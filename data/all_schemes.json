@@ -1,0 +1,1119 @@
+[
+  {
+    "id": "SCH-DELHI-001",
+    "name": "Pradhan Mantri Awas Yojana - Urban 2.0 (PMAY-U 2.0)",
+    "name_hindi": "प्रधानमंत्री आवास योजना - शहरी 2.0 (पीएमएवाई-यू 2.0)",
+    "department": "Ministry of Housing and Urban Affairs (MoHUA)",
+    "department_hindi": "आवासन और शहरी कार्य मंत्रालय",
+    "level": "central",
+    "description": "Pradhan Mantri Awas Yojana-Urban 2.0 (PMAY-U 2.0) – 'Housing for All' Mission provides Central Assistance to 1 crore urban poor and middle-class families to construct, purchase or rent affordable houses in urban areas. The scheme is implemented through four verticals: (1) Beneficiary Led Construction (BLC) – financial assistance up to ₹2.5 lakh to EWS families (annual income up to ₹3 lakh) to construct new pucca houses of 30-45 sqm carpet area on their own land; (2) Affordable Housing in Partnership (AHP) – Central Assistance to EWS beneficiaries for owning a pucca house of 30-45 sqm carpet area constructed by Public/Private Agencies; (3) Affordable Rental Housing (ARH) – promotes creation of adequate rental housing for EWS/LIG beneficiaries including urban migrants, homeless, industrial workers, working women, construction workers, street vendors, rickshaw pullers and other service providers; (4) Interest Subsidy Scheme (ISS) – subsidy on home loans sanctioned and disbursed on 01.09.2024 or after to eligible EWS/LIG/MIG beneficiaries. The scheme also ensures equity across different segments by addressing housing requirements of widows, single women, persons with disabilities, senior citizens, transgenders, SC/ST, minorities, Safai Karmi, Street Vendors identified under PMSVANidhi Scheme, artisans under PM-Vishwakarma Scheme, Anganwadi workers, building and other construction workers, and residents of slums/chawls. Implementation period: 2024 to 2029 (5 years).",
+    "description_hindi": "प्रधानमंत्री आवास योजना - शहरी 2.0 (पीएमएवाई-यू 2.0) योजना का उद्देश्य सबके लिए आवास के दृष्टिकोण के साथ देशभर के सभी पात्र शहरी परिवारों को सभी मौसम के अनुकूल पक्के आवास उपलब्ध कराना है। इस योजना को आवासन और शहरी कार्य मंत्रालय द्वारा लागू किया जा रहा है। यह योजना पात्र परिवारों को निम्न चार घटकों के माध्यम से वित्तीय सहायता प्रदान करती है: (1) लाभार्थी आधारित निर्माण (बीएलसी) – ईडब्ल्यूएस परिवारों को (वार्षिक आय ₹3 लाख तक) अपनी भूमि पर 30-45 वर्गमीटर के नए पक्के आवास बनाने के लिए ₹2.5 लाख तक की सहायता; (2) भागीदारी में किफायती आवास (एएचपी) – सार्वजनिक/निजी एजेंसियों द्वारा निर्मित 30-45 वर्गमीटर के पक्के आवास; (3) किफायती किरायेदार आवास (एआरएच) – शहरी प्रवासियों, बेघरों, औद्योगिक श्रमिकों, कामकाजी महिलाओं आदि के लिए किराये के आवास; (4) ब्याज सब्सिडी योजना (आईएसएस) – 01.09.2024 या उसके बाद स्वीकृत गृहऋण पर सब्सिडी। कार्यान्वयन अवधि: 2024 से 2029 (5 वर्ष)।",
+    "benefits_summary": "BLC: Up to ₹2.5 lakh per EWS household for construction of pucca house (30-45 sqm) on own land, released in 40:40:20 ratio based on construction progress via DBT. AHP: Up to ₹2.5 lakh per EWS flat (30-45 sqm) provided jointly by Central and State agencies; additional Technology Innovation Grant (TIG) @₹1,000 per sqm up to 30 sqm carpet area for projects using innovative construction technologies. ARH: Affordable rental housing for EWS/LIG beneficiaries through two models (PPP conversion of existing govt houses, or construct-operate-maintain by Private/Public Entities). ISS: Maximum interest subsidy of ₹1.80 lakh (max NPV ₹1.50 lakh) at 4.0% on first ₹8 lakh of home loan for tenure up to 12 years; eligible for loan value up to ₹25 lakh on property value up to ₹35 lakh; max carpet area 120 sqm; subsidy released in 5 yearly instalments via DBT.",
+    "benefits_amount": 250000,
+    "benefits_frequency": "as-needed",
+    "eligibility": {
+      "min_age": null,
+      "max_age": null,
+      "genders": [
+        "all"
+      ],
+      "categories": [
+        "EWS",
+        "LIG",
+        "MIG"
+      ],
+      "max_income": null,
+      "income_by_category": {
+        "EWS": 300000,
+        "LIG": 600000,
+        "MIG": 900000
+      },
+      "vertical_wise_eligibility": {
+        "BLC": "EWS only (annual income up to ₹3 lakh)",
+        "AHP": "EWS only (annual income up to ₹3 lakh)",
+        "ARH": "EWS and LIG (annual income up to ₹3 lakh and ₹6 lakh respectively)",
+        "ISS": "EWS, LIG and MIG (annual income up to ₹3 lakh, ₹6 lakh and ₹9 lakh respectively)"
+      },
+      "domicile_required": false,
+      "domicile_states": [
+        "all"
+      ],
+      "employment_statuses": [
+        "all"
+      ],
+      "education_levels": [
+        "all"
+      ],
+      "bpl_required": null,
+      "disability_required": null,
+      "disability_min_percentage": null,
+      "beneficiary_family_definition": "A beneficiary family is defined as comprising of husband, wife and unmarried children.",
+      "pucca_house_definition": "A 'Pucca' house is defined as an all-weather dwelling unit having roof and wall made up of sturdy, modern, and durable materials like burnt bricks, stones packed with cement or lime, cement concrete, timber, Galvanized Iron (GI) sheets, asbestos sheets, machine-made tiles etc., regardless of whether the floor is Kutcha.",
+      "other_conditions": [
+        "Must not own a pucca house either in his/her name or in the name of any member of his/her family anywhere in the country.",
+        "House ownership must be in the name of the female head of the household or in joint ownership with the male member of the family.",
+        "Must not have availed benefits from any housing scheme of Central Govt., State Govt., or Local Self Govt. in the last 20 years.",
+        "Once a vertical (BLC/AHP/ARH/ISS) is selected by the citizen, it cannot be changed at a later stage.",
+        "For ISS vertical: home loan must be sanctioned and disbursed on 01.09.2024 or after.",
+        "For ISS vertical: loan value up to ₹25 lakh for property value up to ₹35 lakh; loan tenure must be more than 5 years; maximum carpet area up to 120 sqm.",
+        "For BLC vertical: beneficiary must have own available land with ownership proof.",
+        "For BLC vertical: house must be minimum 30 sqm and maximum 45 sqm carpet area with at least two rooms, kitchen and a toilet/bathroom.",
+        "For AHP vertical: houses must be 30-45 sqm carpet area; persons with disability and senior citizens to be preferably allotted ground/lower floor.",
+        "For ISS vertical: individual loan applicant must submit proof of income for identification as EWS/LIG/MIG beneficiary.",
+        "Curtailed beneficiaries under PMAY-U whose houses were curtailed by CSMC after 31.12.2023 due to any reason on the recommendation of States/UTs are not eligible for PMAY-U 2.0.",
+        "Applicants who have availed benefits from any housing scheme of Central Govt., State Govt., or Local Self Govt. in the last 20 years."
+      ],
+      "special_focus_groups": [
+        "Widows",
+        "Single women",
+        "Persons with disabilities",
+        "Senior citizens",
+        "Transgenders",
+        "Scheduled Castes (SC)",
+        "Scheduled Tribes (ST)",
+        "Minorities",
+        "Safai Karmi",
+        "Street Vendors identified under PMSVANidhi Scheme",
+        "Artisans under Pradhan Mantri-Vishwakarma Scheme",
+        "Anganwadi workers",
+        "Building and other construction workers",
+        "Residents of slums/chawls"
+      ]
+    },
+    "description_embedding": [],
+    "documents_required": [
+      "DOC-AADHAAR",
+      "DOC-INCOME-CERT",
+      "DOC-BANK-PASSBOOK",
+      "DOC-PROPERTY-DOCS"
+    ],
+    "rejection_rules": [
+      "RULE-NPA-001",
+      "RULE-LOCKPERIOD-002",
+      "RULE-EXISTING-HOUSE-003",
+      "RULE-NONRESIDENTIAL-004",
+      "RULE-PLI-TIMEOUT-005",
+      "RULE-AADHAAR-FAIL-006",
+      "RULE-CURTAILED-007",
+      "RULE-PREVIOUS-SCHEME-008"
+    ],
+    "application_url": "https://pmaymis.gov.in/pmaymis2_2024/PMAY_SURVEY/EligiblityCheck.aspx",
+    "application_steps": [
+      "Step 1: Access the Unified Web Portal (https://pmaymis.gov.in) and navigate to the Eligibility Check page.",
+      "Step 2: Input the State/UT of the project site, the Household Annual Income (in actual rupees), and select the preferred scheme vertical (BLC, AHP, or ISS). Note: Once a vertical is selected, it cannot be changed at a later stage.",
+      "Step 3: Confirm eligibility by declaring 'NO' to owning a pucca house anywhere in India and 'NO' to having availed benefits under any government housing scheme in the past 20 years. Click 'Eligibility Check' to proceed.",
+      "Step 4: Prepare mandatory documents – Aadhaar details for the applicant and family members, Aadhaar-linked bank account details, income proof (PDF up to 100kb), and land documents for BLC projects (PDF up to 1mb).",
+      "Step 5: Submit the comprehensive application along with requisite documents via the Unified Web Portal, a Common Service Centre (CSC), or at the respective Urban Local Body (ULB)/Municipality.",
+      "Step 6: Following statutory approvals, construction progress must be documented via geo-tagging at designated stages using the Bhuvan, Bharat HFA, or PMAY mobile applications to authorize the release of subsequent financial instalments.",
+      "Step 7: For ISS vertical, eligible beneficiaries register demand through Unified Web Portal; application is forwarded to concerned PLIs for further necessary action as per eligibility criteria."
+    ],
+    "offline_process": "Beneficiaries can apply offline by visiting Common Service Centres (CSCs) or their concerned Urban Local Bodies (ULBs)/Municipalities with all required documents. Local authorities of different States/UTs are also organising awareness camps to help people fill PMAY-U 2.0 forms.",
+    "processing_time": "Timelines vary based on State/ULB verifications and statutory approvals.",
+    "helpline": {
+      "phone": [
+        "011-23060484",
+        "011-23063620",
+        "011-23063567",
+        "011-23061827"
+      ],
+      "whatsapp": "+91 8810389745",
+      "email": [
+        "pmay2helpdesk@gmail.com",
+        "pmaymis-mhupa@gov.in"
+      ],
+      "grievance_portal": "https://pmay-urban.gov.in/pgrams/login",
+      "address": "Housing For All, Ministry of Housing and Urban Affairs, Government of India, Sankalp Bhawan, Kasturba Gandhi Marg, New Delhi - 110001"
+    },
+    "life_events": [
+      "CHILDBIRTH",
+      "HOUSING",
+      "MARRIAGE"
+    ],
+    "tags": [
+      "housing",
+      "subsidy",
+      "urban",
+      "loan",
+      "interest_subsidy",
+      "BLC",
+      "AHP",
+      "ARH",
+      "ISS",
+      "EWS",
+      "LIG",
+      "MIG",
+      "Housing for All",
+      "MoHUA",
+      "pucca_house",
+      "affordable_housing",
+      "rental_housing",
+      "geo_tagging",
+      "DBT"
+    ],
+    "official_url": "https://pmay-urban.gov.in/",
+    "metadata": {
+      "benefits_amount_detail": {
+        "BLC": "Up to ₹2,50,000",
+        "AHP": "Up to ₹2,50,000",
+        "ISS": "Up to ₹1,80,000 (max NPV ₹1,50,000)",
+        "ARH": "Not specified (rental housing provision)"
+      },
+      "benefits_frequency_detail": {
+        "BLC": "3 instalments in 40:40:20 ratio based on construction progress via DBT",
+        "AHP": "Released to implementing agencies/beneficiaries via Redeemable Housing Vouchers (RHVs) for private sector projects",
+        "ISS": "5 yearly instalments via DBT in loan account, provided loan is active and >50% principal is outstanding",
+        "ARH": "Not applicable (rental model)"
+      },
+      "processing_time_detail": {
+        "BLC": "Houses should be completed within 12-18 months from the date of sanction.",
+        "AHP": "Projects should be completed within 24-36 months from the receipt of all statutory approvals (18-24 months for projects using innovative technologies with TIG).",
+        "ISS": "Subsidy released in 5 yearly instalments; PLI must claim subsidy on Unified Web Portal within 30 days of loan disbursement.",
+        "ARH": "Not specified; depends on State/UT implementation.",
+        "application_processing": "Timelines vary based on State/ULB verifications and statutory approvals."
+      },
+      "documents_required_detailed": [
+        "Aadhaar details of the applicant and all family members (Aadhaar number, name as per Aadhaar, date of birth).",
+        "Active bank account details of the applicant linked with Aadhaar (account number, bank name, branch, IFSC code).",
+        "Income proof (Only PDF file, size up to 100kb).",
+        "Land ownership documents for BLC vertical (Only PDF file, size up to 1mb).",
+        "Self-declaration/affidavit stating the beneficiary does not own a pucca house anywhere in India.",
+        "For married women: Aadhaar details of husband required; for orphans, divorcee/deserted/destitute women, deceased parents – specific provisions apply as per scheme guidelines.",
+        "Caste certificate for SC/ST category is not mandatory as per scheme guidelines, but may be required by State/UT for their matching share provisions."
+      ],
+      "urls": {
+        "faq_url": "https://pmaymis.gov.in/PMAYMIS2_2024/PmayFAQ.aspx",
+        "mis_portal_url": "https://pmaymis.gov.in/",
+        "scheme_guidelines_url": "https://pmaymis.gov.in/PMAYMIS2_2024/Scheme_Guidelines.aspx"
+      },
+      "life_events_original": [
+        "buying_home",
+        "constructing_home",
+        "renting_home",
+        "marriage",
+        "starting_family"
+      ]
+    },
+    "last_verified": "2026-02-28T00:00:00Z",
+    "is_active": true
+  },
+  {
+    "id": "SCH-DELHI-007",
+    "name": "Delhi Arogya Kosh (DAK)",
+    "name_hindi": "दिल्ली आरोग्य कोष (डीएके)",
+    "department": "Department of Health & Family Welfare, Government of NCT of Delhi (GNCTD)",
+    "department_hindi": "स्वास्थ्य एवं परिवार कल्याण विभाग, दिल्ली सरकार",
+    "level": "state",
+    "description": "Delhi Arogya Kosh (DAK) is a Registered Society under the Government of NCT of Delhi that provides financial assistance up to ₹5 Lakhs to eligible needy patients for treatment of any illness or disease in Government Hospitals. The scheme covers treatment in hospitals run by the Delhi Government, Central Government, Local Bodies, and Autonomous Hospitals under the State Government (including AIIMS). Eligible patients must hold a National Food Security Card and must be bonafide residents of Delhi for the last 3 years prior to application submission. Applications must be submitted in person at the Patient Welfare Cell, Directorate of Health Services, Karkardooma, Delhi. Financial assistance is disbursed as a cheque issued directly to the concerned Government Hospital on behalf of the approved patient. The scheme follows a multi-level approval process through the Director Health Services, Finance Department (GNCTD), and the Secretary (Health) & Chairman DAK.",
+    "description_hindi": "दिल्ली आरोग्य कोष (डीएके) दिल्ली सरकार के अंतर्गत एक पंजीकृत सोसाइटी है जो पात्र जरूरतमंद रोगियों को सरकारी अस्पतालों में किसी भी बीमारी के इलाज के लिए ₹5 लाख तक की वित्तीय सहायता प्रदान करती है। यह योजना दिल्ली सरकार, केंद्र सरकार, स्थानीय निकायों और राज्य सरकार के स्वायत्त अस्पतालों (एम्स सहित) द्वारा संचालित अस्पतालों में उपचार को कवर करती है। पात्र रोगियों के पास राष्ट्रीय खाद्य सुरक्षा कार्ड होना चाहिए और आवेदन जमा करने से पहले पिछले 3 वर्षों से दिल्ली का वास्तविक निवासी होना चाहिए। आवेदन व्यक्तिगत रूप से रोगी कल्याण प्रकोष्ठ, स्वास्थ्य सेवा निदेशालय, करकरडूमा, दिल्ली में जमा करना होता है। वित्तीय सहायता सीधे संबंधित सरकारी अस्पताल को चेक के रूप में जारी की जाती है।",
+    "benefits_summary": "Financial assistance of up to ₹5,00,000 (Five Lakhs) per eligible patient for treatment of any illness/disease in Government Hospitals. The cheque is issued directly to the concerned Government Hospital (not to the patient). The scheme covers all types of treatments including operations, cyclical treatments (chemotherapy, dialysis etc.), and any other medical expenditure as certified by the treating doctor and Medical Superintendent of the concerned Government Hospital.",
+    "benefits_amount": 500000,
+    "benefits_frequency": "one-time",
+    "eligibility": {
+      "min_age": null,
+      "max_age": null,
+      "genders": [
+        "all"
+      ],
+      "categories": [
+        "all"
+      ],
+      "max_income": 300000,
+      "income_by_category": null,
+      "vertical_wise_eligibility": null,
+      "domicile_required": true,
+      "domicile_states": [
+        "delhi"
+      ],
+      "domicile_duration": "3 years (bonafide resident of Delhi for the last 3 years prior to application submission)",
+      "employment_statuses": [
+        "all"
+      ],
+      "education_levels": [
+        "all"
+      ],
+      "bpl_required": null,
+      "disability_required": null,
+      "disability_min_percentage": null,
+      "food_security_card_required": true,
+      "beneficiary_family_definition": "Spouse and children up to 21 years of age, as declared in the undertaking/affidavit (Part C of the application form).",
+      "government_employee_exclusion": "Applicant and their parents must NOT be employees of the Central Government, State Government, or a Local Body.",
+      "other_conditions": [
+        "Patient must hold a valid National Food Security Card.",
+        "Patient must be a bonafide resident of Delhi for the last 3 years prior to application submission.",
+        "Treatment must be required in a Government Hospital run by Delhi Govt., Central Govt., AIIMS, Autonomous Institutes of State Govt., or Local Bodies.",
+        "Family annual income must be up to ₹3,00,000.",
+        "Neither the applicant nor their parents should be employees of the Central/State Government or a Local Body.",
+        "Patient must be unable to arrange or provide funds for the treatment (as declared in the application).",
+        "For minor patients: birth certificate of the patient AND domicile proof of either parent is required.",
+        "Previous assistance from any other source or from Delhi Arogya Nidhi/Kosh must be disclosed in the application.",
+        "All information furnished must be true; false statements are punishable under relevant Acts and laws."
+      ],
+      "special_focus_groups": null
+    },
+    "description_embedding": [],
+    "documents_required": [
+      "DOC-FOOD-SECURITY-CARD",
+      "DOC-DOMICILE",
+      "DOC-ESTIMATE-CERT",
+      "DOC-PHOTOGRAPHS",
+      "DOC-TREATMENT-RECORDS",
+      "DOC-OPD-SLIP",
+      "DOC-INCOME-CERT",
+      "DOC-BIRTH-CERT",
+      "DOC-SELF-DECLARATION"
+    ],
+    "rejection_rules": [
+      "RULE-DAK-NO-FOOD-CARD-001",
+      "RULE-DAK-NO-DOMICILE-002",
+      "RULE-DAK-NON-GOVT-HOSPITAL-003",
+      "RULE-DAK-FALSE-STATEMENT-004",
+      "RULE-DAK-INCOMPLETE-DOCS-005",
+      "RULE-DAK-GOVT-EMPLOYEE-006",
+      "RULE-DAK-INCOME-EXCESS-007"
+    ],
+    "application_url": null,
+    "application_steps": [
+      "Step 1: Obtain the Application Form (Parts A, B, and C) from the Patient Welfare Cell at Room No. 1, 6th Floor, Directorate of Health Services, F-17 Karkardooma, Delhi-110032, or download from health.delhi.gov.in.",
+      "Step 2: Get Part B (Estimate Certificate) filled and signed by the treating doctor of the concerned Government Hospital, with certification by the Head of Department and Medical Superintendent with official seal.",
+      "Step 3: Get two passport-size photographs of the patient attested by the Medical Superintendent or treating doctor/consultant. Paste one on the Estimate Certificate and one on the Application Form.",
+      "Step 4: Obtain Original Monthly Income Certificate from all sources issued by area SDM or authorized Revenue Department officer.",
+      "Step 5: Collect all required domicile proof documents, treatment records, OPD slip copy, and National Food Security Card photocopy.",
+      "Step 6: Complete Part A (Patient Information) of the Application Form with all required details and correct signature as per dependency status.",
+      "Step 7: Complete Part C (Undertaking/Affidavit) with deponent declaration, family details, two witness signatures, and verification.",
+      "Step 8: Submit the complete application with all documents IN PERSON at the Patient Welfare Cell, Room No. 1, 6th Floor, DHS, F-17 Karkardooma, Delhi-110032. Carry all ORIGINAL documents for verification.",
+      "Step 9: Application is processed through: Patient Welfare Cell → Director Health Services (Approval) → Finance Department GNCTD (Approval) → Secretary Health & Chairman DAK (Approval) → Patient Welfare Cell.",
+      "Step 10: Upon approval, cheque is issued directly to the concerned Government Hospital. Applicant is informed via letter. Utilization certificate must be submitted after treatment is over."
+    ],
+    "offline_process": "Application must be submitted IN PERSON at the Patient Welfare Cell, Room No. 1, 6th Floor, Directorate of Health Services, F-17 Karkardooma (Near Karkardooma Court), Delhi-110032, Tel: 011-22306851. No online application facility is available. The patient or their representative must visit with all original documents for verification. Application forms can also be downloaded from the official Delhi Health & Family Welfare website.",
+    "processing_time": "In person; processing begins upon receipt of complete application with all required documents.",
+    "helpline": {
+      "phone": [
+        "011-22306851"
+      ],
+      "whatsapp": null,
+      "email": null,
+      "grievance_portal": null,
+      "address": "Office of Patient Welfare Cell, Room No. 1, 6th Floor, Directorate of Health Services, F-17 Karkardooma (Near Karkardooma Court), Delhi-110032",
+      "department_address": "Department of Health & Family Welfare, 9th Level, A-Wing, IP Extension, Delhi Secretariat, Delhi-110002"
+    },
+    "life_events": [
+      "HEALTH_CRISIS"
+    ],
+    "tags": [
+      "health",
+      "medical_assistance",
+      "financial_aid",
+      "government_hospital",
+      "Delhi",
+      "GNCTD",
+      "DAK",
+      "National_Food_Security_Card",
+      "NFSC",
+      "chemotherapy",
+      "dialysis",
+      "surgery",
+      "AIIMS",
+      "treatment",
+      "patient_welfare",
+      "needy_patients",
+      "BPL",
+      "income_limit"
+    ],
+    "official_url": "https://health.delhi.gov.in/health/delhi-arogya-kosh",
+    "metadata": {
+      "benefits_amount_detail": {
+        "maximum_assistance": "Up to ₹5,00,000",
+        "disbursement_mode": "Cheque issued directly to the concerned Government Hospital",
+        "coverage_scope": "Treatment of any illness/disease including operations, cyclical treatments (chemotherapy/dialysis), and other medical expenditure"
+      },
+      "benefits_frequency_detail": {
+        "type": "One-time or as-needed per application",
+        "disbursement": "Cheque released after multi-level approval (Director Health Services → Finance Department GNCTD → Secretary Health & Chairman DAK)",
+        "repeat_applications": "Prior DAK/Delhi Arogya Nidhi assistance must be disclosed in application; repeat assistance subject to review"
+      },
+      "processing_time_detail": {
+        "application_submission": "In person; processing begins upon receipt of complete application with all required documents.",
+        "approval_chain": "Multi-level: Patient Welfare Cell → Director Health Services → Finance Department GNCTD → Secretary Health & Chairman DAK → Patient Welfare Cell",
+        "disbursement": "Cheque issued to concerned Government Hospital after final approval; applicant informed via letter.",
+        "utilization_certificate": "Must be submitted after treatment is over if grants were released."
+      },
+      "documents_required_detailed": [
+        "Photocopy of National Food Security Card (carry original for verification at time of submission).",
+        "Domicile proof for the last 3 years – any one of: Domicile Certificate issued by area SDM, Ration Card, EPIC (Voter ID), Driving License, Passport, Extract from Electoral Roll, or Aadhaar Card.",
+        "For minor patients: Birth Certificate of the patient AND domicile proof of either parent (any one document from the approved domicile list).",
+        "Original Estimate Certificate (Part B of the form) issued by the treating doctor of the concerned Government Hospital, indicating patient's disease, treatment required, and estimated expenditure – duly certified by the Head of Department and Medical Superintendent with official seal.",
+        "Two passport-size photographs of the patient – duly attested by the Medical Superintendent or treating doctor/consultant of the concerned Government Hospital. One photograph must be pasted on the Estimate Certificate and one on the Application Form.",
+        "Photocopies of treatment records from the Government Hospital.",
+        "Copy of OPD slip from the Government Hospital.",
+        "Original Monthly Income Certificate from all sources, issued by SDM or authorized Revenue Department officer.",
+        "Completed Application Form (Part A) with correct signature as per patient dependency status (minor → father, housewife → husband, adult self-dependent → patient, adult dependent on father → father + affidavit of dependency).",
+        "Completed Estimate Certificate (Part B) with all three required signatures: Treating Doctor, Head of Department, and Medical Superintendent with official seal.",
+        "Signed Undertaking/Affidavit (Part C) with deponent's details, family income declaration, family details (spouse and children ≤21 years), and two witnesses.",
+        "Details of any prior assistance received from any other source or from Delhi Arogya Nidhi/Kosh (if applicable)."
+      ],
+      "notes": [
+        "The application form has three parts: Part A (Patient Information), Part B (Estimate Certificate filled by treating doctor), and Part C (Undertaking & Affidavit).",
+        "All original documents must be carried for verification at the time of submission.",
+        "Cheque is issued directly to the Government Hospital, NOT to the patient.",
+        "Utilization certificate of grants released must be submitted after the treatment is over.",
+        "False statements in the application are punishable under relevant Acts and laws."
+      ],
+      "urls": {
+        "scheme_details_pdf": "https://health.delhi.gov.in/sites/default/files/Health/generic_multiple_files/dak.pdf",
+        "application_form_pdf": "https://health.delhi.gov.in/sites/default/files/Health/generic_multiple_files/totalform1.pdf",
+        "performance_report_url": "https://health.delhi.gov.in/sites/default/files/Health/generic_multiple_files/perfor.pdf",
+        "myscheme_url": "https://www.myscheme.gov.in/schemes/dak"
+      },
+      "life_events_original": [
+        "illness",
+        "hospitalization",
+        "medical_emergency",
+        "chronic_disease",
+        "surgery"
+      ]
+    },
+    "last_verified": "2026-02-27T00:00:00Z",
+    "is_active": true
+  },
+  {
+    "id": "SCH-DELHI-003",
+    "name": "Delhi Pension Scheme to Women in Distress (Widow Pension)",
+    "name_hindi": "दिल्ली महिला विपत्ति पेंशन योजना (विधवा पेंशन)",
+    "department": "Department of Women & Child Development, Government of NCT of Delhi (GNCTD)",
+    "department_hindi": "महिला एवं बाल विकास विभाग, दिल्ली सरकार",
+    "level": "state",
+    "description": "Delhi Pension Scheme to Women in Distress is a welfare scheme of the Government of NCT of Delhi to provide social security by way of monthly financial assistance to widows, divorced, separated, abandoned, deserted or destitute women in the age group of 18 years to lifelong who have no adequate means of subsistence and are poor, needy and vulnerable. The scheme provides ₹2,500 per month remitted directly to the beneficiary's bank account on a monthly basis through ECS of RBI or PFMS. The assistance becomes payable from the next month of application. As of the latest data, approximately 3.5 Lakh beneficiaries are receiving assistance under this scheme. The scheme is implemented through the Financial Assistance Cell of the Department of Women & Child Development, GNCTD, and applications are processed online via the e-District portal.",
+    "description_hindi": "दिल्ली महिला विपत्ति पेंशन योजना दिल्ली सरकार की एक कल्याणकारी योजना है जो विधवाओं, तलाकशुदा, अलग रह रही, परित्यक्त, या निराश्रित महिलाओं को 18 वर्ष से आजीवन तक मासिक वित्तीय सहायता के माध्यम से सामाजिक सुरक्षा प्रदान करती है, जिनके पास जीवन निर्वाह के पर्याप्त साधन नहीं हैं और जो गरीब, जरूरतमंद और कमजोर हैं। यह योजना ₹2,500 प्रति माह की सहायता प्रदान करती है जो आरबीआई के ईसीएस या पीएफएमएस के माध्यम से सीधे लाभार्थी के बैंक खाते में मासिक आधार पर भेजी जाती है। सहायता आवेदन के अगले महीने से देय हो जाती है। नवीनतम आंकड़ों के अनुसार लगभग 3.5 लाख लाभार्थी इस योजना के तहत सहायता प्राप्त कर रहे हैं।",
+    "benefits_summary": "₹2,500 per month remitted to the beneficiary's singly-operated, Aadhaar-linked bank account in NCT of Delhi on a monthly basis through Electronic Clearing System (ECS) of Reserve Bank of India (RBI) or Public Financial Management System (PFMS). The assistance becomes payable from the next month of application submission.",
+    "benefits_amount": 2500,
+    "benefits_frequency": "monthly",
+    "eligibility": {
+      "min_age": 18,
+      "max_age": null,
+      "age_description": "18 years to lifelong",
+      "genders": [
+        "female"
+      ],
+      "categories": [
+        "all"
+      ],
+      "eligible_woman_categories": [
+        "widow",
+        "divorced",
+        "separated",
+        "abandoned",
+        "deserted",
+        "destitute"
+      ],
+      "max_income": 100000,
+      "income_by_category": null,
+      "income_description": "Annual income less than ₹1,00,000 from all sources including rent, interest, dividends, farm earnings, property sale proceeds, etc.",
+      "vertical_wise_eligibility": null,
+      "domicile_required": true,
+      "domicile_states": [
+        "delhi"
+      ],
+      "domicile_duration": "5 years (must have been residing in Delhi for more than 5 years preceding the date of application)",
+      "employment_statuses": [
+        "all"
+      ],
+      "education_levels": [
+        "all"
+      ],
+      "bpl_required": null,
+      "disability_required": null,
+      "disability_min_percentage": null,
+      "aadhaar_mandatory": true,
+      "bank_account_requirements": "Singly-operated, Aadhaar-linked bank account with any bank in NCT of Delhi only",
+      "beneficiary_family_definition": null,
+      "no_other_pension_condition": "Must not be receiving any pension or financial assistance from Central Government, State Government, Municipal Corporation of Delhi (MCD), New Delhi Municipal Council (NDMC), or any other governmental/local bodies or any other source for this purpose.",
+      "other_conditions": [
+        "Applicant must be a widow, divorced, separated, abandoned, deserted, or destitute woman.",
+        "Age must be 18 years or above (lifelong eligibility).",
+        "Must have been residing in Delhi for more than 5 years preceding the date of application.",
+        "Annual income from all sources (including rent, interest, dividends, farm earnings, property sale proceeds, etc.) must be less than ₹1,00,000.",
+        "Must possess a valid Aadhaar number; the application portal will not function without Aadhaar.",
+        "Must have a singly-operated, Aadhaar-linked bank account with any bank in NCT of Delhi only.",
+        "Must not be receiving any pension/financial assistance from Central Govt., State Govt., MCD, NDMC, or any other governmental body or any other source.",
+        "If 5-year residence proof documents are unavailable, statements of any 2 witnesses from an approved list can be submitted before the District WCD Officer; home verification may be conducted."
+      ],
+      "special_focus_groups": [
+        "Widows",
+        "Divorced women",
+        "Separated women",
+        "Abandoned women",
+        "Deserted women",
+        "Destitute women"
+      ],
+      "witness_categories_for_residence": [
+        "RWA President/General Secretary",
+        "Registered shopkeepers/doctors (with registration numbers)",
+        "Two neighbours (with contact details)",
+        "SHG/Mahila Mandal President/authorized signatory",
+        "ICDS Supervisors/ASHA workers",
+        "Gazetted Officer (Delhi/Central Govt.)",
+        "Employer letter (if employed in household/shop)"
+      ]
+    },
+    "description_embedding": [],
+    "documents_required": [
+      "DOC-AADHAAR",
+      "DOC-BIRTH-CERT",
+      "DOC-MARITAL-STATUS-PROOF",
+      "DOC-DOMICILE",
+      "DOC-BANK-PASSBOOK",
+      "DOC-CASTE-CERT",
+      "DOC-PHOTOGRAPHS",
+      "DOC-SELF-DECLARATION"
+    ],
+    "rejection_rules": [
+      "RULE-WPS-NOT-WOMAN-001",
+      "RULE-WPS-AGE-UNDER-18-002",
+      "RULE-WPS-NO-AADHAAR-003",
+      "RULE-WPS-NO-DOMICILE-5YR-004",
+      "RULE-WPS-INCOME-EXCESS-005",
+      "RULE-WPS-DUAL-PENSION-006",
+      "RULE-WPS-BANK-NONCOMPLIANT-007",
+      "RULE-WPS-NO-STATUS-PROOF-008",
+      "RULE-WPS-FALSE-STATEMENT-009",
+      "RULE-WPS-REMARRIAGE-010",
+      "RULE-WPS-AADHAAR-NPCI-FAIL-011"
+    ],
+    "application_url": "https://edistrict.delhigovt.nic.in/",
+    "application_steps": [
+      "Step 1: Visit the e-District Portal (https://edistrict.delhigovt.nic.in/). Under 'Citizen Corner', click 'New User'. Select identification document (Aadhaar or Voter ID), enter the number and captcha.",
+      "Step 2: Fill the Citizen Registration Form including present residential address. Enter captcha and click 'Continue'. Receive Login ID and Password on registered mobile number/email.",
+      "Step 3: Click 'Registered User Login' on the portal. Enter credentials and captcha to log in.",
+      "Step 4: On the main page, click 'Apply Online'. In the dropdown, select 'Apply for Services'.",
+      "Step 5: Select Department: 'Women & Child Development'. Choose Scheme: 'Financial Assistance for Widows/Women in Distress'. Click 'Apply'.",
+      "Step 6: Review the pre-filled Basic/Personal Details Form (pulled from registration). Click 'Continue'.",
+      "Step 7: Fill all required fields in the application form. Upload all required documents (self-attested, scanned copies) – Aadhaar Card, Age Proof, Marital Status Proof, Residence Proof (5 years), Bank Details, Bank Passbook, Caste/Religion Proof, Income Self-Declaration.",
+      "Step 8: Click 'Next'. Upload passport-size photograph. Click 'Finish'.",
+      "Step 9: Enter the OTP received on registered mobile number to authenticate and submit the application.",
+      "Step 10: Acknowledgement of successful submission is generated. Save the acknowledgement for future reference and tracking."
+    ],
+    "offline_process": "The scheme is exclusively online via the e-District portal (https://edistrict.delhigovt.nic.in/). However, if 5-year residence proof documents are unavailable, the applicant may submit statements of any 2 witnesses from the approved list before the District WCD Officer in person. Witnesses must provide photo ID, residence proof, contact details, and length of stay in the area. Home verification may be conducted by the District WCD Office.",
+    "processing_time": "45 days for sanction at District Level",
+    "helpline": {
+      "phone": [
+        "+91-11-23070378",
+        "+91-11-23380513"
+      ],
+      "fax": "+91-11-23070379",
+      "whatsapp": null,
+      "email": [
+        "wcd@nic.in"
+      ],
+      "grievance_portal": null,
+      "know_your_pension": "https://nsap.nic.in/ledgerHistroy.do?method=intialize",
+      "aadhaar_linking_check": "https://uidai.gov.in → Aadhaar Services → Aadhaar Linking Status",
+      "address": "Department of Women & Child Development, Maharana Pratap ISBT Building, Kashmere Gate, Delhi-110006"
+    },
+    "life_events": [
+      "DEATH_IN_FAMILY",
+      "MARITAL_DISTRESS",
+      "WOMEN_EMPOWERMENT"
+    ],
+    "tags": [
+      "pension",
+      "widow",
+      "women_in_distress",
+      "divorced",
+      "separated",
+      "abandoned",
+      "deserted",
+      "destitute",
+      "monthly_assistance",
+      "social_security",
+      "Delhi",
+      "GNCTD",
+      "WCD",
+      "DBT",
+      "ECS",
+      "PFMS",
+      "e-District",
+      "Aadhaar_linked",
+      "NPCI",
+      "financial_assistance",
+      "recurring_pension"
+    ],
+    "official_url": "https://wcd.delhi.gov.in/wcd/delhi-pension-scheme-women-distress-widows-divorced-separated-destitute-abandoned-women",
+    "metadata": {
+      "benefits_amount_detail": {
+        "monthly_pension": "₹2,500 per month",
+        "annual_total": "₹30,000 per annum",
+        "disbursement_mode": "Direct Benefit Transfer (DBT) to beneficiary's singly-operated, Aadhaar-linked bank account via ECS of RBI or PFMS"
+      },
+      "benefits_frequency_detail": {
+        "type": "Monthly recurring pension",
+        "start_date": "From the next month of application submission",
+        "continuation": "Lifelong, subject to continued eligibility and periodic verification",
+        "stoppage_conditions": "Pension stopped upon: re-marriage, death, Aadhaar not linked via NPCI, beneficiary not found at residence during verification, address change without informing District Office, bank account closed/inactive, multiple pension cases detected, or beneficiary's self-declaration requesting stoppage"
+      },
+      "processing_time_detail": {
+        "sanction_timeline": "45 days for sanction at District Level",
+        "verification": "District WCD Officer verifies documents; home visit may be conducted; beneficiary may be called for in-person verification",
+        "pension_start": "Assistance becomes payable from the next month of application submission",
+        "disbursement": "Monthly via ECS of RBI or PFMS to Aadhaar-linked bank account"
+      },
+      "documents_required_detailed": [
+        "Aadhaar Card – mandatory; the e-District application portal will not function without a valid Aadhaar number. Must be self-attested, scanned, and uploaded.",
+        "Age Proof – any one of: Birth Certificate (MCD/Registrar of Births & Deaths), School Leaving Certificate (last class attended), Matriculation/10th Certificate, Hospital Discharge Slip at birth, Voter ID, PAN Card, Driving License, Aadhaar Card, Passport, Age Assessment Medical Certificate, or any Govt./Govt.-recognized document stating date and place of birth.",
+        "Proof of widowhood/divorce/separation/abandonment/destitution – as applicable: Death Certificate of husband (for widows), Divorce Decree (for divorced women), Separation Paper or ongoing divorce proceedings (for separated women), document establishing abandonment, desertion or destitution. For divorced/separated/abandoned or deserted women: divorce decree, any legal proceedings including reports in police station, Crime Against Women Cell, Family Counselling Centres (FCC), Delhi Commission for Women, National Commission for Women, or Mahila Panchayats are admissible.",
+        "Residence Proof for last 5 years in Delhi – any one or more of: Voter ID Card, PAN Card, Ration Card, Driving License, Aadhaar Card, Passport, Insurance Policy Documents, Utility Bills (Electricity/Water/Telephone/Gas Connection receipt), Bank Passbook (with same address), Property Documents, Rent Agreements (covering last 5 years), or any other document clearly showing 5+ years residence in Delhi. If documentary proof is unavailable, statements of any 2 witnesses from the approved list may be submitted before the District WCD Officer.",
+        "Bank Account Details – singly-operated, Aadhaar-linked bank account with any bank in NCT of Delhi only.",
+        "Bank Passbook/Statement for last 1 year – showing account activity and Aadhaar linkage.",
+        "Caste/Religion Proof – for SC/ST: certificate issued by competent authority; for Minority: self-declaration of religion verified by religious institution.",
+        "One passport-size photograph of the applicant.",
+        "Income Self-Declaration in the format available on the e-District portal."
+      ],
+      "notes": [
+        "All documents must be self-attested, scanned, and uploaded on the e-District portal.",
+        "No recommendation or attestation from any external authority is required; only self-declaration by the applicant as per the portal format.",
+        "District WCD Officer verifies documents; home visit may be conducted. Beneficiary may be called for in-person verification.",
+        "Pension is credited only to Aadhaar-linked accounts via National Payments Corporation of India (NPCI) mapping.",
+        "To change bank account details, submit application to concerned District WCD Office. Note: DBT payments are Aadhaar-based.",
+        "To change address within Delhi, submit application with documentary proof of new address to concerned District WCD Office.",
+        "In case of re-marriage, beneficiary must inform District Office with self-declaration. In case of death, relative must inform District Office with death certificate.",
+        "Forged documents result in penal action, penalty, pension stoppage, and recovery of amount.",
+        "The present number of ongoing beneficiaries is approximately 3.5 Lakh."
+      ],
+      "urls": {
+        "myscheme_url": "https://www.myscheme.gov.in/schemes/dpswdwp",
+        "application_portal_url": "https://edistrict.delhigovt.nic.in/",
+        "faq_url": "https://wcd.delhi.gov.in/sites/default/files/WCD/generic_multiple_files/faqwidowpensionscheme.pdf",
+        "self_declaration_format_url": "https://wcd.delhi.gov.in/sites/default/files/WCD/generic_multiple_files/selfdeclartionwomenindistress_1.pdf",
+        "gazette_age_amendment_url": "https://wcd.delhi.gov.in/sites/default/files/WCD/generic_multiple_files/fas_amendment_gazette_396_widow.pdf",
+        "gazette_income_amendment_url": "https://wcd.delhi.gov.in/sites/default/files/WCD/generic_multiple_files/fas_amendment_gazette_348_widow.pdf",
+        "aadhaar_gazette_notification_url": "https://wcd.delhi.gov.in/sites/default/files/WCD/generic_multiple_files/adharnotificationwidowandwdmscheme2022.pdf",
+        "cabinet_decision_pension_stoppage_url": "https://wcd.delhi.gov.in/sites/default/files/WCD/generic_multiple_files/stoping_of_pension.pdf"
+      },
+      "companion_scheme": {
+        "id": "SCH-DELHI-004",
+        "name": "Financial Assistance for the Marriage of Daughters of Poor Widows and Orphan Girls (Widow's Daughter Marriage Scheme)",
+        "name_hindi": "गरीब विधवाओं की पुत्रियों और अनाथ लड़कियों के विवाह के लिए वित्तीय सहायता योजना",
+        "benefits_amount": "₹30,000 (one-time grant)",
+        "benefits_frequency": "One-time",
+        "additional_eligibility": [
+          "Same eligibility criteria as the Widow Pension Scheme (5-year Delhi residence, income < ₹1,00,000, etc.)",
+          "The girl for whose marriage the financial assistance is sought must be above 18 years of age on the date of marriage.",
+          "Financial assistance can be granted for performing marriage of up to two daughters only (for widow applicants).",
+          "Orphan girls: guardians including Homes/Institutions or foster parents may apply."
+        ],
+        "amendment_history": [
+          {
+            "date": "21-09-2006",
+            "notification": "F.1(4)/FAS/WDM/DSW/05-06/25008-18",
+            "change": "Original Rule Publication"
+          },
+          {
+            "date": "06-05-2008",
+            "notification": "F.41(8)/FAS/DSW/Enhancement/07-08/324-334",
+            "change": "1st Amendment"
+          },
+          {
+            "date": "28-10-2009",
+            "notification": "F.1(4)/FAS/WDM/2005-06/28175-185",
+            "change": "2nd Amendment – allowed self-declaration for income certificate in lieu of revenue authority issuance"
+          },
+          {
+            "date": "30-06-2011",
+            "notification": "F.1(4)/FAS/WDM/WCD/2005-06/7951-961",
+            "change": "3rd Amendment – increased assistance from ₹20,000 to ₹25,000; updated verification procedures"
+          },
+          {
+            "date": "04-12-2012",
+            "notification": "F.1(4)/FAS/WDM/WCD/05-06/26278-287",
+            "change": "4th Amendment – expanded to include divorced, separated, abandoned, deserted or destitute women; increased assistance from ₹25,000 to ₹30,000; expanded admissible documentation for divorced/separated/abandoned women to include police station reports, Crime Against Women Cell, FCCs, DCW, NCW, Mahila Panchayats"
+          },
+          {
+            "date": "15-01-2021",
+            "notification": "F.40(9)/FAS/WCD/A/N/2017-18/17030-59",
+            "change": "5th Amendment – income criteria raised from ₹60,000 to ₹1,00,000 per annum from all sources"
+          }
+        ]
+      },
+      "life_events_original": [
+        "death_of_spouse",
+        "divorce",
+        "separation",
+        "abandonment",
+        "destitution",
+        "widowhood",
+        "women_empowerment"
+      ]
+    },
+    "last_verified": "2026-02-28T00:00:00Z",
+    "is_active": true
+  },
+  {
+    "id": "SCH-DELHI-005",
+    "name": "Rajiv Gandhi Swavlamban Rojgar Yojana (RGSRY)",
+    "name_hindi": "राजीव गांधी स्वावलंबन रोज़गार योजना (आरजीएसआरवाई)",
+    "department": "Delhi Khadi & Village Industries Board (DKVIB), Government of NCT of Delhi",
+    "department_hindi": "दिल्ली खादी एवं ग्रामोद्योग बोर्ड (डीकेवीआईबी), दिल्ली सरकार",
+    "level": "state",
+    "description": "Rajiv Gandhi Swavlamban Rojgar Yojana (RGSRY) has been designed, developed and promoted by the Delhi Khadi & Village Industries Board, with the support of the Government of NCT of Delhi, to provide employment opportunities to unemployed youths, artisans, trained professionals, skilled technocrats and entrepreneurs by promotion and expansion of permissible industries, professions, tertiary and service sector in the NCT of Delhi. The scheme provides financial assistance as a loan of up to ₹3,00,000 along with a government subsidy of 15% of project cost (maximum ₹7,500 per entrepreneur). Eligible sectors include the Secondary Sector (Tiny/Cottage Industries), Tertiary Sector (Trade, Transportation, Hotels, Restaurants – without Liquor & Meat, etc.), and Services Sector (under the ambit of various Terms & Conditions, provisions of local bodies and Delhi Master Plan). The loan is repayable in equal quarterly instalments within 5 years, with a 12-month moratorium period from the date of loan release. The scheme also extends marketing support to beneficiaries through product display, DSIIDC/Cooperative stores procurement, trade fair participation, and recognition certificates.",
+    "description_hindi": "राजीव गांधी स्वावलंबन रोज़गार योजना (आरजीएसआरवाई) दिल्ली खादी एवं ग्रामोद्योग बोर्ड द्वारा दिल्ली सरकार के सहयोग से बेरोज़गार युवाओं, कारीगरों, प्रशिक्षित पेशेवरों, कुशल तकनीकी विशेषज्ञों और उद्यमियों को दिल्ली एनसीटी में अनुमत उद्योगों, पेशों, तृतीयक और सेवा क्षेत्र के प्रोत्साहन/विस्तार द्वारा रोज़गार के अवसर प्रदान करने के लिए डिज़ाइन, विकसित और प्रचारित की गई है। यह योजना ₹3,00,000 तक के ऋण के साथ-साथ परियोजना लागत का 15% (अधिकतम ₹7,500 प्रति उद्यमी) की सरकारी सब्सिडी के रूप में वित्तीय सहायता प्रदान करती है। पात्र क्षेत्रों में द्वितीयक क्षेत्र (लघु/कुटीर उद्योग), तृतीयक क्षेत्र (व्यापार, परिवहन, होटल, रेस्तरां – बिना शराब और मांस आदि), और सेवा क्षेत्र शामिल हैं। ऋण 5 वर्षों के भीतर समान त्रैमासिक किस्तों में चुकाना होता है, ऋण जारी होने की तारीख से 12 महीने की मोहलत अवधि के साथ।",
+    "benefits_summary": "Loan of up to ₹3,00,000 for setting up or expanding units in permissible industry, profession, trade or service sectors. Government subsidy of 15% of project cost (maximum ₹7,500 per entrepreneur). For weaker sections (SC/ST/OBC/Physically Handicapped/Women/Ex-Servicemen), entrepreneur's contribution is reduced from 10% to 5%. Additional marketing support through product display, DSIIDC/Cooperative stores, trade fair participation, and recognition certificates.",
+    "benefits_amount": 300000,
+    "benefits_frequency": "as-needed",
+    "eligibility": {
+      "min_age": 18,
+      "max_age": 50,
+      "genders": [
+        "all"
+      ],
+      "categories": [
+        "General",
+        "SC",
+        "ST",
+        "OBC",
+        "Physically Handicapped",
+        "Women",
+        "Ex-Servicemen"
+      ],
+      "weaker_sections": [
+        "SC",
+        "ST",
+        "OBC",
+        "Physically Handicapped",
+        "Women",
+        "Ex-Servicemen"
+      ],
+      "max_income": null,
+      "income_by_category": null,
+      "vertical_wise_eligibility": null,
+      "domicile_required": null,
+      "domicile_states": [
+        "delhi"
+      ],
+      "employment_statuses": [
+        "unemployed",
+        "self-employed",
+        "artisan",
+        "entrepreneur"
+      ],
+      "education_levels": [
+        "all"
+      ],
+      "bpl_required": null,
+      "disability_required": null,
+      "disability_min_percentage": null,
+      "eligible_applicant_categories": {
+        "a": "School/College dropouts (above age 18 years)",
+        "b": "Individual entrepreneur",
+        "c": "Trade Professionals",
+        "d": "Artisan",
+        "e": "Passed out candidates from any technical/professional institute recognized by the Government or its authorized undertakings/bodies, without further training",
+        "f": "Small-Scale Industrial units with total investment in plant, machinery and equipment not exceeding the ceiling prescribed for small-scale units by the Central Government from time to time, located within NCT of Delhi"
+      },
+      "eligible_sectors": {
+        "secondary": "Tiny/Cottage Industries",
+        "tertiary": "Trade, Transportation, Hotels, Restaurants (without Liquor & Meat, etc.)",
+        "services": "Under the ambit of various Terms & Conditions, provisions of local bodies and Delhi Master Plan"
+      },
+      "beneficiary_family_definition": "As per self-declaration: applicant, spouse, and adult children (for purpose of verifying no prior loan from listed institutions).",
+      "other_conditions": [
+        "Applicant must be aged between 18 years and 50 years.",
+        "Applicant must fall under one of the eligible categories: school/college dropout, individual entrepreneur, trade professional, artisan, passed-out candidate from Govt./authorized technical/professional institute, or SSI unit located in NCT Delhi.",
+        "Loan shall NOT be sanctioned to parties who have already received a loan for the same or similar purpose from Government or any Government-controlled financial institution AND have not repaid in full with interest OR have misutilized the loan.",
+        "For units in residential/non-conforming areas: only those professional/industrial activities permitted under the Delhi Master Plan for those areas are eligible for loan.",
+        "For units in non-conforming areas: applicant must additionally submit NOC from High Power Committee (Industries Dept., Govt. of Delhi) and Municipal Corporation License (MCL) for the respective industry.",
+        "For professional/commercial activities in non-conforming areas: Registration Certificate from MCD for the concerned trade is additionally required.",
+        "Loan must be utilized within 3 months of sanction; Managing Director may grant maximum 3 months additional grace (total 6 months).",
+        "Non-utilization of funds within maximum permissible 6-month period → loan treated as misutilized → entire amount + 18% penal interest recoverable.",
+        "Utilization contrary to provisions of loan rules or DKVI Board instructions → loan treated as misutilized → principal + 18% penal interest recoverable.",
+        "Borrower must provide surety from a Govt. servant on a non-transferable post in Delhi (State/Central Govt./Autonomous bodies/Undertakings) OR follow procedure as per commercial banks.",
+        "Neither the applicant, nor spouse, nor any family member including adult children should have taken loan or applied for financial assistance from any of: Dept. of Industries (Delhi), KVIC (GoI), DKVIB, DRDA Delhi, Delhi SC/ST/OBC Development & Financial Corporation, Delhi Financial Corporation, any Nationalized/Scheduled Bank, Delhi State Co-operative Bank, or any other Govt./Non-Govt. Financial Agency/Institution – unless fully repaid.",
+        "Neither the applicant nor any family member should be a member of any Co-operative Society/Registered Institution which has applied for or taken any loan from the listed departments."
+      ],
+      "special_focus_groups": [
+        "SC/ST applicants (reduced 5% contribution)",
+        "OBC applicants (reduced 5% contribution)",
+        "Physically Handicapped applicants (reduced 5% contribution)",
+        "Women applicants (reduced 5% contribution)",
+        "Ex-Servicemen (reduced 5% contribution)"
+      ]
+    },
+    "description_embedding": [],
+    "documents_required": [
+      "DOC-AADHAAR",
+      "DOC-PHOTOGRAPHS",
+      "DOC-EDUCATION-PROOF",
+      "DOC-WORKSITE-DETAILS",
+      "DOC-ELECTRICITY-BILL",
+      "DOC-MCD-REGISTRATION",
+      "DOC-SELF-DECLARATION",
+      "DOC-SURETY-CONSENT",
+      "DOC-EQUITY-PROOF"
+    ],
+    "rejection_rules": [
+      "RULE-RGSRY-AGE-LIMIT-001",
+      "RULE-RGSRY-PRIOR-LOAN-002",
+      "RULE-RGSRY-MISUTILIZATION-003",
+      "RULE-RGSRY-NON-CONFORMING-004",
+      "RULE-RGSRY-UTILIZATION-TIMEOUT-005",
+      "RULE-RGSRY-NO-SURETY-006",
+      "RULE-RGSRY-FALSE-INFO-007",
+      "RULE-RGSRY-COOP-MEMBER-008",
+      "RULE-RGSRY-PROHIBITED-SECTOR-009"
+    ],
+    "application_url": "https://rgsry.co.in/",
+    "application_steps": [
+      "Step 1: Visit the RGSRY online application portal (https://rgsry.co.in/) or the e-District portal of GNCTD (https://edistrict.delhigovt.nic.in/) to apply online. Alternatively, download the application form from www.dkvib.delhigovt.nic.in for offline submission.",
+      "Step 2: Fill Part A (Personal Details) – Name, father's/husband's name, date of birth, category (SC/ST/OBC/General/PH/Women/Ex-Serviceman), residential address, permanent address, and worksite address.",
+      "Step 3: Fill Part B (Project Details Applied) – Proposed cost of project (capital expenditure + working capital), funding pattern (subsidy + applicant's contribution + term loan from DKVIB), estimated employment generation, estimated annual turnover and profit, and environmental/utility compliance declarations.",
+      "Step 4: Fill Part C (Project at a Glance) – Detailed applicant background, project description with market demand, total cost breakdown, machinery/furniture list, raw material details, manpower requirements, and complete profitability analysis with production cost breakdown and estimated annual sale/profit.",
+      "Step 5: Sign Part D (Declaration by Applicant) – declaring compliance with all RGSRY scheme conditions and authenticity of all documents.",
+      "Step 6: Complete Part E (Undertaking/Self-Declaration) – declare previous loan status (Option A: no previous loan from any listed institution OR Option B: details of any existing loan), date of birth, education qualification, cooperative society membership status, and final affirmation of truthfulness. Paste self-attested photograph on the declaration.",
+      "Step 7: Collect and attach all required documents – identity proof, 2 attested photographs, education proof, worksite details, electricity bill (residence), MCD Registration/NOC (as applicable), declaration in prescribed format, surety/guarantor consent letter, and proof of equity/self-contribution.",
+      "Step 8: Submit the complete application either online through the portal or offline at Delhi Khadi & Village Industries Board, 5th Floor, Nigam Bhawan (Old Hindu College), Kashmere Gate, Delhi-110006.",
+      "Step 9: Application is processed on First Come First Serve basis. Identity and photograph of the applicant are verified by ADO/Supervisor. For inquiry and assistance, contact the Facilitation Centre at 9311702507 (Sh. Inder Singh, ADO)."
+    ],
+    "offline_process": "Submit the prescribed Loan Application Form along with all required documents directly at the Delhi Khadi & Village Industries Board office at 5th Floor, Nigam Bhawan (Old Hindu College), Kashmere Gate, Delhi-110006. Application form can be downloaded from www.dkvib.delhigovt.nic.in. Applications are processed on First Come First Serve basis. A Facilitation Centre with a Technical/Field Officer is available daily at the same address for scheme inquiry and assistance.",
+    "processing_time": "First Come First Serve basis; no specific timeline prescribed in scheme literature",
+    "helpline": {
+      "phone": [
+        "9311702507"
+      ],
+      "phone_contact_person": "Sh. Inder Singh, ADO (Assistant Development Officer)",
+      "whatsapp": null,
+      "email": null,
+      "grievance_portal": null,
+      "address": "Delhi Khadi & Village Industries Board, 5th Floor, Nigam Bhawan (Old Hindu College), Kashmere Gate, Delhi-110006",
+      "facilitation_centre": "Technical/Field Officer available daily at 5th Floor, Nigam Bhawan, Old Hindu College, Kashmere Gate, Delhi-110006 for scheme inquiry and assistance"
+    },
+    "life_events": [
+      "BUSINESS_STARTUP",
+      "JOB_LOSS"
+    ],
+    "tags": [
+      "loan",
+      "subsidy",
+      "self_employment",
+      "entrepreneurship",
+      "MSME",
+      "cottage_industry",
+      "trade",
+      "Delhi",
+      "GNCTD",
+      "DKVIB",
+      "khadi",
+      "village_industries",
+      "artisan",
+      "professional",
+      "technician",
+      "SSI",
+      "small_scale",
+      "youth_employment",
+      "SC_ST_OBC",
+      "women",
+      "ex_servicemen",
+      "physically_handicapped"
+    ],
+    "official_url": "https://dkvib.delhi.gov.in/dkvib/salient-features-rajiv-gandhi-swavlamban-rojgar-yojna",
+    "metadata": {
+      "benefits_amount_detail": {
+        "maximum_loan": "₹3,00,000",
+        "subsidy_rate": "15% of project cost",
+        "maximum_subsidy": "₹7,500 per entrepreneur",
+        "subsidy_partnership": "For partnership projects, subsidy calculated separately for each partner at 15% of their share in the project cost, limited to ₹7,500 per partner",
+        "subsidy_adjustment": "Subsidy component adjusted to the borrower's loan account after 2 years from the date of disbursement of loan",
+        "applicant_contribution_general": "Minimum 10% of loan amount demanded",
+        "applicant_contribution_weaker_sections": "Minimum 5% of loan amount demanded (for SC/ST/OBC/Physically Handicapped/Women/Ex-Servicemen)"
+      },
+      "benefits_frequency_detail": {
+        "loan_disbursement": "As per sanction terms; may be disbursed in instalments",
+        "repayment_period": "Full repayment within 5 years in equal quarterly instalments",
+        "moratorium_period": "Recovery of principal starts after 12 months from the date of release of loan amount",
+        "interest_recovery": "Interest on released amount recoverable from the first quarter, from the date of release of loan amount",
+        "security_mechanism": "Equal number of post-dated cheques for quarterly instalments of principal amount including interest due as on date of instalment fixed by the Board",
+        "subsidy_credit": "Subsidy adjusted to borrower's loan account after 2 years from disbursement"
+      },
+      "processing_time_detail": {
+        "application_processing": "First Come First Serve basis; no specific timeline prescribed in scheme literature",
+        "loan_utilization_deadline": "Within 3 months of loan sanction (Managing Director may grant maximum 3 months additional grace; total maximum 6 months)",
+        "moratorium_period": "12 months from date of release of loan amount (no principal recovery during this period; interest recoverable from first quarter)",
+        "repayment_period": "Full repayment within 5 years in equal quarterly instalments",
+        "subsidy_adjustment": "Subsidy adjusted to borrower's loan account after 2 years from date of disbursement"
+      },
+      "documents_required_detailed": [
+        "Copy of Electoral Card / Valid Passport / Aadhaar Card – as identity proof.",
+        "Two passport-size attested photographs of the applicant.",
+        "Education proof – certificate or marksheet of highest qualification.",
+        "Work Site details – proof of ownership/possession, Rent Agreement, No Objection Certificate from Owner, Electricity Bill of work premises, etc.",
+        "Electricity Bill (Residence) – as address proof of the applicant.",
+        "For Shop/Business/Professions: MCD Registration Certificate for the concerned trade. For Industrial unit in non-conforming area: NOC of High Power Committee (HPC) AND Municipal Corporation License (MCL).",
+        "Declaration in prescribed format (proforma attached with application form) – self-declaration regarding previous loan status, date of birth, education qualification, cooperative society membership, and affirmation of truthfulness.",
+        "Consent letter of Surety/Guarantor with their ID and address proof – surety from any Govt. servant on a non-transferable post in Delhi OR as per commercial bank procedure.",
+        "Proof of equity/self-contribution – bank statement or affidavit showing minimum 10% (General) or 5% (Weaker Sections) of loan amount."
+      ],
+      "notes": [
+        "The loan application form has five parts: Part A (Personal Details), Part B (Project Details Applied), Part C (Project at a Glance with profitability analysis), Part D (Declaration by Applicant), and Part E (Undertaking/Self-Declaration regarding advanced loan).",
+        "Part B requires: proposed project cost breakdown (capital expenditure + working capital), funding pattern (grant/subsidy + applicant's contribution + term loan), estimated employment generation, estimated annual turnover and profit, and environmental/utility compliance declarations.",
+        "Part C requires: detailed applicant background (education, experience related to project), project brief with market demand, cost breakdown, machinery/furniture list with costs, raw material details, manpower requirements, and full profitability analysis (production cost, estimated annual sale, estimated annual profit).",
+        "Application processing is on First Come First Serve basis.",
+        "Concealment of facts and giving false information is a punishable offence; benefits availed through false information are liable to be summarily withdrawn.",
+        "Identity and photograph of the applicant are verified by ADO/Supervisor at the DKVI Board office."
+      ],
+      "urls": {
+        "application_form_pdf": "https://dkvib.delhi.gov.in/sites/default/files/DKVIB/generic_multiple_files/rgsry-form.pdf",
+        "myscheme_url": "https://www.myscheme.gov.in/schemes/rgsry",
+        "application_portal_url": "https://rgsry.co.in/",
+        "salient_features_pdf": "https://dkvib.delhi.gov.in/sites/default/files/2022-11/salient-features-of-rgsry.pdf",
+        "board_website": "https://dkvib.delhi.gov.in/",
+        "edistrict_portal_url": "https://edistrict.delhigovt.nic.in/"
+      },
+      "life_events_original": [
+        "starting_business",
+        "self_employment",
+        "entrepreneurship",
+        "skill_utilization",
+        "unemployment",
+        "business_expansion"
+      ]
+    },
+    "last_verified": "2026-02-28T00:00:00Z",
+    "is_active": true
+  },
+  {
+    "id": "SCH-DELHI-006",
+    "name": "Education Loan Scheme - Delhi",
+    "name_hindi": "शिक्षा ऋण योजना - दिल्ली",
+    "department": "Delhi SC/ST/OBC/Minorities & Handicapped Financial Development Corporation Ltd. (DSFDC)",
+    "department_hindi": "दिल्ली अनुसूचित जाति/अनुसूचित जनजाति/अन्य पिछड़ा वर्ग/अल्पसंख्यक एवं विकलांग वित्तीय विकास निगम लि. (डीएसएफडीसी)",
+    "level": "state",
+    "description": "The Education Loan Scheme by the Delhi SC/ST/OBC/Minorities and Handicapped Financial Development Corporation Ltd. (DSFDC), Government of Delhi, provides financial assistance to students belonging to Scheduled Castes (SC), Scheduled Tribes (ST), Other Backward Classes (OBC), Minorities, and Persons with Disabilities (PwD) who are permanent residents of Delhi for pursuing professional and technical courses through Government-recognized institutions in India and abroad. The scheme offers need-based loans with a maximum ceiling of ₹7,50,000/- for studies in India and ₹15,00,000/- for studies abroad. Parents/Guardian of the applicant serve as co-borrower, and adequate securities commensurate with loan value are required — either a personal guarantee by a permanent Government/PSU/Bank/Autonomous Body employee, or collateral security in the form of NSC/KVP/FDR, or property mortgage. Loan is to be repaid within 10 years after commencement of repayment or till date of employment, whichever is earlier. No promoter's contribution is required for loans up to ₹4,00,000/-; for loans above ₹4,00,000/-, a contribution of 5% (studies in India) or 15% (studies abroad) is required.",
+    "description_hindi": "दिल्ली अनुसूचित जाति/अनुसूचित जनजाति/अन्य पिछड़ा वर्ग/अल्पसंख्यक एवं विकलांग वित्तीय विकास निगम लिमिटेड (डीएसएफडीसी), दिल्ली सरकार द्वारा शिक्षा ऋण योजना, दिल्ली के स्थायी निवासी अनुसूचित जाति, अनुसूचित जनजाति, अन्य पिछड़ा वर्ग, अल्पसंख्यक एवं दिव्यांगजन श्रेणी के छात्रों को भारत और विदेश में सरकार द्वारा मान्यता प्राप्त संस्थानों से व्यावसायिक और तकनीकी पाठ्यक्रम करने के लिए वित्तीय सहायता प्रदान करती है। यह योजना भारत में अध्ययन के लिए अधिकतम ₹7,50,000/- और विदेश में अध्ययन के लिए ₹15,00,000/- की अधिकतम सीमा तक आवश्यकता आधारित ऋण प्रदान करती है।",
+    "benefits_summary": "Need-based education loan with a ceiling of ₹7,50,000/- for studies in India and ₹15,00,000/- for studies abroad. No promoter's contribution required for loans up to ₹4,00,000/-. For loans above ₹4,00,000/-, a promoter's contribution of 5% (India) / 15% (abroad) is required. Loan repayment period is up to 10 years after commencement of repayment or until the date of employment, whichever is earlier. Processing fee of ₹350/- applicable. The applicant may repay the loan earlier if desired.",
+    "benefits_amount": 750000,
+    "benefits_frequency": "installments",
+    "eligibility": {
+      "min_age": null,
+      "max_age": null,
+      "genders": [
+        "all"
+      ],
+      "categories": [
+        "SC",
+        "ST",
+        "OBC",
+        "Minorities",
+        "PwD"
+      ],
+      "category_certificates": {
+        "SC": "Caste Certificate issued by concerned area SDM/DC",
+        "ST": "Caste Certificate issued by concerned area SDM/DC",
+        "OBC": "Caste Certificate issued by concerned area SDM/DC",
+        "Minorities": "Affidavit declaring religion",
+        "PwD": "Disability Certificate (40% or more) issued by Medical Board of Government Hospital, Delhi"
+      },
+      "max_income": 500000,
+      "income_description": "Annual income of parents/guardian should be below ₹5,00,000/- (Rupees Five Lakhs only)",
+      "income_proof": "Income Certificate issued by Office of the SDM Concerned OR Form No. 16 of Co-Borrower",
+      "domicile_required": true,
+      "domicile_states": [
+        "delhi"
+      ],
+      "employment_statuses": [
+        "all"
+      ],
+      "education_levels": [
+        "all"
+      ],
+      "bpl_required": null,
+      "disability_required": false,
+      "disability_min_percentage": 40,
+      "disability_note": "Disability Certificate (40% or more) required only for PwD category applicants, issued by Medical Board of a Government Hospital, Delhi",
+      "admission_requirement": "Must have secured admission in a recognized/Government/Technical Institution anywhere in India or abroad",
+      "institution_requirements": {
+        "recognition": "College/Institute must be recognized by Central/State Government or by appropriate authorities such as UGC (University Grants Commission), AICTE (All India Council for Technical Education), etc.",
+        "minimum_course_offering_years": 3,
+        "course_offering_note": "College/Institute should have been offering the course for the last 3 years"
+      },
+      "course_requirements": {
+        "type": "Professional and Technical Courses",
+        "max_duration_years": 5,
+        "mode": "Regular/Correspondence"
+      },
+      "co_borrower_requirements": {
+        "who": "Parents/Guardian of the applicant",
+        "role": "Co-Borrower",
+        "income_source": "Must have regular source of income",
+        "govt_servant_condition": "If Government Servant, must have 15/20 years of service left + certificate from Department"
+      },
+      "guarantor_requirements": {
+        "type": "Permanent employee of Government/PSU/Bank/Autonomous Body of Central/State Government",
+        "conditions": [
+          "Must be a regular employee",
+          "Must not have given guarantee to any other person for loan purpose prior to this guarantee in DSFDC",
+          "Must consent that in case of default in payment by beneficiary, recoveries may be made from salary",
+          "5 Post-Dated Cheques (PDC) required if loan is above ₹2,00,000/-"
+        ],
+        "alternative_security": [
+          "Original Collateral Security in the shape of NSC (National Savings Certificate)/KVP (Kisan Vikas Patra)/FDR (Fixed Deposit Receipt) and Letter of Lien in favour of DSFDC",
+          "Original Documents of Property for Mortgage with complete chain of documents"
+        ]
+      },
+      "other_conditions": [
+        "Applicant or any member of family or dependent must not have availed the said loan facility under the scheme of this Corporation, Government of India, or any other financial institution for the said purpose.",
+        "Neither the applicant nor any other member of the family should be employed in Government/Semi-Government/Autonomous Body of the Central Government/State Government.",
+        "Parents/Guardian should have regular source of income.",
+        "Adequate securities commensurate with loan value must be provided: UTI/NSC/Public Sector/Mortgage property OR personal securities of permanent Government/PSU/Bank/Autonomous Body employee.",
+        "Applicant must submit ECS detail/Post-dated cheques towards repayment.",
+        "If co-borrower is a Government Servant, must have 15/20 years of service left and produce certificate from the Department."
+      ],
+      "post_sanction_obligations": [
+        "The borrower must not participate in any unlawful activity that would debar them from pursuing studies and must follow all rules and regulations laid down by the educational institution.",
+        "The borrower must not enter into any pecuniary obligation or financial liability during the currency of the loan.",
+        "The borrower must strive to secure suitable employment after completing the course and furnish full particulars of such employment, including income details, to DSFDC."
+      ]
+    },
+    "description_embedding": [],
+    "documents_required": [
+      "DOC-AADHAAR",
+      "DOC-INCOME-CERT",
+      "DOC-EDUCATION-PROOF",
+      "DOC-PHOTOGRAPHS",
+      "DOC-BIRTH-CERT",
+      "DOC-CASTE-CERT",
+      "DOC-SELF-DECLARATION",
+      "DOC-ADMISSION-PROOF",
+      "DOC-BANK-PASSBOOK"
+    ],
+    "rejection_rules": [
+      "RULE-ELSD-NONRESIDENT-001",
+      "RULE-ELSD-CATEGORY-002",
+      "RULE-ELSD-INCOME-003",
+      "RULE-ELSD-ADMISSION-004",
+      "RULE-ELSD-INSTITUTION-005",
+      "RULE-ELSD-DURATION-006",
+      "RULE-ELSD-DUPLICATE-007",
+      "RULE-ELSD-INCOMPLETE-008",
+      "RULE-ELSD-UNLAWFUL-009",
+      "RULE-ELSD-PECUNIARY-010",
+      "RULE-ELSD-SECURITY-011"
+    ],
+    "application_url": "http://delhi.gov.in/wps/wcm/connect/doit_dsfdc/DSFDC/Home/",
+    "application_steps": [
+      "Step 1: Obtain the application form free of cost from any of the following Branch Offices — 2-Battery Lane, Rajpur Road, Delhi-54; A-33-38, B-Block, Lal Building, Opposite Police Station, Mangol Puri, Delhi; A-Block, 1st Floor, Bunker Vihar, Deputy Commissioner's Office (North East), Opposite Gagan Cinema, Nand Nagri, Delhi. Alternatively, download the prescribed format from the official website of DSFDC.",
+      "Step 2: Carefully fill out the application form in black ink using a ball pen. Ensure all required details are accurately provided, including personal information of student and parents/guardian, course details, estimated expenditure (year-wise — tuition fee, books/stationery, examination fee, equipment, boarding & lodging), scholarship/fellowship particulars, amount of loan applied for (year-wise), employment prospects post-completion, and guarantor details.",
+      "Step 3: Paste passport-sized photograph on the application form and attach self-attested copies of all mandatory Pre-Sanction documents as per the checklist.",
+      "Step 4: Submit the duly filled application form along with required documents to the Deputy Manager (Education Loan), Room No. 208, IInd Floor, Ambedkar Bhawan, Sector-16, Rohini, Delhi-89. Bring original documents for verification at the time of submission.",
+      "Step 5: Upon application review and approval, DSFDC will issue a Sanction-Cum Agreement Letter. The applicant must sign the acceptance of the Sanction-Cum Agreement Letter.",
+      "Step 6: Complete Post-Sanction formalities — execute Guarantee Deed, Hypothecation Deed, Affidavit of Legal Heir, Affidavit of Personal Guarantee by Borrower and Co-Borrower, submit ECS/Post-Dated Cheques, processing fee of ₹350/-, two witnesses with ID proof copies, copy of last year result, bank account non-closure undertaking, and all Guarantor documents.",
+      "Step 7: Upon completion of all Post-Sanction documentation, DSFDC will release the sanctioned loan amount year-wise as per the approved schedule. Borrower must provide last year results for subsequent year disbursements.",
+      "Step 8: Commence repayment as per the terms — within 10 years after commencement of repayment or till date of employment, whichever is earlier. Repayment through ECS/Post-Dated Cheques.",
+      "Step 9: Upon securing employment after course completion, furnish full particulars of employment including income details to DSFDC."
+    ],
+    "offline_process": "Application forms are available free of cost at DSFDC Branch Offices (Rajpur Road, Mangol Puri, Nand Nagri) and can also be downloaded from the official DSFDC website. Completed forms with all Pre-Sanction documents must be submitted in person to the Deputy Manager (Education Loan), Room No. 208, IInd Floor, Ambedkar Bhawan, Sector-16, Rohini, Delhi-89. Original documents must be brought for verification at the time of submission. Incomplete applications will NOT be accepted.",
+    "processing_time": "Not specified; dependent on DSFDC internal review and document verification",
+    "helpline": {
+      "phone": [
+        "011-27574521",
+        "011-27574377"
+      ],
+      "email": null,
+      "address_head_office": "DSFDC Head Office, Room No. 208, IInd Floor, Ambedkar Bhawan, Institutional Area, Sector-16, Rohini, Delhi-110085",
+      "branch_offices": [
+        {
+          "name": "Rajpur Road Branch",
+          "address": "2-Battery Lane, Rajpur Road, Delhi-54"
+        },
+        {
+          "name": "Mangol Puri Branch",
+          "address": "A-33-38, B-Block, Lal Building, Opposite Police Station, Mangol Puri, Delhi"
+        },
+        {
+          "name": "Nand Nagri Branch",
+          "address": "A-Block, 1st Floor, Bunker Vihar, Deputy Commissioner's Office (North East), Opposite Gagan Cinema, Nand Nagri, Delhi"
+        }
+      ]
+    },
+    "life_events": [
+      "EDUCATION"
+    ],
+    "tags": [
+      "education",
+      "loan",
+      "SC",
+      "ST",
+      "OBC",
+      "minorities",
+      "PwD",
+      "handicapped",
+      "DSFDC",
+      "Delhi",
+      "professional_course",
+      "technical_course",
+      "higher_education",
+      "abroad_studies",
+      "financial_assistance",
+      "need_based",
+      "co_borrower",
+      "guarantor",
+      "collateral",
+      "property_mortgage",
+      "repayment",
+      "offline"
+    ],
+    "official_url": "https://dsfdc.delhi.gov.in/dsfdc/education-loan-scheme",
+    "metadata": {
+      "benefits_amount_detail": {
+        "studies_in_india": "Up to ₹7,50,000/-",
+        "studies_abroad": "Up to ₹15,00,000/-",
+        "note": "Need-based finance within above ceilings"
+      },
+      "benefits_frequency_detail": {
+        "disbursement": "Year-wise as per approved course duration (1st Year through 5th Year)",
+        "repayment": "Within 10 years after commencement of repayment or till date of employment, whichever is earlier",
+        "early_repayment": "The applicant has the option to repay the loan earlier if desired"
+      },
+      "processing_time_detail": {
+        "application_processing": "Not specified; dependent on DSFDC internal review and document verification",
+        "loan_disbursement": "Year-wise disbursement as per approved course duration upon completion of Post-Sanction formalities",
+        "repayment_period": "Up to 10 years after commencement of repayment or till date of employment, whichever is earlier"
+      },
+      "documents_required_detailed": [
+        "Pre-Sanction: Copy of Aadhaar Card of Borrower (Applicant), Co-Borrower (Parents/Guardian), and Guarantor.",
+        "Pre-Sanction: Copy of Income Certificate issued by the Office of the SDM Concerned OR Copy of Form No. 16 of Co-Borrower.",
+        "Pre-Sanction: Copy of Mark Sheet of the Last Examination on the Basis of Which the Applicant Has Obtained Admission in the Present/Particular Course.",
+        "Pre-Sanction: Four Passport Size Photographs of the Borrower, Co-Borrower, and Guarantor, and One Full-Size Photograph of the Borrower (In Case the Applicant Belongs to PwD Category).",
+        "Pre-Sanction: Copy of Birth Certificate/Age Proof.",
+        "Pre-Sanction: Copy of Caste Certificate for SC/ST/OBC issued by the Concerned Area SDM/DC; Affidavit in Case of Minority Category; Disability Certificate (40% or more) issued by Medical Board of Government Hospital, Delhi for PwD Category.",
+        "Pre-Sanction: Affidavit stating that no loan has been availed from any Government Agency for the same purpose.",
+        "Pre-Sanction: Copies of Letter Confirming Scholarship, Freeship, Studentship (if any).",
+        "Pre-Sanction: Proof of Admission to the Recognized Course/Institute.",
+        "Pre-Sanction: Copy of Schedule of Payment for the Courses or Demand Notice from the Institution/University.",
+        "Pre-Sanction: Copies of Foreign Expenses Permit (if applicable).",
+        "Pre-Sanction: Statement of Bank Account for the Last Six Months of the Borrower and Co-Borrower.",
+        "Pre-Sanction: Signature Identification of Borrower and Co-Borrower from the Bank.",
+        "Pre-Sanction: Statement of Assets and Liabilities of Borrower/Co-Borrower.",
+        "Post-Sanction: Copy of Acceptance of Sanction-Cum Agreement Letter.",
+        "Post-Sanction: Execution of Guarantee Deed.",
+        "Post-Sanction: Execution of Hypothecation Deed.",
+        "Post-Sanction: Affidavit of Legal Heir.",
+        "Post-Sanction: Affidavit of Personal Guarantee by Borrower and Co-Borrower.",
+        "Post-Sanction: ECS (Electronic Clearing Service)/Post-Dated Cheques.",
+        "Post-Sanction: Processing Fee of ₹350/-.",
+        "Post-Sanction: Two Witnesses along with Copy of ID Proof.",
+        "Post-Sanction: Copy of Last Year Result of Student.",
+        "Post-Sanction: Undertaking for Non-Closing of Bank Account Till the Completion of Repayment.",
+        "Post-Sanction: Guarantor Documents — Copy of Aadhaar Card/Election Card/Passport; Copy of Identity Card from Employer; Original Latest Pay Slip and Form 16; Copy of Age Proof of Guarantor(s); 04 Passport Size Photographs; Affidavit of Guarantor(s); 5 Post-Dated Cheques (PDC) from the Guarantor(s) in case the loan is above ₹2,00,000/-; Copy of Guarantor(s) Undertaking to Stand as Guarantor/Surety OR Original Collateral Security in the shape of NSC/KVP/FDR and Letter of Lien in favour of DSFDC OR Original Documents of Property for Mortgage with complete chain of documents."
+      ],
+      "urls": {
+        "myscheme_url": "https://www.myscheme.gov.in/schemes/els-delhi",
+        "application_download_url": "http://delhi.gov.in/wps/wcm/connect/doit_dsfdc/DSFDC/Home/"
+      },
+      "life_events_original": [
+        "education",
+        "higher_education",
+        "professional_course",
+        "studying_abroad"
+      ]
+    },
+    "last_verified": "2026-02-28T00:00:00Z",
+    "is_active": true
+  }
+]

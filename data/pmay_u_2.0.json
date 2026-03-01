@@ -1,0 +1,501 @@
+{
+  "scheme": {
+    "id": "SCH-DELHI-001",
+    "name": "Pradhan Mantri Awas Yojana - Urban 2.0 (PMAY-U 2.0)",
+    "name_hindi": "प्रधानमंत्री आवास योजना - शहरी 2.0 (पीएमएवाई-यू 2.0)",
+    "department": "Ministry of Housing and Urban Affairs (MoHUA)",
+    "department_hindi": "आवासन और शहरी कार्य मंत्रालय",
+    "level": "central",
+    "description": "Pradhan Mantri Awas Yojana-Urban 2.0 (PMAY-U 2.0) – 'Housing for All' Mission provides Central Assistance to 1 crore urban poor and middle-class families to construct, purchase or rent affordable houses in urban areas. The scheme is implemented through four verticals: (1) Beneficiary Led Construction (BLC) – financial assistance up to ₹2.5 lakh to EWS families (annual income up to ₹3 lakh) to construct new pucca houses of 30-45 sqm carpet area on their own land; (2) Affordable Housing in Partnership (AHP) – Central Assistance to EWS beneficiaries for owning a pucca house of 30-45 sqm carpet area constructed by Public/Private Agencies; (3) Affordable Rental Housing (ARH) – promotes creation of adequate rental housing for EWS/LIG beneficiaries including urban migrants, homeless, industrial workers, working women, construction workers, street vendors, rickshaw pullers and other service providers; (4) Interest Subsidy Scheme (ISS) – subsidy on home loans sanctioned and disbursed on 01.09.2024 or after to eligible EWS/LIG/MIG beneficiaries. The scheme also ensures equity across different segments by addressing housing requirements of widows, single women, persons with disabilities, senior citizens, transgenders, SC/ST, minorities, Safai Karmi, Street Vendors identified under PMSVANidhi Scheme, artisans under PM-Vishwakarma Scheme, Anganwadi workers, building and other construction workers, and residents of slums/chawls. Implementation period: 2024 to 2029 (5 years).",
+    "description_hindi": "प्रधानमंत्री आवास योजना - शहरी 2.0 (पीएमएवाई-यू 2.0) योजना का उद्देश्य सबके लिए आवास के दृष्टिकोण के साथ देशभर के सभी पात्र शहरी परिवारों को सभी मौसम के अनुकूल पक्के आवास उपलब्ध कराना है। इस योजना को आवासन और शहरी कार्य मंत्रालय द्वारा लागू किया जा रहा है। यह योजना पात्र परिवारों को निम्न चार घटकों के माध्यम से वित्तीय सहायता प्रदान करती है: (1) लाभार्थी आधारित निर्माण (बीएलसी) – ईडब्ल्यूएस परिवारों को (वार्षिक आय ₹3 लाख तक) अपनी भूमि पर 30-45 वर्गमीटर के नए पक्के आवास बनाने के लिए ₹2.5 लाख तक की सहायता; (2) भागीदारी में किफायती आवास (एएचपी) – सार्वजनिक/निजी एजेंसियों द्वारा निर्मित 30-45 वर्गमीटर के पक्के आवास; (3) किफायती किरायेदार आवास (एआरएच) – शहरी प्रवासियों, बेघरों, औद्योगिक श्रमिकों, कामकाजी महिलाओं आदि के लिए किराये के आवास; (4) ब्याज सब्सिडी योजना (आईएसएस) – 01.09.2024 या उसके बाद स्वीकृत गृहऋण पर सब्सिडी। कार्यान्वयन अवधि: 2024 से 2029 (5 वर्ष)।",
+    "benefits_summary": "BLC: Up to ₹2.5 lakh per EWS household for construction of pucca house (30-45 sqm) on own land, released in 40:40:20 ratio based on construction progress via DBT. AHP: Up to ₹2.5 lakh per EWS flat (30-45 sqm) provided jointly by Central and State agencies; additional Technology Innovation Grant (TIG) @₹1,000 per sqm up to 30 sqm carpet area for projects using innovative construction technologies. ARH: Affordable rental housing for EWS/LIG beneficiaries through two models (PPP conversion of existing govt houses, or construct-operate-maintain by Private/Public Entities). ISS: Maximum interest subsidy of ₹1.80 lakh (max NPV ₹1.50 lakh) at 4.0% on first ₹8 lakh of home loan for tenure up to 12 years; eligible for loan value up to ₹25 lakh on property value up to ₹35 lakh; max carpet area 120 sqm; subsidy released in 5 yearly instalments via DBT.",
+    "benefits_amount": 250000,
+    "benefits_frequency": "as-needed",
+    "eligibility": {
+      "min_age": null,
+      "max_age": null,
+      "genders": [
+        "all"
+      ],
+      "categories": [
+        "EWS",
+        "LIG",
+        "MIG"
+      ],
+      "max_income": null,
+      "income_by_category": {
+        "EWS": 300000,
+        "LIG": 600000,
+        "MIG": 900000
+      },
+      "vertical_wise_eligibility": {
+        "BLC": "EWS only (annual income up to ₹3 lakh)",
+        "AHP": "EWS only (annual income up to ₹3 lakh)",
+        "ARH": "EWS and LIG (annual income up to ₹3 lakh and ₹6 lakh respectively)",
+        "ISS": "EWS, LIG and MIG (annual income up to ₹3 lakh, ₹6 lakh and ₹9 lakh respectively)"
+      },
+      "domicile_required": false,
+      "domicile_states": [
+        "all"
+      ],
+      "employment_statuses": [
+        "all"
+      ],
+      "education_levels": [
+        "all"
+      ],
+      "bpl_required": null,
+      "disability_required": null,
+      "disability_min_percentage": null,
+      "beneficiary_family_definition": "A beneficiary family is defined as comprising of husband, wife and unmarried children.",
+      "pucca_house_definition": "A 'Pucca' house is defined as an all-weather dwelling unit having roof and wall made up of sturdy, modern, and durable materials like burnt bricks, stones packed with cement or lime, cement concrete, timber, Galvanized Iron (GI) sheets, asbestos sheets, machine-made tiles etc., regardless of whether the floor is Kutcha.",
+      "other_conditions": [
+        "Must not own a pucca house either in his/her name or in the name of any member of his/her family anywhere in the country.",
+        "House ownership must be in the name of the female head of the household or in joint ownership with the male member of the family.",
+        "Must not have availed benefits from any housing scheme of Central Govt., State Govt., or Local Self Govt. in the last 20 years.",
+        "Once a vertical (BLC/AHP/ARH/ISS) is selected by the citizen, it cannot be changed at a later stage.",
+        "For ISS vertical: home loan must be sanctioned and disbursed on 01.09.2024 or after.",
+        "For ISS vertical: loan value up to ₹25 lakh for property value up to ₹35 lakh; loan tenure must be more than 5 years; maximum carpet area up to 120 sqm.",
+        "For BLC vertical: beneficiary must have own available land with ownership proof.",
+        "For BLC vertical: house must be minimum 30 sqm and maximum 45 sqm carpet area with at least two rooms, kitchen and a toilet/bathroom.",
+        "For AHP vertical: houses must be 30-45 sqm carpet area; persons with disability and senior citizens to be preferably allotted ground/lower floor.",
+        "For ISS vertical: individual loan applicant must submit proof of income for identification as EWS/LIG/MIG beneficiary.",
+        "Curtailed beneficiaries under PMAY-U whose houses were curtailed by CSMC after 31.12.2023 due to any reason on the recommendation of States/UTs are not eligible for PMAY-U 2.0.",
+        "Applicants who have availed benefits from any housing scheme of Central Govt., State Govt., or Local Self Govt. in the last 20 years."
+      ],
+      "special_focus_groups": [
+        "Widows",
+        "Single women",
+        "Persons with disabilities",
+        "Senior citizens",
+        "Transgenders",
+        "Scheduled Castes (SC)",
+        "Scheduled Tribes (ST)",
+        "Minorities",
+        "Safai Karmi",
+        "Street Vendors identified under PMSVANidhi Scheme",
+        "Artisans under Pradhan Mantri-Vishwakarma Scheme",
+        "Anganwadi workers",
+        "Building and other construction workers",
+        "Residents of slums/chawls"
+      ]
+    },
+    "description_embedding": [],
+    "documents_required": [
+      "DOC-AADHAAR",
+      "DOC-INCOME-CERT",
+      "DOC-BANK-PASSBOOK",
+      "DOC-PROPERTY-DOCS"
+    ],
+    "rejection_rules": [
+      "RULE-NPA-001",
+      "RULE-LOCKPERIOD-002",
+      "RULE-EXISTING-HOUSE-003",
+      "RULE-NONRESIDENTIAL-004",
+      "RULE-PLI-TIMEOUT-005",
+      "RULE-AADHAAR-FAIL-006",
+      "RULE-CURTAILED-007",
+      "RULE-PREVIOUS-SCHEME-008"
+    ],
+    "application_url": "https://pmaymis.gov.in/pmaymis2_2024/PMAY_SURVEY/EligiblityCheck.aspx",
+    "application_steps": [
+      "Step 1: Access the Unified Web Portal (https://pmaymis.gov.in) and navigate to the Eligibility Check page.",
+      "Step 2: Input the State/UT of the project site, the Household Annual Income (in actual rupees), and select the preferred scheme vertical (BLC, AHP, or ISS). Note: Once a vertical is selected, it cannot be changed at a later stage.",
+      "Step 3: Confirm eligibility by declaring 'NO' to owning a pucca house anywhere in India and 'NO' to having availed benefits under any government housing scheme in the past 20 years. Click 'Eligibility Check' to proceed.",
+      "Step 4: Prepare mandatory documents – Aadhaar details for the applicant and family members, Aadhaar-linked bank account details, income proof (PDF up to 100kb), and land documents for BLC projects (PDF up to 1mb).",
+      "Step 5: Submit the comprehensive application along with requisite documents via the Unified Web Portal, a Common Service Centre (CSC), or at the respective Urban Local Body (ULB)/Municipality.",
+      "Step 6: Following statutory approvals, construction progress must be documented via geo-tagging at designated stages using the Bhuvan, Bharat HFA, or PMAY mobile applications to authorize the release of subsequent financial instalments.",
+      "Step 7: For ISS vertical, eligible beneficiaries register demand through Unified Web Portal; application is forwarded to concerned PLIs for further necessary action as per eligibility criteria."
+    ],
+    "offline_process": "Beneficiaries can apply offline by visiting Common Service Centres (CSCs) or their concerned Urban Local Bodies (ULBs)/Municipalities with all required documents. Local authorities of different States/UTs are also organising awareness camps to help people fill PMAY-U 2.0 forms.",
+    "processing_time": "Timelines vary based on State/ULB verifications and statutory approvals.",
+    "helpline": {
+      "phone": [
+        "011-23060484",
+        "011-23063620",
+        "011-23063567",
+        "011-23061827"
+      ],
+      "whatsapp": "+91 8810389745",
+      "email": [
+        "pmay2helpdesk@gmail.com",
+        "pmaymis-mhupa@gov.in"
+      ],
+      "grievance_portal": "https://pmay-urban.gov.in/pgrams/login",
+      "address": "Housing For All, Ministry of Housing and Urban Affairs, Government of India, Sankalp Bhawan, Kasturba Gandhi Marg, New Delhi - 110001"
+    },
+    "life_events": [
+      "CHILDBIRTH",
+      "HOUSING",
+      "MARRIAGE"
+    ],
+    "tags": [
+      "housing",
+      "subsidy",
+      "urban",
+      "loan",
+      "interest_subsidy",
+      "BLC",
+      "AHP",
+      "ARH",
+      "ISS",
+      "EWS",
+      "LIG",
+      "MIG",
+      "Housing for All",
+      "MoHUA",
+      "pucca_house",
+      "affordable_housing",
+      "rental_housing",
+      "geo_tagging",
+      "DBT"
+    ],
+    "official_url": "https://pmay-urban.gov.in/",
+    "metadata": {
+      "benefits_amount_detail": {
+        "BLC": "Up to ₹2,50,000",
+        "AHP": "Up to ₹2,50,000",
+        "ISS": "Up to ₹1,80,000 (max NPV ₹1,50,000)",
+        "ARH": "Not specified (rental housing provision)"
+      },
+      "benefits_frequency_detail": {
+        "BLC": "3 instalments in 40:40:20 ratio based on construction progress via DBT",
+        "AHP": "Released to implementing agencies/beneficiaries via Redeemable Housing Vouchers (RHVs) for private sector projects",
+        "ISS": "5 yearly instalments via DBT in loan account, provided loan is active and >50% principal is outstanding",
+        "ARH": "Not applicable (rental model)"
+      },
+      "processing_time_detail": {
+        "BLC": "Houses should be completed within 12-18 months from the date of sanction.",
+        "AHP": "Projects should be completed within 24-36 months from the receipt of all statutory approvals (18-24 months for projects using innovative technologies with TIG).",
+        "ISS": "Subsidy released in 5 yearly instalments; PLI must claim subsidy on Unified Web Portal within 30 days of loan disbursement.",
+        "ARH": "Not specified; depends on State/UT implementation.",
+        "application_processing": "Timelines vary based on State/ULB verifications and statutory approvals."
+      },
+      "documents_required_detailed": [
+        "Aadhaar details of the applicant and all family members (Aadhaar number, name as per Aadhaar, date of birth).",
+        "Active bank account details of the applicant linked with Aadhaar (account number, bank name, branch, IFSC code).",
+        "Income proof (Only PDF file, size up to 100kb).",
+        "Land ownership documents for BLC vertical (Only PDF file, size up to 1mb).",
+        "Self-declaration/affidavit stating the beneficiary does not own a pucca house anywhere in India.",
+        "For married women: Aadhaar details of husband required; for orphans, divorcee/deserted/destitute women, deceased parents – specific provisions apply as per scheme guidelines.",
+        "Caste certificate for SC/ST category is not mandatory as per scheme guidelines, but may be required by State/UT for their matching share provisions."
+      ],
+      "urls": {
+        "faq_url": "https://pmaymis.gov.in/PMAYMIS2_2024/PmayFAQ.aspx",
+        "mis_portal_url": "https://pmaymis.gov.in/",
+        "scheme_guidelines_url": "https://pmaymis.gov.in/PMAYMIS2_2024/Scheme_Guidelines.aspx"
+      },
+      "life_events_original": [
+        "buying_home",
+        "constructing_home",
+        "renting_home",
+        "marriage",
+        "starting_family"
+      ]
+    },
+    "last_verified": "2026-02-28T00:00:00Z",
+    "is_active": true
+  },
+  "documents": [
+    {
+      "id": "DOC-AADHAAR",
+      "name": "Aadhaar Card",
+      "name_hindi": "आधार कार्ड",
+      "issuing_authority": "Unique Identification Authority of India (UIDAI)",
+      "alternate_authority": "Common Service Centre (CSC)",
+      "online_portal": "https://uidai.gov.in/",
+      "prerequisites": [],
+      "fee": "0",
+      "fee_bpl": "0",
+      "processing_time": "15-30 days",
+      "validity_period": "Lifetime (update required every 10 years)",
+      "format_requirements": [
+        "12-digit unique identification number",
+        "Biometric data (fingerprints and iris scan)",
+        "Photograph must be recent",
+        "Address must be complete with PIN code",
+        "Must be self-attested, scanned, and uploaded on e-District portal",
+        "Aadhaar must be linked to bank account via NPCI for DBT pension credit",
+        "Aadhaar must not be locked at time of application",
+        "Any ONE of the following is accepted: Copy of Electoral Card (Voter ID), Valid Passport, or Aadhaar Card",
+        "Must clearly show the applicant's name, photograph, and identification number",
+        "Copy to be submitted with the loan application",
+        "Copy of Aadhaar Card required for Borrower (Applicant), Co-Borrower (Parents/Guardian), and Guarantor — all three",
+        "Photograph and address must be current"
+      ],
+      "common_mistakes": [
+        "Incorrect mobile number during registration",
+        "Poor quality biometric capture",
+        "Address proof documents don't match current residence",
+        "Name spelling doesn't match other documents",
+        "Aadhaar not linked to bank account via NPCI – pension will not be credited",
+        "Aadhaar number locked for security but not unlocked before applying on e-District portal",
+        "Name or address mismatch between Aadhaar and bank account",
+        "Application portal will not function without valid Aadhaar number",
+        "Expired passport submitted as identity proof",
+        "Name on identity proof does not match the application form",
+        "Blurred or illegible photocopy submitted",
+        "None of the three specified documents available",
+        "Missing Aadhaar card of Guarantor — all three Aadhaar copies are mandatory",
+        "Name spelling mismatch between Aadhaar and other submitted documents",
+        "Address on Aadhaar does not reflect Delhi residence"
+      ],
+      "delhi_offices": [
+        "OFF-CSC-DWARKA-001",
+        "OFF-CSC-ROHINI-002"
+      ]
+    },
+    {
+      "id": "DOC-INCOME-CERT",
+      "name": "Income Certificate",
+      "name_hindi": "आय प्रमाण पत्र",
+      "issuing_authority": "Sub-Divisional Magistrate (SDM)",
+      "alternate_authority": "Tehsildar Office",
+      "online_portal": "https://edistrict.delhigovt.nic.in/",
+      "prerequisites": [
+        "DOC-AADHAAR",
+        "DOC-RATION-CARD",
+        "DOC-SALARY-SLIP"
+      ],
+      "fee": "10",
+      "fee_bpl": "0",
+      "processing_time": "7-15 days",
+      "validity_period": "6 months from issue date",
+      "format_requirements": [
+        "Must be on official letterhead with office seal",
+        "Should contain financial year mentioned",
+        "Must have officer's signature and designation",
+        "QR code for verification (if issued after 2023)",
+        "Only PDF file, size up to 100kb (for PMAY-U 2.0 upload)",
+        "Must be ORIGINAL (not photocopy)",
+        "Must state monthly income from ALL sources",
+        "Must be issued by SDM or authorized Revenue Department officer",
+        "Must be on official letterhead with officer's signature, designation, and official seal",
+        "Family annual income must not exceed ₹3,00,000",
+        "Must be issued by the SDM of the concerned area",
+        "Should establish that annual income of parents/guardian is below ₹5,00,000/-",
+        "Official letterhead with office seal and SDM signature",
+        "Alternative: Form No. 16 of Co-Borrower from employer"
+      ],
+      "common_mistakes": [
+        "Income figure doesn't match salary slips",
+        "Certificate older than 6 months",
+        "Missing SDM/Tehsildar signature",
+        "Wrong income head mentioned (agricultural vs non-agricultural)",
+        "File size exceeds 100kb PDF limit when uploading to portal",
+        "Submitting photocopy instead of original income certificate",
+        "Income certificate older than 6 months",
+        "Income from all sources not fully declared",
+        "Missing SDM/authorized officer's signature or seal",
+        "Certificate showing annual income exceeding ₹3,00,000",
+        "Income certificate expired (older than 6 months)",
+        "Income figure exceeds ₹5,00,000/- threshold",
+        "Certificate issued by incorrect SDM jurisdiction",
+        "Form 16 not reflecting total family income from all sources"
+      ],
+      "delhi_offices": [
+        "OFF-SDM-CENTRAL-001",
+        "OFF-TEHSIL-SOUTH-002"
+      ]
+    },
+    {
+      "id": "DOC-BANK-PASSBOOK",
+      "name": "Bank Passbook/Statement",
+      "name_hindi": "बैंक पासबुक/विवरण",
+      "issuing_authority": "Bank Branch",
+      "alternate_authority": "Online banking portal",
+      "online_portal": null,
+      "prerequisites": [
+        "DOC-AADHAAR",
+        "DOC-PAN"
+      ],
+      "fee": "0",
+      "fee_bpl": "0",
+      "processing_time": "Instant (for passbook), 1-2 days (for statement)",
+      "validity_period": "3 months (for scheme applications)",
+      "format_requirements": [
+        "Must show account holder name clearly",
+        "IFSC code and branch details visible",
+        "Account must be active (transactions in last 3 months)",
+        "For statements: bank seal/signature on each page",
+        "Account must be active and linked with Aadhaar",
+        "Account number, bank name, branch and IFSC code required for PMAY-U 2.0",
+        "Account must be singly-operated (not joint account)",
+        "Account must be Aadhaar-linked",
+        "Account must be with any bank in NCT of Delhi only (not outside Delhi)",
+        "Account must be active (not closed, frozen, or dormant)",
+        "DBT payments are Aadhaar-based; pension is credited only to Aadhaar-linked accounts via NPCI mapping",
+        "Must show account activity for the last 1 year",
+        "IFSC code and branch details should be visible",
+        "Address on passbook should match Delhi residence",
+        "Must be self-attested, scanned, and uploaded on e-District portal",
+        "Statement of Bank Account for the last six months of the Borrower and Co-Borrower",
+        "Signature Identification of Borrower and Co-Borrower from the Bank",
+        "Statement of Assets and Liabilities of Borrower/Co-Borrower",
+        "Undertaking for non-closing of bank account till completion of repayment (Post-Sanction)"
+      ],
+      "common_mistakes": [
+        "Zero balance account",
+        "Name spelling differs from Aadhaar",
+        "Statement older than 3 months",
+        "Joint account without primary holder clarification",
+        "Bank account not linked with Aadhaar",
+        "Joint account submitted instead of singly-operated account",
+        "Bank account not linked to Aadhaar via NPCI",
+        "Bank account is with a branch outside NCT of Delhi",
+        "Bank account has become inactive/dormant due to non-operation – pension credits will fail",
+        "Multiple Aadhaar-linked accounts causing NPCI mapping confusion",
+        "Passbook not updated for last 1 year of transactions",
+        "Statement older than 1 year or covering less than 1 year",
+        "Name on passbook does not match Aadhaar",
+        "Bank address is outside NCT of Delhi",
+        "Bank statement older than 6 months",
+        "Missing signature identification from the bank",
+        "Statement not covering full 6-month period",
+        "Assets and liabilities statement incomplete",
+        "Bank account closed during repayment period without prior intimation"
+      ],
+      "delhi_offices": []
+    },
+    {
+      "id": "DOC-PROPERTY-DOCS",
+      "name": "Land Ownership / Property Documents",
+      "name_hindi": "भूमि स्वामित्व / संपत्ति दस्तावेज",
+      "issuing_authority": "Sub-Registrar Office / Revenue Department",
+      "alternate_authority": "Tehsildar Office / Patwari",
+      "online_portal": null,
+      "prerequisites": [],
+      "fee": "Varies by State/UT",
+      "fee_bpl": "Varies by State/UT",
+      "processing_time": "Varies by State/UT",
+      "validity_period": "As per registration",
+      "format_requirements": [
+        "Must establish clear ownership of land by the beneficiary",
+        "Only PDF file, size up to 1mb (for BLC vertical upload on PMAY-U 2.0 portal)",
+        "Must include property registration details",
+        "Land should be in the name of female head or joint ownership with male member"
+      ],
+      "common_mistakes": [
+        "Land title not clear or disputed",
+        "Property documents not in beneficiary's name",
+        "File size exceeds 1mb PDF limit when uploading to portal",
+        "Land ownership not matching with Aadhaar address"
+      ],
+      "delhi_offices": []
+    }
+  ],
+  "rejection_rules": [
+    {
+      "id": "RULE-NPA-001",
+      "scheme_id": "SCH-DELHI-001",
+      "rule_type": "authority",
+      "description": "Subsidy will not be released if the beneficiary's loan account is classified as a Non-Performing Asset (NPA) or if the principal loan amount outstanding is less than 50%.",
+      "description_hindi": "यदि लाभार्थी का ऋण खाता गैर-निष्पादन परिसंपत्ति (एनपीए) के रूप में वर्गीकृत है या मूल ऋण राशि का 50% से कम बकाया है तो सब्सिडी जारी नहीं की जाएगी।",
+      "severity": "critical",
+      "prevention_tip": "Ensure all EMIs are paid on time and maintain more than 50% principal outstanding. Clear any pending dues before applying for subsidy release.",
+      "examples": [
+        "Loan EMI overdue for more than 90 days resulting in NPA classification",
+        "Principal loan amount outstanding has fallen below 50% at time of subsidy release",
+        "Loan account restructured or written off by the PLI"
+      ]
+    },
+    {
+      "id": "RULE-LOCKPERIOD-002",
+      "scheme_id": "SCH-DELHI-001",
+      "rule_type": "timeline",
+      "description": "Applications will be rejected or benefits revoked if the beneficiary sells, transfers, sub-leases, or rents out the house within the mandatory lock-in period of five years from the date of completion.",
+      "description_hindi": "यदि लाभार्थी निर्माण पूरा होने की तारीख से पांच वर्ष की अनिवार्य लॉक-इन अवधि के भीतर मकान बेचता, हस्तांतरित करता, उप-पट्टे पर देता या किराये पर देता है तो आवेदन अस्वीकार या लाभ वापस लिया जाएगा।",
+      "severity": "critical",
+      "prevention_tip": "Plan for long-term residence of at least 5 years from date of completion. Selling, transferring, sub-leasing or renting out before the lock-in period will result in full benefit recovery.",
+      "examples": [
+        "Selling property within 3 years of completion to upgrade",
+        "Transferring ownership to family member in year 4 from completion",
+        "Sub-leasing or renting out the house within the 5-year lock-in period"
+      ]
+    },
+    {
+      "id": "RULE-EXISTING-HOUSE-003",
+      "scheme_id": "SCH-DELHI-001",
+      "rule_type": "validity",
+      "description": "Applicant or any member of his/her family (husband, wife and unmarried children) should not own any pucca house either in his/her name or in the name of any family member anywhere in the country.",
+      "description_hindi": "आवेदक या उसके परिवार (पति, पत्नी और अविवाहित बच्चों) के किसी भी सदस्य के नाम पर देश में कहीं भी कोई पक्का मकान नहीं होना चाहिए।",
+      "severity": "critical",
+      "prevention_tip": "Submit self-declaration/affidavit along with property search report from Sub-Registrar office confirming no pucca house ownership.",
+      "examples": [
+        "Spouse owns ancestral pucca property in another state",
+        "Parent's pucca property still in joint name with applicant",
+        "Previous pucca property sold but land records not updated"
+      ]
+    },
+    {
+      "id": "RULE-NONRESIDENTIAL-004",
+      "scheme_id": "SCH-DELHI-001",
+      "rule_type": "compliance",
+      "description": "The subsidy will be discontinued and previously released amounts recovered if the constructed house is used for any non-residential activities.",
+      "description_hindi": "यदि निर्मित मकान का उपयोग किसी भी गैर-आवासीय गतिविधियों के लिए किया जाता है तो सब्सिडी बंद कर दी जाएगी और पहले जारी की गई राशि वापस ली जाएगी।",
+      "severity": "critical",
+      "prevention_tip": "Use the constructed house strictly for residential purposes only. Any commercial or non-residential use will trigger recovery proceedings.",
+      "examples": [
+        "Converting the house into a commercial shop or office",
+        "Using the house as a warehouse or storage facility",
+        "Operating a manufacturing unit from the subsidized house"
+      ]
+    },
+    {
+      "id": "RULE-PLI-TIMEOUT-005",
+      "scheme_id": "SCH-DELHI-001",
+      "rule_type": "procedural",
+      "description": "For the ISS vertical, subsidy claims will be rejected if the Primary Lending Institution (PLI) fails to claim the subsidy on the Unified Web Portal within 30 days of loan disbursement.",
+      "description_hindi": "आईएसएस घटक के तहत, यदि प्राथमिक ऋणदाता संस्थान (पीएलआई) ऋण वितरण के 30 दिनों के भीतर एकीकृत वेब पोर्टल पर सब्सिडी का दावा करने में विफल रहता है तो सब्सिडी दावा अस्वीकार कर दिया जाएगा।",
+      "severity": "critical",
+      "prevention_tip": "Beneficiaries under ISS vertical should coordinate with their PLI (bank/HFC) to ensure the subsidy claim is filed on the Unified Web Portal within 30 days of loan disbursement.",
+      "examples": [
+        "Bank delays claim filing beyond 30 days after loan disbursement",
+        "PLI fails to register on the Unified Web Portal before claiming subsidy",
+        "Technical issues at PLI end preventing timely subsidy claim submission"
+      ]
+    },
+    {
+      "id": "RULE-AADHAAR-FAIL-006",
+      "scheme_id": "SCH-DELHI-001",
+      "rule_type": "procedural",
+      "description": "Aadhaar authentication failures during demographic or biometric verification (e.g., locked Aadhaar, biometric mismatch, failure to install the UIDAI FaceRD app) will halt application processing.",
+      "description_hindi": "जनसांख्यिकीय या बायोमेट्रिक सत्यापन के दौरान आधार प्रमाणीकरण विफलताएं (जैसे लॉक आधार, बायोमेट्रिक बेमेल, UIDAI FaceRD ऐप इंस्टॉल न होना) आवेदन प्रसंस्करण को रोक देंगी।",
+      "severity": "critical",
+      "prevention_tip": "Ensure Aadhaar is not locked before applying. Update biometric data if fingerprints or iris have changed. Install the UIDAI FaceRD app on mobile device for face authentication.",
+      "examples": [
+        "Aadhaar number locked by beneficiary for security but not unlocked before application",
+        "Biometric mismatch due to worn fingerprints or injury",
+        "UIDAI FaceRD app not installed on mobile device for face-based authentication"
+      ]
+    },
+    {
+      "id": "RULE-CURTAILED-007",
+      "scheme_id": "SCH-DELHI-001",
+      "rule_type": "validity",
+      "description": "Curtailed beneficiaries under PMAY-U whose houses sanctioned under PMAY-U got curtailed by CSMC after 31.12.2023 due to any reason on the recommendation of States/UTs are not eligible for new houses under PMAY-U 2.0.",
+      "description_hindi": "पीएमएवाई-यू के तहत स्वीकृत मकानों को राज्यों/संघ राज्य क्षेत्रों की सिफारिश पर 31.12.2023 के बाद सीएसएमसी द्वारा कटौती किया गया। ऐसे लाभार्थियों को पीएमएवाई-यू 2.0 के तहत नए मकान स्वीकृत नहीं किए जाएंगे।",
+      "severity": "critical",
+      "prevention_tip": "Beneficiaries whose PMAY-U houses were curtailed by CSMC after 31.12.2023 are permanently ineligible for PMAY-U 2.0. They should explore alternative state-level housing schemes.",
+      "examples": [
+        "Beneficiary's PMAY-U house was curtailed by CSMC in February 2024 on State recommendation",
+        "Construction abandoned and house curtailed after the 31.12.2023 cutoff date",
+        "State/UT recommended curtailment due to non-compliance and CSMC approved it after 31.12.2023"
+      ]
+    },
+    {
+      "id": "RULE-PREVIOUS-SCHEME-008",
+      "scheme_id": "SCH-DELHI-001",
+      "rule_type": "validity",
+      "description": "Applicants detected to have availed benefits from any housing scheme of Central Govt., State Govt., or Local Self Govt. in the last 20 years are automatically disqualified from PMAY-U 2.0.",
+      "description_hindi": "यदि आवेदक ने पिछले 20 वर्षों में केंद्र सरकार, राज्य सरकार, या स्थानीय स्वशासन की किसी भी आवास योजना का लाभ उठाया है तो वह पीएमएवाई-यू 2.0 से स्वतः अयोग्य हो जाएगा।",
+      "severity": "critical",
+      "prevention_tip": "Verify that no family member has received housing benefits from any Central, State, or Local government scheme in the last 20 years before applying.",
+      "examples": [
+        "Beneficiary previously received subsidy under Indira Awaas Yojana within 20 years",
+        "Spouse availed housing benefit from state-level housing scheme 15 years ago",
+        "Family received house under a municipal corporation housing program within last 20 years"
+      ]
+    }
+  ]
+}

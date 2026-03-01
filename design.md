@@ -1170,31 +1170,35 @@ class WhatsAppClient:
 ### PostgreSQL Tables
 
 ```sql
--- Schemes table
+-- Enable pgvector extension for semantic search
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Schemes table (core entity)
 CREATE TABLE schemes (
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(200) NOT NULL,
     name_hindi VARCHAR(200) NOT NULL,
-    department VARCHAR(100) NOT NULL,
-    department_hindi VARCHAR(100) NOT NULL,
+    department VARCHAR(200) NOT NULL,  -- Increased for longer department names
+    department_hindi VARCHAR(200) NOT NULL,
     level VARCHAR(20) NOT NULL CHECK (level IN ('central', 'state', 'district')),
     description TEXT NOT NULL,
     description_hindi TEXT NOT NULL,
-    benefits_summary VARCHAR(500),
-    benefits_amount INTEGER,
-    benefits_frequency VARCHAR(20),
+    benefits_summary TEXT,  -- Changed from VARCHAR(500) for longer summaries
+    benefits_amount INTEGER,  -- Nullable for variable benefit schemes
+    benefits_frequency VARCHAR(50),  -- Increased from VARCHAR(20)
     eligibility JSONB NOT NULL,
-    description_embedding vector(1536), -- OpenAI embedding dimension
+    description_embedding vector(1024),  -- Voyage AI voyage-multilingual-2 dimension
     documents_required TEXT[] DEFAULT '{}',
     rejection_rules TEXT[] DEFAULT '{}',
     application_url VARCHAR(500),
     application_steps TEXT[] DEFAULT '{}',
     offline_process TEXT,
     processing_time VARCHAR(100),
-    helpline VARCHAR(50),
+    helpline JSONB,  -- Changed from VARCHAR(50) for multi-channel support
     life_events TEXT[] DEFAULT '{}',
     tags TEXT[] DEFAULT '{}',
     official_url VARCHAR(500),
+    metadata JSONB DEFAULT '{}',  -- Stores rich extras from detailed scheme data
     last_verified TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -1209,31 +1213,31 @@ CREATE TABLE documents (
     issuing_authority VARCHAR(200) NOT NULL,
     alternate_authority VARCHAR(200),
     online_portal VARCHAR(500),
-    prerequisites TEXT[] DEFAULT '{}',
-    fee VARCHAR(50),
-    fee_bpl VARCHAR(50),
+    prerequisites TEXT[] DEFAULT '{}',  -- Document IDs required to obtain this document
+    fee VARCHAR(100),  -- Increased from VARCHAR(50)
+    fee_bpl VARCHAR(100),
     processing_time VARCHAR(100),
     validity_period VARCHAR(100),
     format_requirements TEXT[] DEFAULT '{}',
     common_mistakes TEXT[] DEFAULT '{}',
-    delhi_offices TEXT[] DEFAULT '{}',
+    delhi_offices TEXT[] DEFAULT '{}',  -- Office IDs where this document can be obtained
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Offices table
+-- Offices table (CSCs, SDM offices, department offices)
 CREATE TABLE offices (
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(200) NOT NULL,
-    type VARCHAR(50) NOT NULL,
+    type VARCHAR(50) NOT NULL,  -- CSC, SDM, Tehsildar, District, Department
     address TEXT NOT NULL,
     district VARCHAR(50) NOT NULL,
     pincode VARCHAR(10),
     latitude DECIMAL(10, 8),
     longitude DECIMAL(11, 8),
-    phone VARCHAR(20),
+    phone VARCHAR(50),  -- Increased from VARCHAR(20) for multiple numbers
     working_hours VARCHAR(100),
-    services TEXT[] DEFAULT '{}',
+    services TEXT[] DEFAULT '{}',  -- Document IDs that can be obtained here
     fee_structure JSONB DEFAULT '{}',
     operator_name VARCHAR(100),
     last_verified TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -1244,45 +1248,74 @@ CREATE TABLE offices (
 -- Rejection rules table
 CREATE TABLE rejection_rules (
     id VARCHAR(50) PRIMARY KEY,
-    scheme_id VARCHAR(50) REFERENCES schemes(id),
-    rule_type VARCHAR(50) NOT NULL,
+    scheme_id VARCHAR(50) REFERENCES schemes(id) ON DELETE CASCADE,
+    rule_type VARCHAR(50) NOT NULL,  -- validity, procedural, compliance, timeline, authority
     description TEXT NOT NULL,
     description_hindi TEXT NOT NULL,
-    severity VARCHAR(20) NOT NULL CHECK (severity IN ('critical', 'warning')),
+    severity VARCHAR(20) NOT NULL CHECK (severity IN ('critical', 'warning', 'high')),  -- Added 'high'
     prevention_tip TEXT NOT NULL,
     examples TEXT[] DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Life events taxonomy reference table
+CREATE TABLE life_events_taxonomy (
+    key VARCHAR(50) PRIMARY KEY,  -- UPPERCASE key (e.g., HOUSING, HEALTH_CRISIS)
+    display_name VARCHAR(100) NOT NULL,
+    display_name_hindi VARCHAR(100) NOT NULL,
+    aliases TEXT[] DEFAULT '{}',  -- Lowercase variations that map to this key
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Indexes for performance
 CREATE INDEX idx_schemes_life_events ON schemes USING GIN (life_events);
 CREATE INDEX idx_schemes_eligibility ON schemes USING GIN (eligibility);
-CREATE INDEX idx_schemes_embedding ON schemes USING hnsw (description_embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);
+CREATE INDEX idx_schemes_tags ON schemes USING GIN (tags);
+CREATE INDEX idx_schemes_level ON schemes (level);
+CREATE INDEX idx_schemes_is_active ON schemes (is_active);
+
+-- Vector search index (HNSW for small-to-medium datasets)
+CREATE INDEX idx_schemes_embedding ON schemes
+    USING hnsw (description_embedding vector_cosine_ops)
+    WITH (m = 16, ef_construction = 64);
+
+-- Office indexes
 CREATE INDEX idx_offices_location ON offices (latitude, longitude);
 CREATE INDEX idx_offices_district ON offices (district);
+CREATE INDEX idx_offices_type ON offices (type);
+CREATE INDEX idx_offices_services ON offices USING GIN (services);
+
+-- Rejection rules indexes
 CREATE INDEX idx_rejection_rules_scheme ON rejection_rules (scheme_id);
+CREATE INDEX idx_rejection_rules_severity ON rejection_rules (severity);
 
 -- Vector search configuration notes:
--- - Using OpenAI text-embedding-3-small (1536 dimensions) for cost-effectiveness
--- - HNSW index chosen over IVFFlat: with 25-100 schemes (Phase 1), IVFFlat would require
---   sqrt(n) ≈ 5-10 lists, and at this scale most lists would be nearly empty, degrading recall.
---   HNSW provides better recall for small-to-medium datasets without tuning list counts.
--- - m=16, ef_construction=64 are conservative defaults suitable for <1000 rows.
+-- - Primary: Voyage AI voyage-multilingual-2 (1024 dimensions) - optimized for Hindi-English
+-- - HNSW index chosen over IVFFlat: with 5-100 schemes, HNSW provides better recall
+-- - m=16, ef_construction=64 are conservative defaults suitable for <1000 rows
 -- - Cosine similarity for normalized embeddings
--- - At >10,000 schemes, evaluate switching to IVFFlat with lists=sqrt(n) for build-time savings.
+-- - At >10,000 schemes, evaluate switching to IVFFlat with lists=sqrt(n)
 ```
 
 ### Embedding Model Selection
 
-**Decision:** OpenAI text-embedding-3-small for scheme descriptions.
+**Decision:** Voyage AI voyage-multilingual-2 for scheme descriptions.
 
 **Rationale:**
-- Cost-effective: $0.02 per 1M tokens vs $0.13 for text-embedding-3-large
-- 1536 dimensions sufficient for scheme descriptions
-- Multilingual support for Hindi and English
-- Consistent performance across code-mixed text (Hinglish)
+- Optimized for multilingual retrieval and RAG
+- 1024 dimensions - efficient for scheme descriptions
+- Excellent Hindi-English code-mixed text support
+- 32,000 token context length for long scheme descriptions
 - Meets <500ms retrieval latency requirement (Requirements FR4.5)
+
+**Alternative Considered:** OpenAI text-embedding-3-small
+- 1536 dimensions, good multilingual support
+- Can be used as fallback if Voyage AI is unavailable
+
+**Alternative Considered:** AWS Titan Embeddings
+- Native AWS integration for Bedrock deployment
+- 1024 dimensions, viable for full AWS-native stack
 
 **Alternative Considered:** Sentence-BERT multilingual models
 - Rejected due to lower quality for Hindi-English code-mixing

@@ -1,0 +1,959 @@
+[
+  {
+    "id": "DOC-AADHAAR",
+    "name": "Aadhaar Card",
+    "name_hindi": "आधार कार्ड",
+    "issuing_authority": "Unique Identification Authority of India (UIDAI)",
+    "alternate_authority": "Common Service Centre (CSC)",
+    "online_portal": "https://uidai.gov.in/",
+    "prerequisites": [],
+    "fee": "0",
+    "fee_bpl": "0",
+    "processing_time": "15-30 days",
+    "validity_period": "Lifetime (update required every 10 years)",
+    "format_requirements": [
+      "12-digit unique identification number",
+      "Biometric data (fingerprints and iris scan)",
+      "Photograph must be recent",
+      "Address must be complete with PIN code",
+      "Must be self-attested, scanned, and uploaded on e-District portal",
+      "Aadhaar must be linked to bank account via NPCI for DBT pension credit",
+      "Aadhaar must not be locked at time of application",
+      "Any ONE of the following is accepted: Copy of Electoral Card (Voter ID), Valid Passport, or Aadhaar Card",
+      "Must clearly show the applicant's name, photograph, and identification number",
+      "Copy to be submitted with the loan application",
+      "Copy of Aadhaar Card required for Borrower (Applicant), Co-Borrower (Parents/Guardian), and Guarantor — all three",
+      "Photograph and address must be current"
+    ],
+    "common_mistakes": [
+      "Incorrect mobile number during registration",
+      "Poor quality biometric capture",
+      "Address proof documents don't match current residence",
+      "Name spelling doesn't match other documents",
+      "Aadhaar not linked to bank account via NPCI – pension will not be credited",
+      "Aadhaar number locked for security but not unlocked before applying on e-District portal",
+      "Name or address mismatch between Aadhaar and bank account",
+      "Application portal will not function without valid Aadhaar number",
+      "Expired passport submitted as identity proof",
+      "Name on identity proof does not match the application form",
+      "Blurred or illegible photocopy submitted",
+      "None of the three specified documents available",
+      "Missing Aadhaar card of Guarantor — all three Aadhaar copies are mandatory",
+      "Name spelling mismatch between Aadhaar and other submitted documents",
+      "Address on Aadhaar does not reflect Delhi residence"
+    ],
+    "delhi_offices": [
+      "OFF-CSC-DWARKA-001",
+      "OFF-CSC-ROHINI-002"
+    ]
+  },
+  {
+    "id": "DOC-INCOME-CERT",
+    "name": "Income Certificate",
+    "name_hindi": "आय प्रमाण पत्र",
+    "issuing_authority": "Sub-Divisional Magistrate (SDM)",
+    "alternate_authority": "Tehsildar Office",
+    "online_portal": "https://edistrict.delhigovt.nic.in/",
+    "prerequisites": [
+      "DOC-AADHAAR",
+      "DOC-RATION-CARD",
+      "DOC-SALARY-SLIP"
+    ],
+    "fee": "10",
+    "fee_bpl": "0",
+    "processing_time": "7-15 days",
+    "validity_period": "6 months from issue date",
+    "format_requirements": [
+      "Must be on official letterhead with office seal",
+      "Should contain financial year mentioned",
+      "Must have officer's signature and designation",
+      "QR code for verification (if issued after 2023)",
+      "Only PDF file, size up to 100kb (for PMAY-U 2.0 upload)",
+      "Must be ORIGINAL (not photocopy)",
+      "Must state monthly income from ALL sources",
+      "Must be issued by SDM or authorized Revenue Department officer",
+      "Must be on official letterhead with officer's signature, designation, and official seal",
+      "Family annual income must not exceed ₹3,00,000",
+      "Must be issued by the SDM of the concerned area",
+      "Should establish that annual income of parents/guardian is below ₹5,00,000/-",
+      "Official letterhead with office seal and SDM signature",
+      "Alternative: Form No. 16 of Co-Borrower from employer"
+    ],
+    "common_mistakes": [
+      "Income figure doesn't match salary slips",
+      "Certificate older than 6 months",
+      "Missing SDM/Tehsildar signature",
+      "Wrong income head mentioned (agricultural vs non-agricultural)",
+      "File size exceeds 100kb PDF limit when uploading to portal",
+      "Submitting photocopy instead of original income certificate",
+      "Income certificate older than 6 months",
+      "Income from all sources not fully declared",
+      "Missing SDM/authorized officer's signature or seal",
+      "Certificate showing annual income exceeding ₹3,00,000",
+      "Income certificate expired (older than 6 months)",
+      "Income figure exceeds ₹5,00,000/- threshold",
+      "Certificate issued by incorrect SDM jurisdiction",
+      "Form 16 not reflecting total family income from all sources"
+    ],
+    "delhi_offices": [
+      "OFF-SDM-CENTRAL-001",
+      "OFF-TEHSIL-SOUTH-002"
+    ]
+  },
+  {
+    "id": "DOC-DOMICILE",
+    "name": "Domicile Certificate",
+    "name_hindi": "मूल निवास प्रमाण पत्र",
+    "issuing_authority": "Sub-Divisional Magistrate (SDM)",
+    "alternate_authority": "Tehsildar Office",
+    "online_portal": "https://edistrict.delhigovt.nic.in/",
+    "prerequisites": [
+      "DOC-AADHAAR",
+      "DOC-RENT-AGREEMENT",
+      "DOC-ELECTRICITY-BILL"
+    ],
+    "fee": "10",
+    "fee_bpl": "0",
+    "processing_time": "10-20 days",
+    "validity_period": "Lifetime",
+    "format_requirements": [
+      "Proof of residence for minimum 3 years",
+      "School leaving certificate or voter ID showing Delhi address",
+      "Must be on official letterhead",
+      "Officer signature and seal mandatory",
+      "Any ONE of the following is accepted: Domicile Certificate issued by area SDM, Ration Card, EPIC (Voter ID), Driving License, Passport, Extract from Electoral Roll, or Aadhaar Card",
+      "Document must clearly establish Delhi residency for the last 3 years",
+      "Must carry ORIGINAL at the time of application submission for verification",
+      "For minor patients: Birth Certificate of the patient AND domicile proof of either parent required",
+      "Any one or more of the following is accepted: Voter ID Card, PAN Card, Ration Card, Driving License, Aadhaar Card, Passport, Insurance Policy Documents, Utility Bills (Electricity/Water/Telephone/Gas Connection receipt), Bank Passbook (with same address), Property Documents, Rent Agreements (covering last 5 years), or any other document clearly showing 5+ years residence in Delhi",
+      "Document(s) must collectively establish continuous 5-year residency in Delhi prior to the date of application",
+      "Must be self-attested, scanned, and uploaded on e-District portal",
+      "If documentary proof is unavailable: statements of any 2 witnesses from the approved list must be submitted before the District WCD Officer. Witnesses must provide photo ID, residence proof, contact details, and length of stay in the area. Home verification may be conducted."
+    ],
+    "common_mistakes": [
+      "Residence proof doesn't cover required duration",
+      "Address mismatch between Aadhaar and proof documents",
+      "Rent agreement not notarized",
+      "Utility bills in different person's name",
+      "Document does not cover the full 3-year residency period",
+      "Address on domicile proof does not match current Delhi residence",
+      "Not carrying original document for verification (only photocopy submitted)",
+      "For minors: submitting only the child's domicile proof without parent's proof",
+      "Using expired or cancelled Voter ID / Driving License",
+      "Documents do not cover the full 5-year continuous residency period",
+      "Address on residence proof does not match the address mentioned in the application",
+      "Utility bills or rent agreements not covering the required 5-year period",
+      "Witness statements not from the approved list of witness categories",
+      "Witnesses unable to provide photo ID, residence proof, or contact details"
+    ],
+    "delhi_offices": [
+      "OFF-SDM-CENTRAL-001",
+      "OFF-SDM-NORTH-003"
+    ]
+  },
+  {
+    "id": "DOC-BANK-PASSBOOK",
+    "name": "Bank Passbook/Statement",
+    "name_hindi": "बैंक पासबुक/विवरण",
+    "issuing_authority": "Bank Branch",
+    "alternate_authority": "Online banking portal",
+    "online_portal": null,
+    "prerequisites": [
+      "DOC-AADHAAR",
+      "DOC-PAN"
+    ],
+    "fee": "0",
+    "fee_bpl": "0",
+    "processing_time": "Instant (for passbook), 1-2 days (for statement)",
+    "validity_period": "3 months (for scheme applications)",
+    "format_requirements": [
+      "Must show account holder name clearly",
+      "IFSC code and branch details visible",
+      "Account must be active (transactions in last 3 months)",
+      "For statements: bank seal/signature on each page",
+      "Account must be active and linked with Aadhaar",
+      "Account number, bank name, branch and IFSC code required for PMAY-U 2.0",
+      "Account must be singly-operated (not joint account)",
+      "Account must be Aadhaar-linked",
+      "Account must be with any bank in NCT of Delhi only (not outside Delhi)",
+      "Account must be active (not closed, frozen, or dormant)",
+      "DBT payments are Aadhaar-based; pension is credited only to Aadhaar-linked accounts via NPCI mapping",
+      "Must show account activity for the last 1 year",
+      "IFSC code and branch details should be visible",
+      "Address on passbook should match Delhi residence",
+      "Must be self-attested, scanned, and uploaded on e-District portal",
+      "Statement of Bank Account for the last six months of the Borrower and Co-Borrower",
+      "Signature Identification of Borrower and Co-Borrower from the Bank",
+      "Statement of Assets and Liabilities of Borrower/Co-Borrower",
+      "Undertaking for non-closing of bank account till completion of repayment (Post-Sanction)"
+    ],
+    "common_mistakes": [
+      "Zero balance account",
+      "Name spelling differs from Aadhaar",
+      "Statement older than 3 months",
+      "Joint account without primary holder clarification",
+      "Bank account not linked with Aadhaar",
+      "Joint account submitted instead of singly-operated account",
+      "Bank account not linked to Aadhaar via NPCI",
+      "Bank account is with a branch outside NCT of Delhi",
+      "Bank account has become inactive/dormant due to non-operation – pension credits will fail",
+      "Multiple Aadhaar-linked accounts causing NPCI mapping confusion",
+      "Passbook not updated for last 1 year of transactions",
+      "Statement older than 1 year or covering less than 1 year",
+      "Name on passbook does not match Aadhaar",
+      "Bank address is outside NCT of Delhi",
+      "Bank statement older than 6 months",
+      "Missing signature identification from the bank",
+      "Statement not covering full 6-month period",
+      "Assets and liabilities statement incomplete",
+      "Bank account closed during repayment period without prior intimation"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-BIRTH-CERT",
+    "name": "Birth Certificate",
+    "name_hindi": "जन्म प्रमाण पत्र",
+    "issuing_authority": "Municipal Corporation of Delhi (MCD)",
+    "alternate_authority": "Registrar of Births and Deaths",
+    "online_portal": "https://mcdonline.nic.in/",
+    "prerequisites": [],
+    "fee": "0",
+    "fee_bpl": "0",
+    "processing_time": "7-15 days (late registration: 30 days)",
+    "validity_period": "Lifetime",
+    "format_requirements": [
+      "Must contain child's full name as registered",
+      "Parents' names must be complete",
+      "Place of birth (hospital name or address)",
+      "Registration number and date",
+      "Registrar's signature and seal",
+      "Required ONLY for minor patients (below 18 years)",
+      "Must clearly state the child's name, date of birth, and parents' names",
+      "Must be issued by competent authority (Municipal Corporation / Registrar)",
+      "Must be accompanied by domicile proof of either parent",
+      "Any ONE of the following is accepted: Birth Certificate (MCD/Registrar of Births & Deaths), School Leaving Certificate (last class attended), Matriculation/10th Class Certificate, Hospital Discharge Slip at birth, Voter ID Card, PAN Card, Driving License, Aadhaar Card, Passport, Age Assessment Medical Certificate, or any Govt./Govt.-recognized document stating date and place of birth",
+      "Must clearly state the applicant's date of birth or age",
+      "Must be self-attested, scanned, and uploaded on e-District portal",
+      "Applicant must be 18 years or above as per the age proof document",
+      "Copy of Birth Certificate or valid Age Proof document",
+      "Must establish the date of birth of the applicant",
+      "Self-attested copy required"
+    ],
+    "common_mistakes": [
+      "Late registration without affidavit",
+      "Name spelling inconsistent with school records",
+      "Missing parents' details",
+      "Hospital discharge summary not attached (for late registration)",
+      "Not submitting birth certificate for minor patients",
+      "Birth certificate not accompanied by parent's domicile proof",
+      "Name or date of birth mismatch between birth certificate and other documents",
+      "Using hospital discharge summary instead of official birth certificate",
+      "Date of birth on age proof does not match Aadhaar or other submitted documents",
+      "Age proof document does not clearly state the date of birth",
+      "Applicant is below 18 years of age as per the document submitted",
+      "Using an unofficial or unrecognized document as age proof",
+      "Date of birth mismatch with other submitted documents",
+      "Document not self-attested"
+    ],
+    "delhi_offices": [
+      "OFF-MCD-CENTRAL",
+      "OFF-MCD-SOUTH"
+    ]
+  },
+  {
+    "id": "DOC-PROPERTY-DOCS",
+    "name": "Land Ownership / Property Documents",
+    "name_hindi": "भूमि स्वामित्व / संपत्ति दस्तावेज",
+    "issuing_authority": "Sub-Registrar Office / Revenue Department",
+    "alternate_authority": "Tehsildar Office / Patwari",
+    "online_portal": null,
+    "prerequisites": [],
+    "fee": "Varies by State/UT",
+    "fee_bpl": "Varies by State/UT",
+    "processing_time": "Varies by State/UT",
+    "validity_period": "As per registration",
+    "format_requirements": [
+      "Must establish clear ownership of land by the beneficiary",
+      "Only PDF file, size up to 1mb (for BLC vertical upload on PMAY-U 2.0 portal)",
+      "Must include property registration details",
+      "Land should be in the name of female head or joint ownership with male member"
+    ],
+    "common_mistakes": [
+      "Land title not clear or disputed",
+      "Property documents not in beneficiary's name",
+      "File size exceeds 1mb PDF limit when uploading to portal",
+      "Land ownership not matching with Aadhaar address"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-SELF-DECLARATION",
+    "name": "Self-Declaration / Affidavit",
+    "name_hindi": "स्व-घोषणा / शपथ पत्र",
+    "issuing_authority": "Notary Public / Executive Magistrate",
+    "alternate_authority": "Self-attested (where applicable)",
+    "online_portal": null,
+    "prerequisites": [
+      "DOC-AADHAAR"
+    ],
+    "fee": "Varies (typically ₹10-100 for notarization)",
+    "fee_bpl": "0",
+    "processing_time": "Instant (notarization)",
+    "validity_period": "Valid for the application period",
+    "format_requirements": [
+      "Must state that beneficiary does not own a pucca house anywhere in India",
+      "Must declare no benefits availed from any Central/State/Local housing scheme in last 20 years",
+      "Must be signed by the applicant",
+      "Notarization or attestation by competent authority where required by State/UT",
+      "Must declare: patient's disease, hospital where treatment is being done, approximate expenditure as certified by hospital",
+      "Must declare total family monthly income with specific source details",
+      "Must include family details table: spouse and children up to 21 years (name, age, relation, profession, monthly income)",
+      "Must declare inability to bear treatment expenses",
+      "Must acknowledge that false statements are punishable under relevant Acts and laws",
+      "Must include verification clause with date and place (New Delhi)",
+      "Must be signed by TWO witnesses with their names and addresses",
+      "Deponent rules: Minor patient → Father signs; Housewife patient → Husband signs; Adult self-dependent → Patient signs; Adult dependent on father → Father signs (+ separate affidavit of dependency required)",
+      "Must be in the format available on the e-District portal",
+      "Must declare annual income from all sources (including rent, interest, dividends, farm earnings, property sale proceeds, etc.)",
+      "Annual income declared must be less than ₹1,00,000",
+      "No recommendation or attestation from any external authority is required; only self-declaration by applicant",
+      "Must be self-attested, scanned, and uploaded on e-District portal",
+      "Must be in the prescribed format (proforma attached with the RGSRY application form)",
+      "Part D: Declaration of scheme compliance and document authenticity",
+      "Part E: Undertaking regarding previous loan status – must select Option (a) 'No Previous Loan' or Option (b) 'Previous Loan Details' with full disclosure of outstanding amounts",
+      "Part E must include: date of birth, education qualification, cooperative society membership status, and final affirmation of truthfulness",
+      "Must include self-attested photograph pasted with half signature on photograph and half on paper",
+      "Must declare that neither the applicant, spouse, nor any family member including adult children have taken or applied for loans from any of the listed 9 categories of institutions (unless fully repaid)",
+      "Must declare that no family member is a member of any Co-operative Society/Registered Institution that has applied for or taken loan from the listed departments",
+      "Affidavit stating that no loan has been availed from any Government Agency for the same purpose",
+      "Must state that no member of the family or dependent has availed the loan facility under the scheme of this Corporation, Government of India, or any other financial institution for the said purpose",
+      "Must be notarized or attested as applicable"
+    ],
+    "common_mistakes": [
+      "Declaration not covering all family members (husband, wife, unmarried children)",
+      "Missing notary stamp or seal",
+      "Not declaring previous housing benefits availed",
+      "Incorrect factual statements leading to disqualification",
+      "Wrong deponent signing (e.g., patient signing when they are a dependent minor)",
+      "Missing witness signatures or incomplete witness details",
+      "Family income details not matching the income certificate",
+      "Not disclosing all sources of income",
+      "Missing affidavit of dependency when adult patient is dependent on father",
+      "Incomplete family details table",
+      "Not acknowledging the penal consequences of false statements",
+      "Not using the prescribed format available on the e-District portal",
+      "Declaring income that exceeds the ₹1,00,000 annual limit",
+      "Not disclosing all sources of income (rent, interest, dividends, farm earnings, property sale proceeds, etc.)",
+      "False income declaration – punishable with penal action, penalty, pension stoppage, and recovery of amount",
+      "Not using the prescribed proforma format",
+      "Checking Option (a) 'No Previous Loan' when a previous loan exists",
+      "Not disclosing spouse's or adult children's loans from listed institutions",
+      "Missing self-attested photograph with half-signature placement",
+      "Not acknowledging penal consequences of false information",
+      "Concealing cooperative society membership",
+      "Not covering all family members in the declaration",
+      "Previously availed loan from another government scheme for the same purpose not disclosed"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-FOOD-SECURITY-CARD",
+    "name": "National Food Security Card",
+    "name_hindi": "राष्ट्रीय खाद्य सुरक्षा कार्ड",
+    "issuing_authority": "Department of Food, Supplies and Consumer Affairs, GNCTD",
+    "alternate_authority": "Circle Office / Food & Supply Office",
+    "online_portal": "https://nfs.delhi.gov.in/",
+    "prerequisites": [
+      "DOC-AADHAAR"
+    ],
+    "fee": "0",
+    "fee_bpl": "0",
+    "processing_time": "15-30 days",
+    "validity_period": "Until cancelled or updated by issuing authority",
+    "format_requirements": [
+      "Must contain names of all eligible family members",
+      "Must have valid card number",
+      "Address must be within NCT of Delhi",
+      "Must be current and not expired/cancelled"
+    ],
+    "common_mistakes": [
+      "Card not updated after change of address within Delhi",
+      "Family member names missing or spelled incorrectly",
+      "Card cancelled due to non-collection of rations for extended period",
+      "Carrying photocopy without original for verification"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-ESTIMATE-CERT",
+    "name": "Estimate Certificate (Part B of DAK Form)",
+    "name_hindi": "अनुमानित व्यय प्रमाण पत्र (डीएके फॉर्म का भाग बी)",
+    "issuing_authority": "Treating Doctor of the concerned Government Hospital",
+    "alternate_authority": null,
+    "online_portal": null,
+    "prerequisites": [],
+    "fee": "0",
+    "fee_bpl": "0",
+    "processing_time": "Depends on hospital processing (typically 1-7 days)",
+    "validity_period": "Valid for the current application/treatment period",
+    "format_requirements": [
+      "Must be filled by the treating doctor of the concerned Government Hospital",
+      "Must contain: patient's name, age, hospital name, OPD/Registration No., father/husband's name, address, diagnosis of disease, and financial assistance required",
+      "Must include treatment cost breakdown: (a) operation details and estimated expenditure, (b) cyclical treatment details (chemotherapy/dialysis) with per-month or per-cycle cost and item-wise expenditure, (c) any other expenditure details",
+      "Must be signed by THREE authorities: (1) Treating Doctor, (2) Head of Department, (3) Medical Superintendent with Official Seal",
+      "One passport-size photograph of the patient must be pasted on the Estimate Certificate, attested by the treating doctor",
+      "Must be submitted in ORIGINAL (not photocopy)"
+    ],
+    "common_mistakes": [
+      "Missing signature of Head of Department or Medical Superintendent",
+      "Missing official seal of Medical Superintendent",
+      "Photograph not attested by treating doctor",
+      "Incomplete treatment cost breakdown (missing item-wise expenditure for cyclical treatments)",
+      "Estimate Certificate not filled by the treating doctor (filled by patient instead)",
+      "Submitting photocopy instead of original"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-PHOTOGRAPHS",
+    "name": "Attested Passport-Size Photographs of Patient",
+    "name_hindi": "रोगी के सत्यापित पासपोर्ट आकार के फोटो",
+    "issuing_authority": "Any photo studio (attestation by Medical Superintendent / Treating Doctor / Consultant of Government Hospital)",
+    "alternate_authority": null,
+    "online_portal": null,
+    "prerequisites": [],
+    "fee": "Nominal (photo studio charges)",
+    "fee_bpl": "Nominal",
+    "processing_time": "Instant (photographs); attestation depends on hospital availability",
+    "validity_period": "Must be recent photographs",
+    "format_requirements": [
+      "Two passport-size photographs of the patient required",
+      "Must be duly attested by the Medical Superintendent or treating doctor/consultant of the concerned Government Hospital",
+      "One photograph must be pasted on the Estimate Certificate (Part B)",
+      "One photograph must be pasted on the Application Form (Part A)",
+      "One passport-size photograph of the applicant",
+      "Must be recent and clearly identifiable",
+      "Must be scanned and uploaded on the e-District portal during application",
+      "Two passport-size photographs required",
+      "Must be attested",
+      "One photograph to be pasted on the self-declaration (Part E) with half signature on photograph and half on paper",
+      "Four passport-size photographs each of the Borrower, Co-Borrower, and Guarantor",
+      "One full-size photograph of the Borrower if the applicant belongs to PwD category",
+      "Photographs should be recent and clearly identifiable"
+    ],
+    "common_mistakes": [
+      "Photographs not attested by hospital authority",
+      "Only one photograph submitted instead of two",
+      "Photographs pasted on wrong form sections",
+      "Photographs not recent or not clearly identifiable",
+      "Photograph too old or not clearly identifiable",
+      "Photograph not in passport-size format",
+      "Blurred or low-resolution scan uploaded on the portal",
+      "Photographs not attested",
+      "Self-attested photograph on Part E not done correctly (half-signature placement)",
+      "Old or unclear photographs",
+      "Insufficient number of photographs (need 4 each for borrower, co-borrower, and guarantor)",
+      "Missing full-size photograph for PwD category applicant"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-TREATMENT-RECORDS",
+    "name": "Treatment Records (Photocopies)",
+    "name_hindi": "उपचार के रिकॉर्ड (फोटोकॉपी)",
+    "issuing_authority": "Concerned Government Hospital",
+    "alternate_authority": null,
+    "online_portal": null,
+    "prerequisites": [],
+    "fee": "0 (hospital records); nominal charges for photocopying",
+    "fee_bpl": "0",
+    "processing_time": "Instant to 1-2 days (depends on hospital records department)",
+    "validity_period": "Must be current treatment records relevant to the application",
+    "format_requirements": [
+      "Photocopies of all treatment records from the Government Hospital",
+      "Must include diagnosis, treatment history, and ongoing treatment details",
+      "Records must be from a Government Hospital (Delhi Govt., Central Govt., AIIMS, Autonomous Institutes, or Local Bodies)"
+    ],
+    "common_mistakes": [
+      "Submitting treatment records from private hospitals (not eligible)",
+      "Incomplete records missing diagnosis or treatment details",
+      "Records not matching the disease mentioned in the Estimate Certificate"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-OPD-SLIP",
+    "name": "OPD Slip",
+    "name_hindi": "ओपीडी पर्ची",
+    "issuing_authority": "Outpatient Department of the concerned Government Hospital",
+    "alternate_authority": null,
+    "online_portal": null,
+    "prerequisites": [],
+    "fee": "Nominal (OPD registration charges)",
+    "fee_bpl": "0",
+    "processing_time": "Instant (at time of hospital visit)",
+    "validity_period": "Valid for the current treatment/visit",
+    "format_requirements": [
+      "Must be from the Government Hospital where treatment is being sought",
+      "Must contain patient's name, registration number, department, and date of visit",
+      "Photocopy to be attached with the application"
+    ],
+    "common_mistakes": [
+      "OPD slip from a different hospital than the one mentioned in the Estimate Certificate",
+      "Illegible or damaged OPD slip",
+      "OPD slip not matching the patient's name in the application"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-MARITAL-STATUS-PROOF",
+    "name": "Proof of Widowhood / Divorce / Separation / Abandonment / Destitution",
+    "name_hindi": "वैवाहिक स्थिति प्रमाण (विधवापन / तलाक / अलगाव / परित्याग / निराश्रयता)",
+    "issuing_authority": "Varies – Registrar of Deaths (death certificate), Family Court (divorce decree), Police Station / Crime Against Women Cell / DCW / NCW / FCC / Mahila Panchayat (separation/abandonment documentation)",
+    "alternate_authority": null,
+    "online_portal": null,
+    "prerequisites": [],
+    "fee": "Varies by document type",
+    "fee_bpl": "0 (for death certificate and government-issued documents)",
+    "processing_time": "Varies by document type and legal proceedings",
+    "validity_period": "Lifetime / As per legal proceedings",
+    "format_requirements": [
+      "For widows: Death Certificate of husband issued by Registrar of Deaths",
+      "For divorced women: Divorce Decree from competent court",
+      "For separated women: Separation Paper or documentation of ongoing divorce proceedings",
+      "For divorced/separated/abandoned/deserted women: any of the following are admissible – divorce decree, legal proceedings including reports from Police Station, Crime Against Women Cell, Family Counselling Centres (FCC), Delhi Commission for Women (DCW), National Commission for Women (NCW), or Mahila Panchayats",
+      "For destitute women: document establishing destitute status",
+      "Must be self-attested, scanned, and uploaded on e-District portal"
+    ],
+    "common_mistakes": [
+      "Death certificate of husband not issued by Registrar of Deaths (using hospital certificate instead)",
+      "Divorce decree not from a competent court",
+      "Separation/abandonment documentation insufficient or not from an admissible authority",
+      "Submitting documents in a language not recognized by the portal without translation"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-CASTE-CERT",
+    "name": "Caste / Religion Certificate",
+    "name_hindi": "जाति / धर्म प्रमाण पत्र",
+    "issuing_authority": "Competent Authority (for SC/ST certificate) / Religious Institution (for Minority self-declaration verification)",
+    "alternate_authority": "SDM Office (for caste certificate)",
+    "online_portal": "https://edistrict.delhigovt.nic.in/",
+    "prerequisites": [
+      "DOC-AADHAAR"
+    ],
+    "fee": "Varies (typically free for SC/ST certificates)",
+    "fee_bpl": "0",
+    "processing_time": "7-15 days (for SC/ST certificate from SDM)",
+    "validity_period": "Lifetime (SC/ST certificate); as per declaration (minority)",
+    "format_requirements": [
+      "For SC/ST category: Caste certificate issued by competent authority (SDM/Tehsildar)",
+      "For Minority category: Self-declaration of religion verified by religious institution",
+      "Must be self-attested, scanned, and uploaded on e-District portal",
+      "SC/ST/OBC: Caste Certificate issued by the concerned area SDM/DC",
+      "Minority: Affidavit declaring religion (on stamp paper)",
+      "PwD: Disability Certificate certifying 40% or more disability, issued by the Medical Board of a Government Hospital, Delhi"
+    ],
+    "common_mistakes": [
+      "SC/ST certificate not issued by competent authority",
+      "Minority self-declaration not verified by a religious institution",
+      "Certificate details not matching Aadhaar or other submitted documents",
+      "Caste certificate issued by wrong SDM jurisdiction",
+      "Minority affidavit not on proper stamp paper",
+      "PwD disability certificate showing less than 40% disability",
+      "PwD certificate not issued by Medical Board of a Government Hospital in Delhi"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-EDUCATION-PROOF",
+    "name": "Education Proof (Certificate / Marksheet)",
+    "name_hindi": "शिक्षा प्रमाण (प्रमाण पत्र / अंकपत्र)",
+    "issuing_authority": "Educational Institution / Board of Education / University",
+    "alternate_authority": null,
+    "online_portal": null,
+    "prerequisites": [],
+    "fee": "Varies",
+    "fee_bpl": "0",
+    "processing_time": "Varies by institution",
+    "validity_period": "Lifetime",
+    "format_requirements": [
+      "Certificate or marksheet of highest qualification attained",
+      "For school/college dropouts: proof of last class attended",
+      "For passed-out candidates from Govt./authorized technical/professional institutes: certificate from the recognized institute",
+      "For artisans: any relevant skill/trade certificate",
+      "Copy of Mark Sheet of the last examination on the basis of which the applicant has obtained admission in the present/particular course",
+      "Must clearly show marks/grades obtained",
+      "Self-attested copy required"
+    ],
+    "common_mistakes": [
+      "Education proof not matching the applicant category claimed in the application",
+      "Certificate from an institute not recognized by the Government or its authorized undertakings",
+      "Missing or incomplete certificate/marksheet",
+      "Submitting mark sheet of an examination other than the one qualifying for admission",
+      "Mark sheet not self-attested",
+      "Illegible or incomplete copies"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-WORKSITE-DETAILS",
+    "name": "Work Site Details & Proof",
+    "name_hindi": "कार्यस्थल विवरण एवं प्रमाण",
+    "issuing_authority": "Varies – Sub-Registrar (ownership documents), Landlord (rent agreement/NOC), Electricity Company (bills)",
+    "alternate_authority": null,
+    "online_portal": null,
+    "prerequisites": [],
+    "fee": "Varies by document type",
+    "fee_bpl": "Varies",
+    "processing_time": "Varies by document type",
+    "validity_period": "Must be current and valid at time of application",
+    "format_requirements": [
+      "Must include one or more of: Proof of ownership/possession of work premises, Rent Agreement for work premises, No Objection Certificate (NOC) from Owner/Landlord, Electricity Bill of work premises",
+      "Worksite must be located within NCT of Delhi",
+      "For units in non-conforming areas: must additionally provide NOC from HPC and MCL",
+      "For professional/commercial activities: MCD Registration Certificate for the concerned trade"
+    ],
+    "common_mistakes": [
+      "Worksite located outside NCT of Delhi",
+      "Rent agreement expired or not covering the proposed project period",
+      "NOC from landlord missing for rented premises",
+      "Work premises electricity bill not in applicant's or landlord's name",
+      "Activity proposed in non-conforming area without required HPC NOC and MCL"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-ELECTRICITY-BILL",
+    "name": "Electricity Bill (Residence)",
+    "name_hindi": "बिजली बिल (निवास)",
+    "issuing_authority": "Electricity Distribution Company (BSES Rajdhani / BSES Yamuna / TPDDL / NDPL)",
+    "alternate_authority": null,
+    "online_portal": null,
+    "prerequisites": [],
+    "fee": "0 (bill is part of regular utility service)",
+    "fee_bpl": "0",
+    "processing_time": "Monthly billing cycle",
+    "validity_period": "Must be recent (typically within last 3 months)",
+    "format_requirements": [
+      "Must be a residential electricity bill showing the applicant's Delhi address",
+      "Used as address proof for the applicant",
+      "Should clearly show the consumer name and address"
+    ],
+    "common_mistakes": [
+      "Electricity bill not in applicant's name",
+      "Bill for a non-Delhi address",
+      "Very old bill (more than 3 months)",
+      "Commercial electricity bill submitted instead of residential"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-MCD-REGISTRATION",
+    "name": "MCD Registration Certificate / HPC NOC & MCL",
+    "name_hindi": "एमसीडी पंजीकरण प्रमाण पत्र / एचपीसी अनापत्ति प्रमाण पत्र एवं एमसीएल",
+    "issuing_authority": "Municipal Corporation of Delhi (MCD) / High Power Committee (Industries Department, Govt. of Delhi)",
+    "alternate_authority": null,
+    "online_portal": null,
+    "prerequisites": [],
+    "fee": "Varies as per MCD/Industries Department norms",
+    "fee_bpl": "Varies",
+    "processing_time": "Varies (typically 15-30 days for MCD registration; HPC NOC may take longer)",
+    "validity_period": "As per MCD registration period / HPC NOC validity",
+    "format_requirements": [
+      "For Shop/Business/Professions: MCD Registration Certificate for the concerned trade",
+      "For Industrial unit in non-conforming area: NOC from High Power Committee (HPC) constituted by Industries Department, Govt. of Delhi AND Municipal Corporation License (MCL) for the respective industry",
+      "For professional/commercial activities in non-conforming areas: additionally, Registration Certificate from MCD for the concerned trade",
+      "Must be valid and current at time of loan application"
+    ],
+    "common_mistakes": [
+      "MCD Registration not obtained before applying for loan",
+      "HPC NOC not obtained for unit in non-conforming area",
+      "MCL expired or not covering the specific industry proposed",
+      "Trade registration does not match the proposed business activity in the application"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-SURETY-CONSENT",
+    "name": "Consent Letter of Surety / Guarantor",
+    "name_hindi": "ज़मानतदार / गारंटर की सहमति पत्र",
+    "issuing_authority": "Government servant (for Option A) / Bank (for Option B)",
+    "alternate_authority": null,
+    "online_portal": null,
+    "prerequisites": [],
+    "fee": "0",
+    "fee_bpl": "0",
+    "processing_time": "Varies (depends on availability of guarantor)",
+    "validity_period": "Valid for the loan tenure (5 years)",
+    "format_requirements": [
+      "Consent letter from the surety/guarantor agreeing to guarantee the loan",
+      "Option A: Surety from any Govt. servant working on a non-transferable post in Delhi in any office of State Government/Central Government or its autonomous bodies/undertakings",
+      "Option B: Surety/guarantee as per commercial bank procedures",
+      "Must include surety's/guarantor's ID proof and address proof",
+      "Surety remains liable for the entire loan tenure and any default by the borrower"
+    ],
+    "common_mistakes": [
+      "Guarantor is on a transferable post (not valid under Option A)",
+      "Guarantor is not a Delhi-based government servant (for Option A)",
+      "Consent letter missing guarantor's ID and address proof",
+      "Guarantor unaware of their liability in case of borrower default",
+      "No surety/guarantor arranged at all"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-EQUITY-PROOF",
+    "name": "Proof of Equity / Self-Contribution",
+    "name_hindi": "स्वयं के योगदान का प्रमाण",
+    "issuing_authority": "Bank (for bank statement) / Notary Public (for affidavit)",
+    "alternate_authority": null,
+    "online_portal": null,
+    "prerequisites": [],
+    "fee": "0 (bank statement); varies for affidavit notarization",
+    "fee_bpl": "0",
+    "processing_time": "Instant (bank statement); 1 day (affidavit)",
+    "validity_period": "Must be current at time of application",
+    "format_requirements": [
+      "Bank statement or affidavit showing capacity to contribute the required equity",
+      "General category: minimum 10% of loan amount demanded from DKVIB",
+      "Weaker sections (SC/ST/OBC/Physically Handicapped/Women/Ex-Servicemen): minimum 5% of loan amount demanded from DKVIB",
+      "Must clearly demonstrate availability of the self-contribution amount"
+    ],
+    "common_mistakes": [
+      "Bank statement does not show sufficient balance for the required contribution percentage",
+      "Claiming weaker section reduced contribution (5%) without proper category certificate",
+      "Old bank statement that does not reflect current financial capacity",
+      "Affidavit not notarized"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-ADMISSION-PROOF",
+    "name": "Proof of Admission / Payment Schedule",
+    "name_hindi": "प्रवेश प्रमाण / भुगतान अनुसूची",
+    "issuing_authority": "Educational Institution / University",
+    "alternate_authority": null,
+    "online_portal": null,
+    "prerequisites": [],
+    "fee": "0",
+    "fee_bpl": "0",
+    "processing_time": "Varies by institution",
+    "validity_period": "Current academic session",
+    "format_requirements": [
+      "Proof of Admission to the recognized course/institute (admission letter / enrolment confirmation)",
+      "Copy of Schedule of Payment for the courses or Demand Notice from the Institution/University",
+      "Copies of Foreign Expenses Permit (if applicable for studies abroad)",
+      "Copies of letter confirming Scholarship, Freeship, Studentship (if any)"
+    ],
+    "common_mistakes": [
+      "Admission proof does not match the course mentioned in application",
+      "Payment schedule/demand notice missing or for incorrect academic year",
+      "Foreign expenses permit not submitted for abroad studies",
+      "Institution not recognized by Central/State Government or UGC/AICTE"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-RATION-CARD",
+    "name": "Ration Card",
+    "name_hindi": "राशन कार्ड",
+    "issuing_authority": "Department of Food, Supplies and Consumer Affairs, GNCTD",
+    "alternate_authority": "Circle Food Office",
+    "online_portal": "https://nfs.delhi.gov.in/",
+    "prerequisites": [
+      "DOC-AADHAAR"
+    ],
+    "fee": "0",
+    "fee_bpl": "0",
+    "processing_time": "15-30 days",
+    "validity_period": "Until cancelled or updated",
+    "format_requirements": [
+      "Must contain names of all eligible family members",
+      "Must have valid card number"
+    ],
+    "common_mistakes": [
+      "Card not updated after change of address",
+      "Missing family member names"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-SALARY-SLIP",
+    "name": "Salary Slip",
+    "name_hindi": "वेतन पर्ची",
+    "issuing_authority": "Employer",
+    "alternate_authority": null,
+    "online_portal": null,
+    "prerequisites": [],
+    "fee": "0",
+    "fee_bpl": "0",
+    "processing_time": "Monthly",
+    "validity_period": "3 months (for income proof)",
+    "format_requirements": [
+      "Must show gross and net salary",
+      "Must have employer signature/seal"
+    ],
+    "common_mistakes": [
+      "Salary slip older than 3 months",
+      "Missing employer signature"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-RENT-AGREEMENT",
+    "name": "Rent Agreement",
+    "name_hindi": "किराया समझौता",
+    "issuing_authority": "Notary Public / Sub-Registrar",
+    "alternate_authority": "Self-attested (for short-term)",
+    "online_portal": null,
+    "prerequisites": [
+      "DOC-AADHAAR"
+    ],
+    "fee": "Varies (stamp duty)",
+    "fee_bpl": "Varies",
+    "processing_time": "1-7 days",
+    "validity_period": "As per agreement terms",
+    "format_requirements": [
+      "Must be on stamp paper",
+      "Must be notarized or registered"
+    ],
+    "common_mistakes": [
+      "Agreement expired",
+      "Not notarized",
+      "Landlord details missing"
+    ],
+    "delhi_offices": []
+  },
+  {
+    "id": "DOC-PAN",
+    "name": "PAN Card",
+    "name_hindi": "पैन कार्ड",
+    "issuing_authority": "Income Tax Department",
+    "alternate_authority": "NSDL/UTIITSL",
+    "online_portal": "https://www.onlineservices.nsdl.com/paam/endUserRegisterContact.html",
+    "prerequisites": [
+      "DOC-AADHAAR"
+    ],
+    "fee": "110",
+    "fee_bpl": "110",
+    "processing_time": "15-30 days",
+    "validity_period": "Lifetime",
+    "format_requirements": [
+      "10-character alphanumeric code",
+      "Must have photograph"
+    ],
+    "common_mistakes": [
+      "Name mismatch with Aadhaar",
+      "Old photograph"
+    ],
+    "delhi_offices": [
+      "OFF-CSC-ROHINI-002"
+    ]
+  },
+  {
+    "id": "DOC-VOTER-ID",
+    "name": "Voter ID Card (EPIC)",
+    "name_hindi": "मतदाता पहचान पत्र",
+    "issuing_authority": "Election Commission of India",
+    "alternate_authority": "Booth Level Officer",
+    "online_portal": "https://voterportal.eci.gov.in/",
+    "prerequisites": [
+      "DOC-AADHAAR"
+    ],
+    "fee": "0",
+    "fee_bpl": "0",
+    "processing_time": "30-45 days",
+    "validity_period": "Lifetime (update address as needed)",
+    "format_requirements": [
+      "Must have photograph",
+      "Must show correct address"
+    ],
+    "common_mistakes": [
+      "Address not updated",
+      "Expired card"
+    ],
+    "delhi_offices": [
+      "OFF-CSC-ROHINI-002"
+    ]
+  },
+  {
+    "id": "DOC-DEATH-CERT",
+    "name": "Death Certificate",
+    "name_hindi": "मृत्यु प्रमाण पत्र",
+    "issuing_authority": "Municipal Corporation / Registrar of Births and Deaths",
+    "alternate_authority": "Hospital",
+    "online_portal": "https://mcdonline.nic.in/",
+    "prerequisites": [
+      "DOC-AADHAAR"
+    ],
+    "fee": "0",
+    "fee_bpl": "0",
+    "processing_time": "7-15 days",
+    "validity_period": "Lifetime",
+    "format_requirements": [
+      "Must have cause of death",
+      "Must have registrar signature"
+    ],
+    "common_mistakes": [
+      "Late registration",
+      "Missing hospital records"
+    ],
+    "delhi_offices": [
+      "OFF-MCD-CENTRAL"
+    ]
+  },
+  {
+    "id": "DOC-TRADE-LICENSE",
+    "name": "Trade License",
+    "name_hindi": "व्यापार लाइसेंस",
+    "issuing_authority": "Municipal Corporation of Delhi (MCD)",
+    "alternate_authority": null,
+    "online_portal": "https://mcdonline.nic.in/",
+    "prerequisites": [
+      "DOC-AADHAAR",
+      "DOC-PROPERTY-DOCS"
+    ],
+    "fee": "500+",
+    "fee_bpl": "500+",
+    "processing_time": "15-30 days",
+    "validity_period": "1 year (renewable)",
+    "format_requirements": [
+      "Must specify trade category",
+      "Must have MCD seal"
+    ],
+    "common_mistakes": [
+      "License expired",
+      "Wrong trade category"
+    ],
+    "delhi_offices": [
+      "OFF-MCD-CENTRAL"
+    ]
+  },
+  {
+    "id": "DOC-LAND-RECORDS",
+    "name": "Land Records / Jamabandi",
+    "name_hindi": "भूमि रिकॉर्ड / जमाबंदी",
+    "issuing_authority": "Revenue Department / Tehsildar",
+    "alternate_authority": "Patwari",
+    "online_portal": "https://doris.delhigovt.nic.in/",
+    "prerequisites": [],
+    "fee": "10-50",
+    "fee_bpl": "0",
+    "processing_time": "7-15 days",
+    "validity_period": "As per records",
+    "format_requirements": [
+      "Must show ownership details",
+      "Must have tehsildar seal"
+    ],
+    "common_mistakes": [
+      "Outdated records",
+      "Disputed ownership"
+    ],
+    "delhi_offices": [
+      "OFF-TEHSIL-SOUTH-002"
+    ]
+  }
+]

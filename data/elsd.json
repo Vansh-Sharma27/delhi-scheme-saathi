@@ -1,0 +1,817 @@
+{
+  "scheme": {
+    "id": "SCH-DELHI-006",
+    "name": "Education Loan Scheme - Delhi",
+    "name_hindi": "शिक्षा ऋण योजना - दिल्ली",
+    "department": "Delhi SC/ST/OBC/Minorities & Handicapped Financial Development Corporation Ltd. (DSFDC)",
+    "department_hindi": "दिल्ली अनुसूचित जाति/अनुसूचित जनजाति/अन्य पिछड़ा वर्ग/अल्पसंख्यक एवं विकलांग वित्तीय विकास निगम लि. (डीएसएफडीसी)",
+    "level": "state",
+    "description": "The Education Loan Scheme by the Delhi SC/ST/OBC/Minorities and Handicapped Financial Development Corporation Ltd. (DSFDC), Government of Delhi, provides financial assistance to students belonging to Scheduled Castes (SC), Scheduled Tribes (ST), Other Backward Classes (OBC), Minorities, and Persons with Disabilities (PwD) who are permanent residents of Delhi for pursuing professional and technical courses through Government-recognized institutions in India and abroad. The scheme offers need-based loans with a maximum ceiling of ₹7,50,000/- for studies in India and ₹15,00,000/- for studies abroad. Parents/Guardian of the applicant serve as co-borrower, and adequate securities commensurate with loan value are required — either a personal guarantee by a permanent Government/PSU/Bank/Autonomous Body employee, or collateral security in the form of NSC/KVP/FDR, or property mortgage. Loan is to be repaid within 10 years after commencement of repayment or till date of employment, whichever is earlier. No promoter's contribution is required for loans up to ₹4,00,000/-; for loans above ₹4,00,000/-, a contribution of 5% (studies in India) or 15% (studies abroad) is required.",
+    "description_hindi": "दिल्ली अनुसूचित जाति/अनुसूचित जनजाति/अन्य पिछड़ा वर्ग/अल्पसंख्यक एवं विकलांग वित्तीय विकास निगम लिमिटेड (डीएसएफडीसी), दिल्ली सरकार द्वारा शिक्षा ऋण योजना, दिल्ली के स्थायी निवासी अनुसूचित जाति, अनुसूचित जनजाति, अन्य पिछड़ा वर्ग, अल्पसंख्यक एवं दिव्यांगजन श्रेणी के छात्रों को भारत और विदेश में सरकार द्वारा मान्यता प्राप्त संस्थानों से व्यावसायिक और तकनीकी पाठ्यक्रम करने के लिए वित्तीय सहायता प्रदान करती है। यह योजना भारत में अध्ययन के लिए अधिकतम ₹7,50,000/- और विदेश में अध्ययन के लिए ₹15,00,000/- की अधिकतम सीमा तक आवश्यकता आधारित ऋण प्रदान करती है।",
+    "benefits_summary": "Need-based education loan with a ceiling of ₹7,50,000/- for studies in India and ₹15,00,000/- for studies abroad. No promoter's contribution required for loans up to ₹4,00,000/-. For loans above ₹4,00,000/-, a promoter's contribution of 5% (India) / 15% (abroad) is required. Loan repayment period is up to 10 years after commencement of repayment or until the date of employment, whichever is earlier. Processing fee of ₹350/- applicable. The applicant may repay the loan earlier if desired.",
+    "benefits_amount": 750000,
+    "benefits_frequency": "installments",
+    "eligibility": {
+      "min_age": null,
+      "max_age": null,
+      "genders": [
+        "all"
+      ],
+      "categories": [
+        "SC",
+        "ST",
+        "OBC",
+        "Minorities",
+        "PwD"
+      ],
+      "category_certificates": {
+        "SC": "Caste Certificate issued by concerned area SDM/DC",
+        "ST": "Caste Certificate issued by concerned area SDM/DC",
+        "OBC": "Caste Certificate issued by concerned area SDM/DC",
+        "Minorities": "Affidavit declaring religion",
+        "PwD": "Disability Certificate (40% or more) issued by Medical Board of Government Hospital, Delhi"
+      },
+      "max_income": 500000,
+      "income_description": "Annual income of parents/guardian should be below ₹5,00,000/- (Rupees Five Lakhs only)",
+      "income_proof": "Income Certificate issued by Office of the SDM Concerned OR Form No. 16 of Co-Borrower",
+      "domicile_required": true,
+      "domicile_states": [
+        "delhi"
+      ],
+      "employment_statuses": [
+        "all"
+      ],
+      "education_levels": [
+        "all"
+      ],
+      "bpl_required": null,
+      "disability_required": false,
+      "disability_min_percentage": 40,
+      "disability_note": "Disability Certificate (40% or more) required only for PwD category applicants, issued by Medical Board of a Government Hospital, Delhi",
+      "admission_requirement": "Must have secured admission in a recognized/Government/Technical Institution anywhere in India or abroad",
+      "institution_requirements": {
+        "recognition": "College/Institute must be recognized by Central/State Government or by appropriate authorities such as UGC (University Grants Commission), AICTE (All India Council for Technical Education), etc.",
+        "minimum_course_offering_years": 3,
+        "course_offering_note": "College/Institute should have been offering the course for the last 3 years"
+      },
+      "course_requirements": {
+        "type": "Professional and Technical Courses",
+        "max_duration_years": 5,
+        "mode": "Regular/Correspondence"
+      },
+      "co_borrower_requirements": {
+        "who": "Parents/Guardian of the applicant",
+        "role": "Co-Borrower",
+        "income_source": "Must have regular source of income",
+        "govt_servant_condition": "If Government Servant, must have 15/20 years of service left + certificate from Department"
+      },
+      "guarantor_requirements": {
+        "type": "Permanent employee of Government/PSU/Bank/Autonomous Body of Central/State Government",
+        "conditions": [
+          "Must be a regular employee",
+          "Must not have given guarantee to any other person for loan purpose prior to this guarantee in DSFDC",
+          "Must consent that in case of default in payment by beneficiary, recoveries may be made from salary",
+          "5 Post-Dated Cheques (PDC) required if loan is above ₹2,00,000/-"
+        ],
+        "alternative_security": [
+          "Original Collateral Security in the shape of NSC (National Savings Certificate)/KVP (Kisan Vikas Patra)/FDR (Fixed Deposit Receipt) and Letter of Lien in favour of DSFDC",
+          "Original Documents of Property for Mortgage with complete chain of documents"
+        ]
+      },
+      "other_conditions": [
+        "Applicant or any member of family or dependent must not have availed the said loan facility under the scheme of this Corporation, Government of India, or any other financial institution for the said purpose.",
+        "Neither the applicant nor any other member of the family should be employed in Government/Semi-Government/Autonomous Body of the Central Government/State Government.",
+        "Parents/Guardian should have regular source of income.",
+        "Adequate securities commensurate with loan value must be provided: UTI/NSC/Public Sector/Mortgage property OR personal securities of permanent Government/PSU/Bank/Autonomous Body employee.",
+        "Applicant must submit ECS detail/Post-dated cheques towards repayment.",
+        "If co-borrower is a Government Servant, must have 15/20 years of service left and produce certificate from the Department."
+      ],
+      "post_sanction_obligations": [
+        "The borrower must not participate in any unlawful activity that would debar them from pursuing studies and must follow all rules and regulations laid down by the educational institution.",
+        "The borrower must not enter into any pecuniary obligation or financial liability during the currency of the loan.",
+        "The borrower must strive to secure suitable employment after completing the course and furnish full particulars of such employment, including income details, to DSFDC."
+      ]
+    },
+    "description_embedding": [],
+    "documents_required": [
+      "DOC-AADHAAR",
+      "DOC-INCOME-CERT",
+      "DOC-EDUCATION-PROOF",
+      "DOC-PHOTOGRAPHS",
+      "DOC-BIRTH-CERT",
+      "DOC-CASTE-CERT",
+      "DOC-SELF-DECLARATION",
+      "DOC-ADMISSION-PROOF",
+      "DOC-BANK-PASSBOOK"
+    ],
+    "rejection_rules": [
+      "RULE-ELSD-NONRESIDENT-001",
+      "RULE-ELSD-CATEGORY-002",
+      "RULE-ELSD-INCOME-003",
+      "RULE-ELSD-ADMISSION-004",
+      "RULE-ELSD-INSTITUTION-005",
+      "RULE-ELSD-DURATION-006",
+      "RULE-ELSD-DUPLICATE-007",
+      "RULE-ELSD-INCOMPLETE-008",
+      "RULE-ELSD-UNLAWFUL-009",
+      "RULE-ELSD-PECUNIARY-010",
+      "RULE-ELSD-SECURITY-011"
+    ],
+    "application_url": "http://delhi.gov.in/wps/wcm/connect/doit_dsfdc/DSFDC/Home/",
+    "application_steps": [
+      "Step 1: Obtain the application form free of cost from any of the following Branch Offices — 2-Battery Lane, Rajpur Road, Delhi-54; A-33-38, B-Block, Lal Building, Opposite Police Station, Mangol Puri, Delhi; A-Block, 1st Floor, Bunker Vihar, Deputy Commissioner's Office (North East), Opposite Gagan Cinema, Nand Nagri, Delhi. Alternatively, download the prescribed format from the official website of DSFDC.",
+      "Step 2: Carefully fill out the application form in black ink using a ball pen. Ensure all required details are accurately provided, including personal information of student and parents/guardian, course details, estimated expenditure (year-wise — tuition fee, books/stationery, examination fee, equipment, boarding & lodging), scholarship/fellowship particulars, amount of loan applied for (year-wise), employment prospects post-completion, and guarantor details.",
+      "Step 3: Paste passport-sized photograph on the application form and attach self-attested copies of all mandatory Pre-Sanction documents as per the checklist.",
+      "Step 4: Submit the duly filled application form along with required documents to the Deputy Manager (Education Loan), Room No. 208, IInd Floor, Ambedkar Bhawan, Sector-16, Rohini, Delhi-89. Bring original documents for verification at the time of submission.",
+      "Step 5: Upon application review and approval, DSFDC will issue a Sanction-Cum Agreement Letter. The applicant must sign the acceptance of the Sanction-Cum Agreement Letter.",
+      "Step 6: Complete Post-Sanction formalities — execute Guarantee Deed, Hypothecation Deed, Affidavit of Legal Heir, Affidavit of Personal Guarantee by Borrower and Co-Borrower, submit ECS/Post-Dated Cheques, processing fee of ₹350/-, two witnesses with ID proof copies, copy of last year result, bank account non-closure undertaking, and all Guarantor documents.",
+      "Step 7: Upon completion of all Post-Sanction documentation, DSFDC will release the sanctioned loan amount year-wise as per the approved schedule. Borrower must provide last year results for subsequent year disbursements.",
+      "Step 8: Commence repayment as per the terms — within 10 years after commencement of repayment or till date of employment, whichever is earlier. Repayment through ECS/Post-Dated Cheques.",
+      "Step 9: Upon securing employment after course completion, furnish full particulars of employment including income details to DSFDC."
+    ],
+    "offline_process": "Application forms are available free of cost at DSFDC Branch Offices (Rajpur Road, Mangol Puri, Nand Nagri) and can also be downloaded from the official DSFDC website. Completed forms with all Pre-Sanction documents must be submitted in person to the Deputy Manager (Education Loan), Room No. 208, IInd Floor, Ambedkar Bhawan, Sector-16, Rohini, Delhi-89. Original documents must be brought for verification at the time of submission. Incomplete applications will NOT be accepted.",
+    "processing_time": "Not specified; dependent on DSFDC internal review and document verification",
+    "helpline": {
+      "phone": [
+        "011-27574521",
+        "011-27574377"
+      ],
+      "email": null,
+      "address_head_office": "DSFDC Head Office, Room No. 208, IInd Floor, Ambedkar Bhawan, Institutional Area, Sector-16, Rohini, Delhi-110085",
+      "branch_offices": [
+        {
+          "name": "Rajpur Road Branch",
+          "address": "2-Battery Lane, Rajpur Road, Delhi-54"
+        },
+        {
+          "name": "Mangol Puri Branch",
+          "address": "A-33-38, B-Block, Lal Building, Opposite Police Station, Mangol Puri, Delhi"
+        },
+        {
+          "name": "Nand Nagri Branch",
+          "address": "A-Block, 1st Floor, Bunker Vihar, Deputy Commissioner's Office (North East), Opposite Gagan Cinema, Nand Nagri, Delhi"
+        }
+      ]
+    },
+    "life_events": [
+      "EDUCATION"
+    ],
+    "tags": [
+      "education",
+      "loan",
+      "SC",
+      "ST",
+      "OBC",
+      "minorities",
+      "PwD",
+      "handicapped",
+      "DSFDC",
+      "Delhi",
+      "professional_course",
+      "technical_course",
+      "higher_education",
+      "abroad_studies",
+      "financial_assistance",
+      "need_based",
+      "co_borrower",
+      "guarantor",
+      "collateral",
+      "property_mortgage",
+      "repayment",
+      "offline"
+    ],
+    "official_url": "https://dsfdc.delhi.gov.in/dsfdc/education-loan-scheme",
+    "metadata": {
+      "benefits_amount_detail": {
+        "studies_in_india": "Up to ₹7,50,000/-",
+        "studies_abroad": "Up to ₹15,00,000/-",
+        "note": "Need-based finance within above ceilings"
+      },
+      "benefits_frequency_detail": {
+        "disbursement": "Year-wise as per approved course duration (1st Year through 5th Year)",
+        "repayment": "Within 10 years after commencement of repayment or till date of employment, whichever is earlier",
+        "early_repayment": "The applicant has the option to repay the loan earlier if desired"
+      },
+      "processing_time_detail": {
+        "application_processing": "Not specified; dependent on DSFDC internal review and document verification",
+        "loan_disbursement": "Year-wise disbursement as per approved course duration upon completion of Post-Sanction formalities",
+        "repayment_period": "Up to 10 years after commencement of repayment or till date of employment, whichever is earlier"
+      },
+      "documents_required_detailed": [
+        "Pre-Sanction: Copy of Aadhaar Card of Borrower (Applicant), Co-Borrower (Parents/Guardian), and Guarantor.",
+        "Pre-Sanction: Copy of Income Certificate issued by the Office of the SDM Concerned OR Copy of Form No. 16 of Co-Borrower.",
+        "Pre-Sanction: Copy of Mark Sheet of the Last Examination on the Basis of Which the Applicant Has Obtained Admission in the Present/Particular Course.",
+        "Pre-Sanction: Four Passport Size Photographs of the Borrower, Co-Borrower, and Guarantor, and One Full-Size Photograph of the Borrower (In Case the Applicant Belongs to PwD Category).",
+        "Pre-Sanction: Copy of Birth Certificate/Age Proof.",
+        "Pre-Sanction: Copy of Caste Certificate for SC/ST/OBC issued by the Concerned Area SDM/DC; Affidavit in Case of Minority Category; Disability Certificate (40% or more) issued by Medical Board of Government Hospital, Delhi for PwD Category.",
+        "Pre-Sanction: Affidavit stating that no loan has been availed from any Government Agency for the same purpose.",
+        "Pre-Sanction: Copies of Letter Confirming Scholarship, Freeship, Studentship (if any).",
+        "Pre-Sanction: Proof of Admission to the Recognized Course/Institute.",
+        "Pre-Sanction: Copy of Schedule of Payment for the Courses or Demand Notice from the Institution/University.",
+        "Pre-Sanction: Copies of Foreign Expenses Permit (if applicable).",
+        "Pre-Sanction: Statement of Bank Account for the Last Six Months of the Borrower and Co-Borrower.",
+        "Pre-Sanction: Signature Identification of Borrower and Co-Borrower from the Bank.",
+        "Pre-Sanction: Statement of Assets and Liabilities of Borrower/Co-Borrower.",
+        "Post-Sanction: Copy of Acceptance of Sanction-Cum Agreement Letter.",
+        "Post-Sanction: Execution of Guarantee Deed.",
+        "Post-Sanction: Execution of Hypothecation Deed.",
+        "Post-Sanction: Affidavit of Legal Heir.",
+        "Post-Sanction: Affidavit of Personal Guarantee by Borrower and Co-Borrower.",
+        "Post-Sanction: ECS (Electronic Clearing Service)/Post-Dated Cheques.",
+        "Post-Sanction: Processing Fee of ₹350/-.",
+        "Post-Sanction: Two Witnesses along with Copy of ID Proof.",
+        "Post-Sanction: Copy of Last Year Result of Student.",
+        "Post-Sanction: Undertaking for Non-Closing of Bank Account Till the Completion of Repayment.",
+        "Post-Sanction: Guarantor Documents — Copy of Aadhaar Card/Election Card/Passport; Copy of Identity Card from Employer; Original Latest Pay Slip and Form 16; Copy of Age Proof of Guarantor(s); 04 Passport Size Photographs; Affidavit of Guarantor(s); 5 Post-Dated Cheques (PDC) from the Guarantor(s) in case the loan is above ₹2,00,000/-; Copy of Guarantor(s) Undertaking to Stand as Guarantor/Surety OR Original Collateral Security in the shape of NSC/KVP/FDR and Letter of Lien in favour of DSFDC OR Original Documents of Property for Mortgage with complete chain of documents."
+      ],
+      "urls": {
+        "myscheme_url": "https://www.myscheme.gov.in/schemes/els-delhi",
+        "application_download_url": "http://delhi.gov.in/wps/wcm/connect/doit_dsfdc/DSFDC/Home/"
+      },
+      "life_events_original": [
+        "education",
+        "higher_education",
+        "professional_course",
+        "studying_abroad"
+      ]
+    },
+    "last_verified": "2026-02-28T00:00:00Z",
+    "is_active": true
+  },
+  "documents": [
+    {
+      "id": "DOC-AADHAAR",
+      "name": "Aadhaar Card",
+      "name_hindi": "आधार कार्ड",
+      "issuing_authority": "Unique Identification Authority of India (UIDAI)",
+      "alternate_authority": "Common Service Centre (CSC)",
+      "online_portal": "https://uidai.gov.in/",
+      "prerequisites": [],
+      "fee": "0",
+      "fee_bpl": "0",
+      "processing_time": "15-30 days",
+      "validity_period": "Lifetime (update required every 10 years)",
+      "format_requirements": [
+        "12-digit unique identification number",
+        "Biometric data (fingerprints and iris scan)",
+        "Photograph must be recent",
+        "Address must be complete with PIN code",
+        "Must be self-attested, scanned, and uploaded on e-District portal",
+        "Aadhaar must be linked to bank account via NPCI for DBT pension credit",
+        "Aadhaar must not be locked at time of application",
+        "Any ONE of the following is accepted: Copy of Electoral Card (Voter ID), Valid Passport, or Aadhaar Card",
+        "Must clearly show the applicant's name, photograph, and identification number",
+        "Copy to be submitted with the loan application",
+        "Copy of Aadhaar Card required for Borrower (Applicant), Co-Borrower (Parents/Guardian), and Guarantor — all three",
+        "Photograph and address must be current"
+      ],
+      "common_mistakes": [
+        "Incorrect mobile number during registration",
+        "Poor quality biometric capture",
+        "Address proof documents don't match current residence",
+        "Name spelling doesn't match other documents",
+        "Aadhaar not linked to bank account via NPCI – pension will not be credited",
+        "Aadhaar number locked for security but not unlocked before applying on e-District portal",
+        "Name or address mismatch between Aadhaar and bank account",
+        "Application portal will not function without valid Aadhaar number",
+        "Expired passport submitted as identity proof",
+        "Name on identity proof does not match the application form",
+        "Blurred or illegible photocopy submitted",
+        "None of the three specified documents available",
+        "Missing Aadhaar card of Guarantor — all three Aadhaar copies are mandatory",
+        "Name spelling mismatch between Aadhaar and other submitted documents",
+        "Address on Aadhaar does not reflect Delhi residence"
+      ],
+      "delhi_offices": [
+        "OFF-CSC-DWARKA-001",
+        "OFF-CSC-ROHINI-002"
+      ]
+    },
+    {
+      "id": "DOC-INCOME-CERT",
+      "name": "Income Certificate",
+      "name_hindi": "आय प्रमाण पत्र",
+      "issuing_authority": "Sub-Divisional Magistrate (SDM)",
+      "alternate_authority": "Tehsildar Office",
+      "online_portal": "https://edistrict.delhigovt.nic.in/",
+      "prerequisites": [
+        "DOC-AADHAAR",
+        "DOC-RATION-CARD",
+        "DOC-SALARY-SLIP"
+      ],
+      "fee": "10",
+      "fee_bpl": "0",
+      "processing_time": "7-15 days",
+      "validity_period": "6 months from issue date",
+      "format_requirements": [
+        "Must be on official letterhead with office seal",
+        "Should contain financial year mentioned",
+        "Must have officer's signature and designation",
+        "QR code for verification (if issued after 2023)",
+        "Only PDF file, size up to 100kb (for PMAY-U 2.0 upload)",
+        "Must be ORIGINAL (not photocopy)",
+        "Must state monthly income from ALL sources",
+        "Must be issued by SDM or authorized Revenue Department officer",
+        "Must be on official letterhead with officer's signature, designation, and official seal",
+        "Family annual income must not exceed ₹3,00,000",
+        "Must be issued by the SDM of the concerned area",
+        "Should establish that annual income of parents/guardian is below ₹5,00,000/-",
+        "Official letterhead with office seal and SDM signature",
+        "Alternative: Form No. 16 of Co-Borrower from employer"
+      ],
+      "common_mistakes": [
+        "Income figure doesn't match salary slips",
+        "Certificate older than 6 months",
+        "Missing SDM/Tehsildar signature",
+        "Wrong income head mentioned (agricultural vs non-agricultural)",
+        "File size exceeds 100kb PDF limit when uploading to portal",
+        "Submitting photocopy instead of original income certificate",
+        "Income certificate older than 6 months",
+        "Income from all sources not fully declared",
+        "Missing SDM/authorized officer's signature or seal",
+        "Certificate showing annual income exceeding ₹3,00,000",
+        "Income certificate expired (older than 6 months)",
+        "Income figure exceeds ₹5,00,000/- threshold",
+        "Certificate issued by incorrect SDM jurisdiction",
+        "Form 16 not reflecting total family income from all sources"
+      ],
+      "delhi_offices": [
+        "OFF-SDM-CENTRAL-001",
+        "OFF-TEHSIL-SOUTH-002"
+      ]
+    },
+    {
+      "id": "DOC-BANK-PASSBOOK",
+      "name": "Bank Passbook/Statement",
+      "name_hindi": "बैंक पासबुक/विवरण",
+      "issuing_authority": "Bank Branch",
+      "alternate_authority": "Online banking portal",
+      "online_portal": null,
+      "prerequisites": [
+        "DOC-AADHAAR",
+        "DOC-PAN"
+      ],
+      "fee": "0",
+      "fee_bpl": "0",
+      "processing_time": "Instant (for passbook), 1-2 days (for statement)",
+      "validity_period": "3 months (for scheme applications)",
+      "format_requirements": [
+        "Must show account holder name clearly",
+        "IFSC code and branch details visible",
+        "Account must be active (transactions in last 3 months)",
+        "For statements: bank seal/signature on each page",
+        "Account must be active and linked with Aadhaar",
+        "Account number, bank name, branch and IFSC code required for PMAY-U 2.0",
+        "Account must be singly-operated (not joint account)",
+        "Account must be Aadhaar-linked",
+        "Account must be with any bank in NCT of Delhi only (not outside Delhi)",
+        "Account must be active (not closed, frozen, or dormant)",
+        "DBT payments are Aadhaar-based; pension is credited only to Aadhaar-linked accounts via NPCI mapping",
+        "Must show account activity for the last 1 year",
+        "IFSC code and branch details should be visible",
+        "Address on passbook should match Delhi residence",
+        "Must be self-attested, scanned, and uploaded on e-District portal",
+        "Statement of Bank Account for the last six months of the Borrower and Co-Borrower",
+        "Signature Identification of Borrower and Co-Borrower from the Bank",
+        "Statement of Assets and Liabilities of Borrower/Co-Borrower",
+        "Undertaking for non-closing of bank account till completion of repayment (Post-Sanction)"
+      ],
+      "common_mistakes": [
+        "Zero balance account",
+        "Name spelling differs from Aadhaar",
+        "Statement older than 3 months",
+        "Joint account without primary holder clarification",
+        "Bank account not linked with Aadhaar",
+        "Joint account submitted instead of singly-operated account",
+        "Bank account not linked to Aadhaar via NPCI",
+        "Bank account is with a branch outside NCT of Delhi",
+        "Bank account has become inactive/dormant due to non-operation – pension credits will fail",
+        "Multiple Aadhaar-linked accounts causing NPCI mapping confusion",
+        "Passbook not updated for last 1 year of transactions",
+        "Statement older than 1 year or covering less than 1 year",
+        "Name on passbook does not match Aadhaar",
+        "Bank address is outside NCT of Delhi",
+        "Bank statement older than 6 months",
+        "Missing signature identification from the bank",
+        "Statement not covering full 6-month period",
+        "Assets and liabilities statement incomplete",
+        "Bank account closed during repayment period without prior intimation"
+      ],
+      "delhi_offices": []
+    },
+    {
+      "id": "DOC-BIRTH-CERT",
+      "name": "Birth Certificate",
+      "name_hindi": "जन्म प्रमाण पत्र",
+      "issuing_authority": "Municipal Corporation of Delhi (MCD)",
+      "alternate_authority": "Registrar of Births and Deaths",
+      "online_portal": "https://mcdonline.nic.in/",
+      "prerequisites": [],
+      "fee": "0",
+      "fee_bpl": "0",
+      "processing_time": "7-15 days (late registration: 30 days)",
+      "validity_period": "Lifetime",
+      "format_requirements": [
+        "Must contain child's full name as registered",
+        "Parents' names must be complete",
+        "Place of birth (hospital name or address)",
+        "Registration number and date",
+        "Registrar's signature and seal",
+        "Required ONLY for minor patients (below 18 years)",
+        "Must clearly state the child's name, date of birth, and parents' names",
+        "Must be issued by competent authority (Municipal Corporation / Registrar)",
+        "Must be accompanied by domicile proof of either parent",
+        "Any ONE of the following is accepted: Birth Certificate (MCD/Registrar of Births & Deaths), School Leaving Certificate (last class attended), Matriculation/10th Class Certificate, Hospital Discharge Slip at birth, Voter ID Card, PAN Card, Driving License, Aadhaar Card, Passport, Age Assessment Medical Certificate, or any Govt./Govt.-recognized document stating date and place of birth",
+        "Must clearly state the applicant's date of birth or age",
+        "Must be self-attested, scanned, and uploaded on e-District portal",
+        "Applicant must be 18 years or above as per the age proof document",
+        "Copy of Birth Certificate or valid Age Proof document",
+        "Must establish the date of birth of the applicant",
+        "Self-attested copy required"
+      ],
+      "common_mistakes": [
+        "Late registration without affidavit",
+        "Name spelling inconsistent with school records",
+        "Missing parents' details",
+        "Hospital discharge summary not attached (for late registration)",
+        "Not submitting birth certificate for minor patients",
+        "Birth certificate not accompanied by parent's domicile proof",
+        "Name or date of birth mismatch between birth certificate and other documents",
+        "Using hospital discharge summary instead of official birth certificate",
+        "Date of birth on age proof does not match Aadhaar or other submitted documents",
+        "Age proof document does not clearly state the date of birth",
+        "Applicant is below 18 years of age as per the document submitted",
+        "Using an unofficial or unrecognized document as age proof",
+        "Date of birth mismatch with other submitted documents",
+        "Document not self-attested"
+      ],
+      "delhi_offices": [
+        "OFF-MCD-CENTRAL",
+        "OFF-MCD-SOUTH"
+      ]
+    },
+    {
+      "id": "DOC-SELF-DECLARATION",
+      "name": "Self-Declaration / Affidavit",
+      "name_hindi": "स्व-घोषणा / शपथ पत्र",
+      "issuing_authority": "Notary Public / Executive Magistrate",
+      "alternate_authority": "Self-attested (where applicable)",
+      "online_portal": null,
+      "prerequisites": [
+        "DOC-AADHAAR"
+      ],
+      "fee": "Varies (typically ₹10-100 for notarization)",
+      "fee_bpl": "0",
+      "processing_time": "Instant (notarization)",
+      "validity_period": "Valid for the application period",
+      "format_requirements": [
+        "Must state that beneficiary does not own a pucca house anywhere in India",
+        "Must declare no benefits availed from any Central/State/Local housing scheme in last 20 years",
+        "Must be signed by the applicant",
+        "Notarization or attestation by competent authority where required by State/UT",
+        "Must declare: patient's disease, hospital where treatment is being done, approximate expenditure as certified by hospital",
+        "Must declare total family monthly income with specific source details",
+        "Must include family details table: spouse and children up to 21 years (name, age, relation, profession, monthly income)",
+        "Must declare inability to bear treatment expenses",
+        "Must acknowledge that false statements are punishable under relevant Acts and laws",
+        "Must include verification clause with date and place (New Delhi)",
+        "Must be signed by TWO witnesses with their names and addresses",
+        "Deponent rules: Minor patient → Father signs; Housewife patient → Husband signs; Adult self-dependent → Patient signs; Adult dependent on father → Father signs (+ separate affidavit of dependency required)",
+        "Must be in the format available on the e-District portal",
+        "Must declare annual income from all sources (including rent, interest, dividends, farm earnings, property sale proceeds, etc.)",
+        "Annual income declared must be less than ₹1,00,000",
+        "No recommendation or attestation from any external authority is required; only self-declaration by applicant",
+        "Must be self-attested, scanned, and uploaded on e-District portal",
+        "Must be in the prescribed format (proforma attached with the RGSRY application form)",
+        "Part D: Declaration of scheme compliance and document authenticity",
+        "Part E: Undertaking regarding previous loan status – must select Option (a) 'No Previous Loan' or Option (b) 'Previous Loan Details' with full disclosure of outstanding amounts",
+        "Part E must include: date of birth, education qualification, cooperative society membership status, and final affirmation of truthfulness",
+        "Must include self-attested photograph pasted with half signature on photograph and half on paper",
+        "Must declare that neither the applicant, spouse, nor any family member including adult children have taken or applied for loans from any of the listed 9 categories of institutions (unless fully repaid)",
+        "Must declare that no family member is a member of any Co-operative Society/Registered Institution that has applied for or taken loan from the listed departments",
+        "Affidavit stating that no loan has been availed from any Government Agency for the same purpose",
+        "Must state that no member of the family or dependent has availed the loan facility under the scheme of this Corporation, Government of India, or any other financial institution for the said purpose",
+        "Must be notarized or attested as applicable"
+      ],
+      "common_mistakes": [
+        "Declaration not covering all family members (husband, wife, unmarried children)",
+        "Missing notary stamp or seal",
+        "Not declaring previous housing benefits availed",
+        "Incorrect factual statements leading to disqualification",
+        "Wrong deponent signing (e.g., patient signing when they are a dependent minor)",
+        "Missing witness signatures or incomplete witness details",
+        "Family income details not matching the income certificate",
+        "Not disclosing all sources of income",
+        "Missing affidavit of dependency when adult patient is dependent on father",
+        "Incomplete family details table",
+        "Not acknowledging the penal consequences of false statements",
+        "Not using the prescribed format available on the e-District portal",
+        "Declaring income that exceeds the ₹1,00,000 annual limit",
+        "Not disclosing all sources of income (rent, interest, dividends, farm earnings, property sale proceeds, etc.)",
+        "False income declaration – punishable with penal action, penalty, pension stoppage, and recovery of amount",
+        "Not using the prescribed proforma format",
+        "Checking Option (a) 'No Previous Loan' when a previous loan exists",
+        "Not disclosing spouse's or adult children's loans from listed institutions",
+        "Missing self-attested photograph with half-signature placement",
+        "Not acknowledging penal consequences of false information",
+        "Concealing cooperative society membership",
+        "Not covering all family members in the declaration",
+        "Previously availed loan from another government scheme for the same purpose not disclosed"
+      ],
+      "delhi_offices": []
+    },
+    {
+      "id": "DOC-PHOTOGRAPHS",
+      "name": "Attested Passport-Size Photographs of Patient",
+      "name_hindi": "रोगी के सत्यापित पासपोर्ट आकार के फोटो",
+      "issuing_authority": "Any photo studio (attestation by Medical Superintendent / Treating Doctor / Consultant of Government Hospital)",
+      "alternate_authority": null,
+      "online_portal": null,
+      "prerequisites": [],
+      "fee": "Nominal (photo studio charges)",
+      "fee_bpl": "Nominal",
+      "processing_time": "Instant (photographs); attestation depends on hospital availability",
+      "validity_period": "Must be recent photographs",
+      "format_requirements": [
+        "Two passport-size photographs of the patient required",
+        "Must be duly attested by the Medical Superintendent or treating doctor/consultant of the concerned Government Hospital",
+        "One photograph must be pasted on the Estimate Certificate (Part B)",
+        "One photograph must be pasted on the Application Form (Part A)",
+        "One passport-size photograph of the applicant",
+        "Must be recent and clearly identifiable",
+        "Must be scanned and uploaded on the e-District portal during application",
+        "Two passport-size photographs required",
+        "Must be attested",
+        "One photograph to be pasted on the self-declaration (Part E) with half signature on photograph and half on paper",
+        "Four passport-size photographs each of the Borrower, Co-Borrower, and Guarantor",
+        "One full-size photograph of the Borrower if the applicant belongs to PwD category",
+        "Photographs should be recent and clearly identifiable"
+      ],
+      "common_mistakes": [
+        "Photographs not attested by hospital authority",
+        "Only one photograph submitted instead of two",
+        "Photographs pasted on wrong form sections",
+        "Photographs not recent or not clearly identifiable",
+        "Photograph too old or not clearly identifiable",
+        "Photograph not in passport-size format",
+        "Blurred or low-resolution scan uploaded on the portal",
+        "Photographs not attested",
+        "Self-attested photograph on Part E not done correctly (half-signature placement)",
+        "Old or unclear photographs",
+        "Insufficient number of photographs (need 4 each for borrower, co-borrower, and guarantor)",
+        "Missing full-size photograph for PwD category applicant"
+      ],
+      "delhi_offices": []
+    },
+    {
+      "id": "DOC-CASTE-CERT",
+      "name": "Caste / Religion Certificate",
+      "name_hindi": "जाति / धर्म प्रमाण पत्र",
+      "issuing_authority": "Competent Authority (for SC/ST certificate) / Religious Institution (for Minority self-declaration verification)",
+      "alternate_authority": "SDM Office (for caste certificate)",
+      "online_portal": "https://edistrict.delhigovt.nic.in/",
+      "prerequisites": [
+        "DOC-AADHAAR"
+      ],
+      "fee": "Varies (typically free for SC/ST certificates)",
+      "fee_bpl": "0",
+      "processing_time": "7-15 days (for SC/ST certificate from SDM)",
+      "validity_period": "Lifetime (SC/ST certificate); as per declaration (minority)",
+      "format_requirements": [
+        "For SC/ST category: Caste certificate issued by competent authority (SDM/Tehsildar)",
+        "For Minority category: Self-declaration of religion verified by religious institution",
+        "Must be self-attested, scanned, and uploaded on e-District portal",
+        "SC/ST/OBC: Caste Certificate issued by the concerned area SDM/DC",
+        "Minority: Affidavit declaring religion (on stamp paper)",
+        "PwD: Disability Certificate certifying 40% or more disability, issued by the Medical Board of a Government Hospital, Delhi"
+      ],
+      "common_mistakes": [
+        "SC/ST certificate not issued by competent authority",
+        "Minority self-declaration not verified by a religious institution",
+        "Certificate details not matching Aadhaar or other submitted documents",
+        "Caste certificate issued by wrong SDM jurisdiction",
+        "Minority affidavit not on proper stamp paper",
+        "PwD disability certificate showing less than 40% disability",
+        "PwD certificate not issued by Medical Board of a Government Hospital in Delhi"
+      ],
+      "delhi_offices": []
+    },
+    {
+      "id": "DOC-EDUCATION-PROOF",
+      "name": "Education Proof (Certificate / Marksheet)",
+      "name_hindi": "शिक्षा प्रमाण (प्रमाण पत्र / अंकपत्र)",
+      "issuing_authority": "Educational Institution / Board of Education / University",
+      "alternate_authority": null,
+      "online_portal": null,
+      "prerequisites": [],
+      "fee": "Varies",
+      "fee_bpl": "0",
+      "processing_time": "Varies by institution",
+      "validity_period": "Lifetime",
+      "format_requirements": [
+        "Certificate or marksheet of highest qualification attained",
+        "For school/college dropouts: proof of last class attended",
+        "For passed-out candidates from Govt./authorized technical/professional institutes: certificate from the recognized institute",
+        "For artisans: any relevant skill/trade certificate",
+        "Copy of Mark Sheet of the last examination on the basis of which the applicant has obtained admission in the present/particular course",
+        "Must clearly show marks/grades obtained",
+        "Self-attested copy required"
+      ],
+      "common_mistakes": [
+        "Education proof not matching the applicant category claimed in the application",
+        "Certificate from an institute not recognized by the Government or its authorized undertakings",
+        "Missing or incomplete certificate/marksheet",
+        "Submitting mark sheet of an examination other than the one qualifying for admission",
+        "Mark sheet not self-attested",
+        "Illegible or incomplete copies"
+      ],
+      "delhi_offices": []
+    },
+    {
+      "id": "DOC-ADMISSION-PROOF",
+      "name": "Proof of Admission / Payment Schedule",
+      "name_hindi": "प्रवेश प्रमाण / भुगतान अनुसूची",
+      "issuing_authority": "Educational Institution / University",
+      "alternate_authority": null,
+      "online_portal": null,
+      "prerequisites": [],
+      "fee": "0",
+      "fee_bpl": "0",
+      "processing_time": "Varies by institution",
+      "validity_period": "Current academic session",
+      "format_requirements": [
+        "Proof of Admission to the recognized course/institute (admission letter / enrolment confirmation)",
+        "Copy of Schedule of Payment for the courses or Demand Notice from the Institution/University",
+        "Copies of Foreign Expenses Permit (if applicable for studies abroad)",
+        "Copies of letter confirming Scholarship, Freeship, Studentship (if any)"
+      ],
+      "common_mistakes": [
+        "Admission proof does not match the course mentioned in application",
+        "Payment schedule/demand notice missing or for incorrect academic year",
+        "Foreign expenses permit not submitted for abroad studies",
+        "Institution not recognized by Central/State Government or UGC/AICTE"
+      ],
+      "delhi_offices": []
+    }
+  ],
+  "rejection_rules": [
+    {
+      "id": "RULE-ELSD-NONRESIDENT-001",
+      "scheme_id": "SCH-DELHI-006",
+      "rule_type": "validity",
+      "description": "Application will be rejected if the applicant is not a permanent resident of Delhi. Residency must be established through valid address proof documents.",
+      "description_hindi": "यदि आवेदक दिल्ली का स्थायी निवासी नहीं है तो आवेदन अस्वीकार कर दिया जाएगा।",
+      "severity": "critical",
+      "prevention_tip": "Ensure Aadhaar Card and other address proof documents reflect a Delhi residential address. Obtain an updated Aadhaar if address has changed.",
+      "examples": [
+        "Applicant's Aadhaar Card shows residence in another state",
+        "No valid proof of permanent Delhi residency submitted",
+        "Address proof documents inconsistent across submissions"
+      ]
+    },
+    {
+      "id": "RULE-ELSD-CATEGORY-002",
+      "scheme_id": "SCH-DELHI-006",
+      "rule_type": "validity",
+      "description": "Application will be rejected if the applicant does not belong to one of the eligible target groups — Scheduled Caste (SC), Scheduled Tribe (ST), Other Backward Classes (OBC), Minorities, or Persons with Disabilities (PwD) — or fails to furnish the requisite category certificate.",
+      "description_hindi": "यदि आवेदक अनुसूचित जाति, अनुसूचित जनजाति, अन्य पिछड़ा वर्ग, अल्पसंख्यक, या दिव्यांगजन श्रेणी से नहीं है या आवश्यक श्रेणी प्रमाणपत्र प्रस्तुत नहीं करता है तो आवेदन अस्वीकार कर दिया जाएगा।",
+      "severity": "critical",
+      "prevention_tip": "Obtain the appropriate category certificate before applying — Caste Certificate from SDM/DC for SC/ST/OBC, Affidavit declaring religion for Minorities, or Disability Certificate (40%+) from Government Hospital Medical Board for PwD.",
+      "examples": [
+        "Applicant from General category applies — not eligible",
+        "OBC certificate issued by unauthorized authority",
+        "PwD certificate showing disability below 40%",
+        "Minority affidavit not submitted or not on stamp paper"
+      ]
+    },
+    {
+      "id": "RULE-ELSD-INCOME-003",
+      "scheme_id": "SCH-DELHI-006",
+      "rule_type": "validity",
+      "description": "Application will be rejected if the annual income of parents/guardian exceeds ₹5,00,000/- (Rupees Five Lakhs). Income certificate from the concerned SDM or Form No. 16 of Co-Borrower must establish income below the prescribed limit.",
+      "description_hindi": "यदि माता-पिता/अभिभावक की वार्षिक आय ₹5,00,000/- से अधिक है तो आवेदन अस्वीकार कर दिया जाएगा।",
+      "severity": "critical",
+      "prevention_tip": "Obtain a current income certificate from the SDM of the concerned area explicitly stating annual family income below ₹5,00,000/- before applying.",
+      "examples": [
+        "Income certificate shows annual income of ₹5,50,000/-",
+        "Form 16 of Co-Borrower reflects income exceeding ₹5,00,000/-",
+        "Income from all sources when aggregated crosses the ₹5,00,000/- limit"
+      ]
+    },
+    {
+      "id": "RULE-ELSD-ADMISSION-004",
+      "scheme_id": "SCH-DELHI-006",
+      "rule_type": "validity",
+      "description": "Application will be rejected if the applicant has not secured confirmed admission in a recognized/Government/Technical institution. Mere application to an institution without confirmed admission is insufficient.",
+      "description_hindi": "यदि आवेदक ने मान्यता प्राप्त/सरकारी/तकनीकी संस्थान में पुष्ट प्रवेश प्राप्त नहीं किया है तो आवेदन अस्वीकार कर दिया जाएगा।",
+      "severity": "critical",
+      "prevention_tip": "Submit the loan application only after receiving confirmed admission from the institution, along with the admission letter, demand notice, and payment schedule.",
+      "examples": [
+        "Application submitted before admission confirmation",
+        "Admission in an unrecognized or non-accredited institution",
+        "Conditional admission letter submitted without final confirmation"
+      ]
+    },
+    {
+      "id": "RULE-ELSD-INSTITUTION-005",
+      "scheme_id": "SCH-DELHI-006",
+      "rule_type": "validity",
+      "description": "Application will be rejected if the College/Institute has not been offering the course for the last 3 years, or if it is not recognized by the Central/State Government or by appropriate authorities such as UGC, AICTE, etc.",
+      "description_hindi": "यदि कॉलेज/संस्थान ने पिछले 3 वर्षों से पाठ्यक्रम नहीं चलाया है, या यदि यह केंद्र/राज्य सरकार या यूजीसी, एआईसीटीई आदि द्वारा मान्यता प्राप्त नहीं है, तो आवेदन अस्वीकार कर दिया जाएगा।",
+      "severity": "critical",
+      "prevention_tip": "Verify that the institution and course have been operational for at least 3 years and are duly recognized by Central/State Government or relevant regulatory bodies (UGC, AICTE) before applying.",
+      "examples": [
+        "Newly started course in its first or second year of offering",
+        "Institution not recognized by UGC or AICTE",
+        "Private coaching institute without government recognition",
+        "Course recognition expired or withdrawn"
+      ]
+    },
+    {
+      "id": "RULE-ELSD-DURATION-006",
+      "scheme_id": "SCH-DELHI-006",
+      "rule_type": "validity",
+      "description": "Application will be rejected if the duration of the course exceeds 5 years. Only courses with duration of 5 years or less are eligible under the scheme.",
+      "description_hindi": "यदि पाठ्यक्रम की अवधि 5 वर्ष से अधिक है तो आवेदन अस्वीकार कर दिया जाएगा।",
+      "severity": "high",
+      "prevention_tip": "Confirm that the total course duration (including mandatory internship/training periods) does not exceed 5 years before applying.",
+      "examples": [
+        "6-year integrated course (e.g., certain medical programs)",
+        "Course with extended internship pushing total duration beyond 5 years",
+        "Multiple combined courses exceeding 5-year aggregate"
+      ]
+    },
+    {
+      "id": "RULE-ELSD-DUPLICATE-007",
+      "scheme_id": "SCH-DELHI-006",
+      "rule_type": "validity",
+      "description": "Application will be rejected if the applicant or any member of the family or dependent has previously availed the loan facility under the scheme of DSFDC, Government of India, or any other financial institution for the same purpose. In the event any information is found false or incorrect, the beneficiary shall be liable to refund the entire loan amount along with up-to-date interest to DSFDC.",
+      "description_hindi": "यदि आवेदक या उसके परिवार/आश्रित ने डीएसएफडीसी, भारत सरकार, या किसी अन्य वित्तीय संस्थान से उसी उद्देश्य के लिए ऋण सुविधा प्राप्त की है तो आवेदन अस्वीकार कर दिया जाएगा।",
+      "severity": "critical",
+      "prevention_tip": "Submit an affidavit truthfully declaring that no loan has been availed from any Government agency for the same purpose. Any false information will result in recovery of the entire loan with interest.",
+      "examples": [
+        "Applicant previously took education loan from another government scheme for the same course",
+        "Family member availed similar loan from another state corporation",
+        "Concealment of prior loan availed from a central government scheme"
+      ]
+    },
+    {
+      "id": "RULE-ELSD-INCOMPLETE-008",
+      "scheme_id": "SCH-DELHI-006",
+      "rule_type": "procedural",
+      "description": "Incomplete applications will NOT be accepted. All mandatory fields in the application form must be filled, required documents must be attached, and original documents must be presented for verification at the time of submission.",
+      "description_hindi": "अधूरे आवेदन स्वीकार नहीं किए जाएंगे। आवेदन पत्र के सभी अनिवार्य क्षेत्र भरे जाने चाहिए, आवश्यक दस्तावेज संलग्न होने चाहिए, और प्रस्तुति के समय सत्यापन के लिए मूल दस्तावेज प्रस्तुत किए जाने चाहिए।",
+      "severity": "high",
+      "prevention_tip": "Complete all fields in the application form using the detailed checklist. Carry all original documents at the time of submission for on-the-spot verification. Use the Pre-Sanction and Post-Sanction document checklists provided.",
+      "examples": [
+        "Application form with blank mandatory fields submitted",
+        "Missing Aadhaar Card copy of Guarantor",
+        "Original documents not brought for verification",
+        "Bank statement not covering the required 6-month period"
+      ]
+    },
+    {
+      "id": "RULE-ELSD-UNLAWFUL-009",
+      "scheme_id": "SCH-DELHI-006",
+      "rule_type": "compliance",
+      "description": "Loan may be recalled and benefits revoked if the borrower participates in any unlawful activity that would debar them from pursuing studies, or fails to follow the rules and regulations laid down by the educational institution.",
+      "description_hindi": "यदि उधारकर्ता किसी ऐसी गैरकानूनी गतिविधि में भाग लेता है जो उन्हें पढ़ाई से वंचित करती है, या शैक्षणिक संस्थान द्वारा निर्धारित नियमों और विनियमों का पालन नहीं करता है, तो ऋण वापस लिया जा सकता है।",
+      "severity": "high",
+      "prevention_tip": "Maintain discipline and adhere to all rules and regulations of the educational institution throughout the course duration. Avoid any conduct that could result in expulsion or rustication.",
+      "examples": [
+        "Borrower expelled from institution for misconduct",
+        "Involvement in unlawful activities leading to debarment from studies",
+        "Violation of institutional rules resulting in discontinuation of studies"
+      ]
+    },
+    {
+      "id": "RULE-ELSD-PECUNIARY-010",
+      "scheme_id": "SCH-DELHI-006",
+      "rule_type": "compliance",
+      "description": "Loan may be recalled if the borrower enters into any pecuniary obligation or financial liability during the currency of the loan, in violation of the post-sanction conditions.",
+      "description_hindi": "यदि उधारकर्ता ऋण की अवधि के दौरान किसी आर्थिक दायित्व में प्रवेश करता है तो ऋण वापस लिया जा सकता है।",
+      "severity": "high",
+      "prevention_tip": "Do not take on any additional financial obligations or liabilities during the loan currency period. Focus solely on completing the course.",
+      "examples": [
+        "Taking another loan from a different financial institution during course period",
+        "Incurring significant debt obligations during loan currency",
+        "Becoming a guarantor for another person's loan while own loan is active"
+      ]
+    },
+    {
+      "id": "RULE-ELSD-SECURITY-011",
+      "scheme_id": "SCH-DELHI-006",
+      "rule_type": "procedural",
+      "description": "Application will be rejected if adequate securities commensurate with the loan value are not provided. The applicant must furnish either a personal guarantee from a permanent Government/PSU/Bank/Autonomous Body employee, or original collateral security (NSC/KVP/FDR with lien letter in favour of DSFDC), or original property documents for mortgage with complete chain of documents.",
+      "description_hindi": "यदि ऋण मूल्य के अनुपात में पर्याप्त प्रतिभूतियां प्रदान नहीं की जाती हैं तो आवेदन अस्वीकार कर दिया जाएगा।",
+      "severity": "critical",
+      "prevention_tip": "Arrange for one of the three acceptable security options before applying — personal guarantee from an eligible government employee, collateral security instruments (NSC/KVP/FDR), or property mortgage documents with complete chain.",
+      "examples": [
+        "Guarantor is not a permanent government employee",
+        "Collateral security documents (NSC/KVP/FDR) without lien letter in favour of DSFDC",
+        "Property mortgage documents with incomplete chain of ownership",
+        "Guarantor has already given guarantee to another person in DSFDC"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,665 @@
+[
+  {
+    "id": "RULE-NPA-001",
+    "scheme_id": "SCH-DELHI-001",
+    "rule_type": "authority",
+    "description": "Subsidy will not be released if the beneficiary's loan account is classified as a Non-Performing Asset (NPA) or if the principal loan amount outstanding is less than 50%.",
+    "description_hindi": "यदि लाभार्थी का ऋण खाता गैर-निष्पादन परिसंपत्ति (एनपीए) के रूप में वर्गीकृत है या मूल ऋण राशि का 50% से कम बकाया है तो सब्सिडी जारी नहीं की जाएगी।",
+    "severity": "critical",
+    "prevention_tip": "Ensure all EMIs are paid on time and maintain more than 50% principal outstanding. Clear any pending dues before applying for subsidy release.",
+    "examples": [
+      "Loan EMI overdue for more than 90 days resulting in NPA classification",
+      "Principal loan amount outstanding has fallen below 50% at time of subsidy release",
+      "Loan account restructured or written off by the PLI"
+    ]
+  },
+  {
+    "id": "RULE-LOCKPERIOD-002",
+    "scheme_id": "SCH-DELHI-001",
+    "rule_type": "timeline",
+    "description": "Applications will be rejected or benefits revoked if the beneficiary sells, transfers, sub-leases, or rents out the house within the mandatory lock-in period of five years from the date of completion.",
+    "description_hindi": "यदि लाभार्थी निर्माण पूरा होने की तारीख से पांच वर्ष की अनिवार्य लॉक-इन अवधि के भीतर मकान बेचता, हस्तांतरित करता, उप-पट्टे पर देता या किराये पर देता है तो आवेदन अस्वीकार या लाभ वापस लिया जाएगा।",
+    "severity": "critical",
+    "prevention_tip": "Plan for long-term residence of at least 5 years from date of completion. Selling, transferring, sub-leasing or renting out before the lock-in period will result in full benefit recovery.",
+    "examples": [
+      "Selling property within 3 years of completion to upgrade",
+      "Transferring ownership to family member in year 4 from completion",
+      "Sub-leasing or renting out the house within the 5-year lock-in period"
+    ]
+  },
+  {
+    "id": "RULE-EXISTING-HOUSE-003",
+    "scheme_id": "SCH-DELHI-001",
+    "rule_type": "validity",
+    "description": "Applicant or any member of his/her family (husband, wife and unmarried children) should not own any pucca house either in his/her name or in the name of any family member anywhere in the country.",
+    "description_hindi": "आवेदक या उसके परिवार (पति, पत्नी और अविवाहित बच्चों) के किसी भी सदस्य के नाम पर देश में कहीं भी कोई पक्का मकान नहीं होना चाहिए।",
+    "severity": "critical",
+    "prevention_tip": "Submit self-declaration/affidavit along with property search report from Sub-Registrar office confirming no pucca house ownership.",
+    "examples": [
+      "Spouse owns ancestral pucca property in another state",
+      "Parent's pucca property still in joint name with applicant",
+      "Previous pucca property sold but land records not updated"
+    ]
+  },
+  {
+    "id": "RULE-NONRESIDENTIAL-004",
+    "scheme_id": "SCH-DELHI-001",
+    "rule_type": "compliance",
+    "description": "The subsidy will be discontinued and previously released amounts recovered if the constructed house is used for any non-residential activities.",
+    "description_hindi": "यदि निर्मित मकान का उपयोग किसी भी गैर-आवासीय गतिविधियों के लिए किया जाता है तो सब्सिडी बंद कर दी जाएगी और पहले जारी की गई राशि वापस ली जाएगी।",
+    "severity": "critical",
+    "prevention_tip": "Use the constructed house strictly for residential purposes only. Any commercial or non-residential use will trigger recovery proceedings.",
+    "examples": [
+      "Converting the house into a commercial shop or office",
+      "Using the house as a warehouse or storage facility",
+      "Operating a manufacturing unit from the subsidized house"
+    ]
+  },
+  {
+    "id": "RULE-PLI-TIMEOUT-005",
+    "scheme_id": "SCH-DELHI-001",
+    "rule_type": "procedural",
+    "description": "For the ISS vertical, subsidy claims will be rejected if the Primary Lending Institution (PLI) fails to claim the subsidy on the Unified Web Portal within 30 days of loan disbursement.",
+    "description_hindi": "आईएसएस घटक के तहत, यदि प्राथमिक ऋणदाता संस्थान (पीएलआई) ऋण वितरण के 30 दिनों के भीतर एकीकृत वेब पोर्टल पर सब्सिडी का दावा करने में विफल रहता है तो सब्सिडी दावा अस्वीकार कर दिया जाएगा।",
+    "severity": "critical",
+    "prevention_tip": "Beneficiaries under ISS vertical should coordinate with their PLI (bank/HFC) to ensure the subsidy claim is filed on the Unified Web Portal within 30 days of loan disbursement.",
+    "examples": [
+      "Bank delays claim filing beyond 30 days after loan disbursement",
+      "PLI fails to register on the Unified Web Portal before claiming subsidy",
+      "Technical issues at PLI end preventing timely subsidy claim submission"
+    ]
+  },
+  {
+    "id": "RULE-AADHAAR-FAIL-006",
+    "scheme_id": "SCH-DELHI-001",
+    "rule_type": "procedural",
+    "description": "Aadhaar authentication failures during demographic or biometric verification (e.g., locked Aadhaar, biometric mismatch, failure to install the UIDAI FaceRD app) will halt application processing.",
+    "description_hindi": "जनसांख्यिकीय या बायोमेट्रिक सत्यापन के दौरान आधार प्रमाणीकरण विफलताएं (जैसे लॉक आधार, बायोमेट्रिक बेमेल, UIDAI FaceRD ऐप इंस्टॉल न होना) आवेदन प्रसंस्करण को रोक देंगी।",
+    "severity": "critical",
+    "prevention_tip": "Ensure Aadhaar is not locked before applying. Update biometric data if fingerprints or iris have changed. Install the UIDAI FaceRD app on mobile device for face authentication.",
+    "examples": [
+      "Aadhaar number locked by beneficiary for security but not unlocked before application",
+      "Biometric mismatch due to worn fingerprints or injury",
+      "UIDAI FaceRD app not installed on mobile device for face-based authentication"
+    ]
+  },
+  {
+    "id": "RULE-CURTAILED-007",
+    "scheme_id": "SCH-DELHI-001",
+    "rule_type": "validity",
+    "description": "Curtailed beneficiaries under PMAY-U whose houses sanctioned under PMAY-U got curtailed by CSMC after 31.12.2023 due to any reason on the recommendation of States/UTs are not eligible for new houses under PMAY-U 2.0.",
+    "description_hindi": "पीएमएवाई-यू के तहत स्वीकृत मकानों को राज्यों/संघ राज्य क्षेत्रों की सिफारिश पर 31.12.2023 के बाद सीएसएमसी द्वारा कटौती किया गया। ऐसे लाभार्थियों को पीएमएवाई-यू 2.0 के तहत नए मकान स्वीकृत नहीं किए जाएंगे।",
+    "severity": "critical",
+    "prevention_tip": "Beneficiaries whose PMAY-U houses were curtailed by CSMC after 31.12.2023 are permanently ineligible for PMAY-U 2.0. They should explore alternative state-level housing schemes.",
+    "examples": [
+      "Beneficiary's PMAY-U house was curtailed by CSMC in February 2024 on State recommendation",
+      "Construction abandoned and house curtailed after the 31.12.2023 cutoff date",
+      "State/UT recommended curtailment due to non-compliance and CSMC approved it after 31.12.2023"
+    ]
+  },
+  {
+    "id": "RULE-PREVIOUS-SCHEME-008",
+    "scheme_id": "SCH-DELHI-001",
+    "rule_type": "validity",
+    "description": "Applicants detected to have availed benefits from any housing scheme of Central Govt., State Govt., or Local Self Govt. in the last 20 years are automatically disqualified from PMAY-U 2.0.",
+    "description_hindi": "यदि आवेदक ने पिछले 20 वर्षों में केंद्र सरकार, राज्य सरकार, या स्थानीय स्वशासन की किसी भी आवास योजना का लाभ उठाया है तो वह पीएमएवाई-यू 2.0 से स्वतः अयोग्य हो जाएगा।",
+    "severity": "critical",
+    "prevention_tip": "Verify that no family member has received housing benefits from any Central, State, or Local government scheme in the last 20 years before applying.",
+    "examples": [
+      "Beneficiary previously received subsidy under Indira Awaas Yojana within 20 years",
+      "Spouse availed housing benefit from state-level housing scheme 15 years ago",
+      "Family received house under a municipal corporation housing program within last 20 years"
+    ]
+  },
+  {
+    "id": "RULE-DAK-NO-FOOD-CARD-001",
+    "scheme_id": "SCH-DELHI-007",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the patient does not hold a valid National Food Security Card. This is a mandatory eligibility criterion for the Delhi Arogya Kosh scheme.",
+    "description_hindi": "यदि रोगी के पास वैध राष्ट्रीय खाद्य सुरक्षा कार्ड नहीं है तो आवेदन अस्वीकार कर दिया जाएगा। यह दिल्ली आरोग्य कोष योजना के लिए अनिवार्य पात्रता मानदंड है।",
+    "severity": "critical",
+    "prevention_tip": "Ensure the patient has a valid, current National Food Security Card before applying. If the card is expired or cancelled, get it renewed from the local Food & Supply Office.",
+    "examples": [
+      "Patient does not possess any National Food Security Card",
+      "National Food Security Card has been cancelled due to non-collection of rations",
+      "Patient's name not listed on the family's National Food Security Card"
+    ]
+  },
+  {
+    "id": "RULE-DAK-NO-DOMICILE-002",
+    "scheme_id": "SCH-DELHI-007",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the patient cannot prove bonafide residency of Delhi for the last 3 years prior to application submission. At least one valid domicile proof document from the approved list must be provided.",
+    "description_hindi": "यदि रोगी आवेदन जमा करने से पहले पिछले 3 वर्षों से दिल्ली का वास्तविक निवास प्रमाणित नहीं कर पाता है तो आवेदन अस्वीकार कर दिया जाएगा। अनुमोदित सूची में से कम से कम एक वैध अधिवास प्रमाण दस्तावेज प्रदान करना होगा।",
+    "severity": "critical",
+    "prevention_tip": "Carry any one valid domicile proof (Domicile Certificate from SDM, Ration Card, Voter ID, Driving License, Passport, Electoral Roll extract, or Aadhaar Card) showing Delhi address for the last 3 years. For minors, additionally carry birth certificate and parent's domicile proof.",
+    "examples": [
+      "Patient has been residing in Delhi for only 2 years",
+      "Domicile proof document shows address outside Delhi",
+      "Document does not cover the required 3-year period",
+      "Minor patient's application submitted without parent's domicile proof"
+    ]
+  },
+  {
+    "id": "RULE-DAK-NON-GOVT-HOSPITAL-003",
+    "scheme_id": "SCH-DELHI-007",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the treatment is sought or being received at a private hospital. DAK covers only treatment in Government Hospitals run by Delhi Govt., Central Govt., AIIMS, Autonomous Institutes of State Govt., or Local Bodies.",
+    "description_hindi": "यदि उपचार किसी निजी अस्पताल में मांगा जा रहा है या प्राप्त किया जा रहा है तो आवेदन अस्वीकार कर दिया जाएगा। डीएके केवल दिल्ली सरकार, केंद्र सरकार, एम्स, राज्य सरकार के स्वायत्त संस्थानों या स्थानीय निकायों द्वारा संचालित सरकारी अस्पतालों में उपचार को कवर करता है।",
+    "severity": "critical",
+    "prevention_tip": "Ensure treatment is at an eligible Government Hospital before applying. Verify with the Patient Welfare Cell if unsure whether a specific hospital qualifies under DAK.",
+    "examples": [
+      "Patient seeking treatment at a private hospital or nursing home",
+      "Estimate Certificate issued by a private hospital doctor",
+      "Treatment received at a private hospital with referral from a government hospital (private hospital treatment still not covered)"
+    ]
+  },
+  {
+    "id": "RULE-DAK-FALSE-STATEMENT-004",
+    "scheme_id": "SCH-DELHI-007",
+    "rule_type": "compliance",
+    "description": "Application will be rejected and legal action initiated if the applicant makes any false statement in the application form, undertaking, or affidavit. Making false statements is punishable under relevant Acts and laws.",
+    "description_hindi": "यदि आवेदक आवेदन पत्र, वचनबद्धता, या शपथ पत्र में कोई झूठा बयान देता है तो आवेदन अस्वीकार कर दिया जाएगा और कानूनी कार्रवाई शुरू की जाएगी। झूठे बयान देना संबंधित अधिनियमों और कानूनों के तहत दंडनीय है।",
+    "severity": "critical",
+    "prevention_tip": "Provide only truthful and accurate information in all parts of the application. Disclose all sources of income, prior assistance received, and any other material facts truthfully.",
+    "examples": [
+      "Misrepresenting family income to qualify under the ₹3 lakh income limit",
+      "Concealing prior financial assistance received from DAK or Delhi Arogya Nidhi",
+      "Falsely declaring non-employment in Central/State Government or Local Body",
+      "Providing forged or tampered documents"
+    ]
+  },
+  {
+    "id": "RULE-DAK-INCOMPLETE-DOCS-005",
+    "scheme_id": "SCH-DELHI-007",
+    "rule_type": "procedural",
+    "description": "Application will not be processed if submitted with incomplete documents. All required documents including original Estimate Certificate, original Income Certificate, attested photographs, domicile proof, food security card, treatment records, OPD slip, and signed affidavit with witnesses must be submitted together.",
+    "description_hindi": "यदि अधूरे दस्तावेजों के साथ आवेदन जमा किया जाता है तो आवेदन पर कार्रवाई नहीं की जाएगी। मूल अनुमानित व्यय प्रमाण पत्र, मूल आय प्रमाण पत्र, सत्यापित फोटो, अधिवास प्रमाण, खाद्य सुरक्षा कार्ड, उपचार रिकॉर्ड, ओपीडी पर्ची, और गवाहों के साथ हस्ताक्षरित शपथ पत्र सभी एक साथ जमा करने होंगे।",
+    "severity": "high",
+    "prevention_tip": "Use the applicant checklist before visiting the Patient Welfare Cell: (1) Food Security Card photocopy + original, (2) Domicile proof, (3) Birth Certificate (if minor) + parent's proof, (4) Original Estimate Certificate with all 3 signatures + seal, (5) 2 attested photos, (6) Treatment records photocopies, (7) OPD slip, (8) Original Income Certificate, (9) Completed Application Form, (10) Signed Affidavit with witnesses, (11) Prior assistance details if any.",
+    "examples": [
+      "Estimate Certificate missing Medical Superintendent's signature or official seal",
+      "Only one photograph submitted instead of two",
+      "Original income certificate not provided (only photocopy submitted)",
+      "Affidavit submitted without witness signatures",
+      "Missing domicile proof or food security card"
+    ]
+  },
+  {
+    "id": "RULE-DAK-GOVT-EMPLOYEE-006",
+    "scheme_id": "SCH-DELHI-007",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the applicant or their parents are employees of the Central Government, State Government, or a Local Body. This is explicitly declared in the application form.",
+    "description_hindi": "यदि आवेदक या उनके माता-पिता केंद्र सरकार, राज्य सरकार, या स्थानीय निकाय के कर्मचारी हैं तो आवेदन अस्वीकार कर दिया जाएगा। यह आवेदन पत्र में स्पष्ट रूप से घोषित किया जाता है।",
+    "severity": "critical",
+    "prevention_tip": "DAK is exclusively for non-government employees. Government employees (Central, State, or Local Body) and their children are not eligible. They should explore CGHS/State health schemes available to government employees.",
+    "examples": [
+      "Applicant is a Central Government employee with CGHS coverage",
+      "Applicant's parent is a State Government employee",
+      "Applicant works in a Municipal Corporation (Local Body)",
+      "Retired government employee concealing previous employment status"
+    ]
+  },
+  {
+    "id": "RULE-DAK-INCOME-EXCESS-007",
+    "scheme_id": "SCH-DELHI-007",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the patient's family annual income exceeds ₹3,00,000 (Three Lakhs). Income certificate must show total family income from all sources within this limit.",
+    "description_hindi": "यदि रोगी के परिवार की वार्षिक आय ₹3,00,000 (तीन लाख) से अधिक है तो आवेदन अस्वीकार कर दिया जाएगा। आय प्रमाण पत्र में सभी स्रोतों से कुल पारिवारिक आय इस सीमा के भीतर दिखानी होगी।",
+    "severity": "critical",
+    "prevention_tip": "Ensure the income certificate obtained from SDM/authorized officer accurately reflects total family income from all sources. If family income exceeds ₹3 lakh annually, the patient is not eligible for DAK assistance.",
+    "examples": [
+      "Family annual income is ₹3,50,000 which exceeds the ₹3 lakh limit",
+      "Income certificate shows monthly income exceeding ₹25,000",
+      "Undisclosed income sources discovered during verification that push total above the limit"
+    ]
+  },
+  {
+    "id": "RULE-WPS-NOT-WOMAN-001",
+    "scheme_id": "SCH-DELHI-003",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the applicant is not a woman. The scheme is exclusively for women in distress – widows, divorced, separated, abandoned, deserted, or destitute women.",
+    "description_hindi": "यदि आवेदक महिला नहीं है तो आवेदन अस्वीकार कर दिया जाएगा। यह योजना विशेष रूप से विपत्ति में महिलाओं – विधवाओं, तलाकशुदा, अलग रह रही, परित्यक्त, या निराश्रित महिलाओं के लिए है।",
+    "severity": "critical",
+    "prevention_tip": "This scheme is exclusively for women. Male applicants are not eligible under any circumstances.",
+    "examples": [
+      "Male applicant attempting to apply for widow pension",
+      "Application filed on behalf of a male family member"
+    ]
+  },
+  {
+    "id": "RULE-WPS-AGE-UNDER-18-002",
+    "scheme_id": "SCH-DELHI-003",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the applicant is below 18 years of age. The scheme covers women in the age group of 18 years to lifelong.",
+    "description_hindi": "यदि आवेदक की आयु 18 वर्ष से कम है तो आवेदन अस्वीकार कर दिया जाएगा। यह योजना 18 वर्ष से आजीवन आयु वर्ग की महिलाओं को कवर करती है।",
+    "severity": "critical",
+    "prevention_tip": "Verify age from age proof document before applying. Applicant must be 18 years or above on the date of application.",
+    "examples": [
+      "17-year-old widow applying for pension before turning 18",
+      "Age proof document shows applicant is below 18 years"
+    ]
+  },
+  {
+    "id": "RULE-WPS-NO-AADHAAR-003",
+    "scheme_id": "SCH-DELHI-003",
+    "rule_type": "procedural",
+    "description": "Application cannot be submitted if the applicant does not have a valid Aadhaar number. The e-District application portal will not function without Aadhaar. Additionally, Aadhaar must be linked to the bank account via NPCI for pension credit.",
+    "description_hindi": "यदि आवेदक के पास वैध आधार संख्या नहीं है तो आवेदन जमा नहीं किया जा सकता। ई-डिस्ट्रिक्ट आवेदन पोर्टल बिना आधार के काम नहीं करेगा। इसके अतिरिक्त, पेंशन क्रेडिट के लिए आधार को एनपीसीआई के माध्यम से बैंक खाते से जोड़ा होना चाहिए।",
+    "severity": "critical",
+    "prevention_tip": "Obtain Aadhaar card before applying. Ensure Aadhaar is linked to bank account via NPCI. Check linking status at https://uidai.gov.in → Aadhaar Services → Aadhaar Linking Status.",
+    "examples": [
+      "Applicant does not possess any Aadhaar card",
+      "Aadhaar number is locked and cannot be verified on the portal",
+      "Aadhaar exists but is not linked to bank account via NPCI – pension credit will fail"
+    ]
+  },
+  {
+    "id": "RULE-WPS-NO-DOMICILE-5YR-004",
+    "scheme_id": "SCH-DELHI-003",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the applicant has not been residing in Delhi for more than 5 years preceding the date of application. Documentary proof or verified witness statements establishing 5-year Delhi residency is mandatory.",
+    "description_hindi": "यदि आवेदक आवेदन की तारीख से पहले 5 वर्षों से अधिक समय से दिल्ली में नहीं रह रही है तो आवेदन अस्वीकार कर दिया जाएगा। 5 वर्ष के दिल्ली निवास को स्थापित करने वाला दस्तावेजी प्रमाण या सत्यापित गवाह बयान अनिवार्य है।",
+    "severity": "critical",
+    "prevention_tip": "Ensure residence proof documents collectively cover 5+ years of continuous Delhi residency. If documents are unavailable, arrange 2 witnesses from the approved list to appear before the District WCD Officer.",
+    "examples": [
+      "Applicant recently moved to Delhi and has resided for only 3 years",
+      "Residence proof documents cover only 4 years of Delhi residency",
+      "Witness statements could not be verified during home visit",
+      "Applicant's address on documents is outside NCT of Delhi"
+    ]
+  },
+  {
+    "id": "RULE-WPS-INCOME-EXCESS-005",
+    "scheme_id": "SCH-DELHI-003",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the applicant's annual income from all sources (including rent, interest, dividends, farm earnings, property sale proceeds, etc.) is ₹1,00,000 or more.",
+    "description_hindi": "यदि आवेदक की सभी स्रोतों (किराया, ब्याज, लाभांश, कृषि आय, संपत्ति बिक्री आय आदि सहित) से वार्षिक आय ₹1,00,000 या अधिक है तो आवेदन अस्वीकार कर दिया जाएगा।",
+    "severity": "critical",
+    "prevention_tip": "Ensure total annual income from ALL sources is below ₹1,00,000 before applying. The income self-declaration must truthfully account for all sources of income.",
+    "examples": [
+      "Applicant's annual income from salary is ₹80,000 but rental income of ₹25,000 pushes total above ₹1 lakh",
+      "Interest income from bank deposits not disclosed in self-declaration",
+      "Property sale proceeds not accounted for in income declaration"
+    ]
+  },
+  {
+    "id": "RULE-WPS-DUAL-PENSION-006",
+    "scheme_id": "SCH-DELHI-003",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the applicant is already receiving any pension or financial assistance from Central Government, State Government, Municipal Corporation of Delhi (MCD), New Delhi Municipal Council (NDMC), or any other governmental/local body or any other source for this purpose.",
+    "description_hindi": "यदि आवेदक पहले से केंद्र सरकार, राज्य सरकार, दिल्ली नगर निगम (एमसीडी), नई दिल्ली नगरपालिका परिषद (एनडीएमसी), या किसी अन्य सरकारी/स्थानीय निकाय या किसी अन्य स्रोत से कोई पेंशन या वित्तीय सहायता प्राप्त कर रही है तो आवेदन अस्वीकार कर दिया जाएगा।",
+    "severity": "critical",
+    "prevention_tip": "Ensure the applicant is not receiving any other pension or financial assistance from any government body. If receiving another pension, it must be surrendered before applying for this scheme.",
+    "examples": [
+      "Applicant already receiving Old Age Pension from Delhi Government",
+      "Applicant receiving pension from Central Government employer",
+      "Applicant receiving financial assistance from NDMC for a similar purpose",
+      "Multiple pension cases detected during verification – all pensions will be stopped"
+    ]
+  },
+  {
+    "id": "RULE-WPS-BANK-NONCOMPLIANT-007",
+    "scheme_id": "SCH-DELHI-003",
+    "rule_type": "procedural",
+    "description": "Application will be rejected or pension payments will fail if the bank account does not meet all requirements: must be singly-operated (not joint), Aadhaar-linked via NPCI, and with a bank in NCT of Delhi only. Closed, frozen, or dormant accounts will cause pension credit failure.",
+    "description_hindi": "यदि बैंक खाता सभी आवश्यकताओं को पूरा नहीं करता है तो आवेदन अस्वीकार कर दिया जाएगा या पेंशन भुगतान विफल हो जाएगा: खाता एकल संचालित (संयुक्त नहीं), एनपीसीआई के माध्यम से आधार-लिंक्ड, और केवल दिल्ली एनसीटी के बैंक में होना चाहिए। बंद, फ्रोजन, या निष्क्रिय खाते पेंशन क्रेडिट विफलता का कारण बनेंगे।",
+    "severity": "high",
+    "prevention_tip": "Open a singly-operated bank account in any Delhi bank. Link Aadhaar to the account via NPCI. Keep the account active with regular transactions. To change bank details, submit application to concerned District WCD Office.",
+    "examples": [
+      "Joint bank account submitted instead of singly-operated account",
+      "Bank account is with a branch outside Delhi (e.g., in Uttar Pradesh or Haryana)",
+      "Aadhaar not linked to bank account via NPCI",
+      "Bank account has become dormant due to no transactions for 2 years"
+    ]
+  },
+  {
+    "id": "RULE-WPS-NO-STATUS-PROOF-008",
+    "scheme_id": "SCH-DELHI-003",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the applicant cannot provide adequate proof of widowhood, divorce, separation, abandonment, desertion, or destitution as applicable. Without proof of qualifying distress status, eligibility cannot be established.",
+    "description_hindi": "यदि आवेदक विधवापन, तलाक, अलगाव, परित्याग या निराश्रयता का पर्याप्त प्रमाण प्रदान नहीं कर सकती है तो आवेदन अस्वीकार कर दिया जाएगा। पात्र विपत्ति स्थिति के प्रमाण के बिना पात्रता स्थापित नहीं की जा सकती।",
+    "severity": "critical",
+    "prevention_tip": "Gather appropriate documentation: death certificate of husband (widows), divorce decree (divorced), legal proceedings/police reports/DCW/NCW/FCC/Mahila Panchayat documentation (separated/abandoned/deserted), destitution proof (destitute). Keep originals ready for verification if called.",
+    "examples": [
+      "Widow applicant unable to produce death certificate of husband",
+      "Divorced applicant's divorce decree is from an unrecognized court",
+      "Separated applicant has no documentation from police, DCW, NCW, FCC, or Mahila Panchayat",
+      "Abandoned applicant cannot provide any document establishing abandonment"
+    ]
+  },
+  {
+    "id": "RULE-WPS-FALSE-STATEMENT-009",
+    "scheme_id": "SCH-DELHI-003",
+    "rule_type": "compliance",
+    "description": "Submission of forged documents or false statements will result in penal action, monetary penalty, immediate pension stoppage, and recovery of all amounts disbursed. Making false declarations is punishable under relevant Acts and laws.",
+    "description_hindi": "जाली दस्तावेज या झूठे बयान जमा करने पर दंडात्मक कार्रवाई, आर्थिक दंड, तत्काल पेंशन रोकना, और वितरित सभी राशियों की वसूली की जाएगी। झूठी घोषणाएं संबंधित अधिनियमों और कानूनों के तहत दंडनीय हैं।",
+    "severity": "critical",
+    "prevention_tip": "Provide only truthful and accurate information. All documents submitted must be genuine. False income declarations, forged death certificates, or fabricated status proofs will result in severe legal consequences.",
+    "examples": [
+      "Forged death certificate of husband submitted for widow pension",
+      "False income self-declaration understating actual income",
+      "Fabricated divorce decree or separation documents",
+      "Concealing re-marriage status to continue receiving pension"
+    ]
+  },
+  {
+    "id": "RULE-WPS-REMARRIAGE-010",
+    "scheme_id": "SCH-DELHI-003",
+    "rule_type": "compliance",
+    "description": "Pension will be permanently stopped if the beneficiary re-marries. The beneficiary is obligated to inform the concerned District WCD Office with a self-declaration upon re-marriage. Failure to inform is punishable.",
+    "description_hindi": "यदि लाभार्थी पुनर्विवाह करती है तो पेंशन स्थायी रूप से बंद कर दी जाएगी। लाभार्थी को पुनर्विवाह पर संबंधित जिला महिला एवं बाल विकास कार्यालय को स्व-घोषणा के साथ सूचित करना अनिवार्य है। सूचित न करना दंडनीय है।",
+    "severity": "critical",
+    "prevention_tip": "Upon re-marriage, immediately inform the concerned District WCD Office with a self-declaration. Concealing re-marriage and continuing to receive pension is punishable with penal action and recovery of amounts.",
+    "examples": [
+      "Beneficiary re-marries but does not inform District Office and continues receiving pension",
+      "Re-marriage discovered during periodic home verification visit",
+      "Beneficiary conceals re-marriage and is found receiving pension for over a year after"
+    ]
+  },
+  {
+    "id": "RULE-WPS-AADHAAR-NPCI-FAIL-011",
+    "scheme_id": "SCH-DELHI-003",
+    "rule_type": "procedural",
+    "description": "Pension payments will be stopped if Aadhaar is not linked to the bank account via National Payments Corporation of India (NPCI). Additionally, pension will be stopped if the beneficiary is not found at the registered residence during verification, if the address is changed without informing the District Office, or if the bank account is closed or becomes inactive.",
+    "description_hindi": "यदि आधार राष्ट्रीय भुगतान निगम (एनपीसीआई) के माध्यम से बैंक खाते से नहीं जुड़ा है तो पेंशन भुगतान बंद कर दिया जाएगा। इसके अतिरिक्त, यदि सत्यापन के दौरान लाभार्थी पंजीकृत निवास पर नहीं पाई जाती, पता बिना सूचित किए बदला जाता है, या बैंक खाता बंद/निष्क्रिय हो जाता है तो भी पेंशन रोक दी जाएगी।",
+    "severity": "high",
+    "prevention_tip": "Regularly verify Aadhaar-bank linking status at https://uidai.gov.in. If Aadhaar linking shows 'Inactive', contact bank branch to re-activate. Inform District WCD Office of any address change with documentary proof. Keep bank account active with regular transactions.",
+    "examples": [
+      "Aadhaar linking status shows 'Inactive' at NPCI – pension credit fails month after month",
+      "Beneficiary moved to a new address in Delhi without informing District Office",
+      "Bank account closed by the bank due to inactivity",
+      "Beneficiary not found at registered address during home verification visit"
+    ]
+  },
+  {
+    "id": "RULE-RGSRY-AGE-LIMIT-001",
+    "scheme_id": "SCH-DELHI-005",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the applicant is below 18 years or above 50 years of age. The scheme is exclusively for applicants aged between 18 years and 50 years.",
+    "description_hindi": "यदि आवेदक की आयु 18 वर्ष से कम या 50 वर्ष से अधिक है तो आवेदन अस्वीकार कर दिया जाएगा। यह योजना विशेष रूप से 18 से 50 वर्ष की आयु के आवेदकों के लिए है।",
+    "severity": "critical",
+    "prevention_tip": "Verify age from identity documents before applying. Applicant must be between 18 and 50 years of age at the time of application.",
+    "examples": [
+      "17-year-old school dropout applying for a loan",
+      "51-year-old entrepreneur applying for financial assistance",
+      "Date of birth on application does not match identity proof, revealing ineligible age"
+    ]
+  },
+  {
+    "id": "RULE-RGSRY-PRIOR-LOAN-002",
+    "scheme_id": "SCH-DELHI-005",
+    "rule_type": "validity",
+    "description": "Loan shall NOT be sanctioned to parties who have already been advanced any loan for the same or similar purpose by the Government or any Government-controlled financial institution AND have not repaid in full with interest OR have misutilized the loan. This extends to the applicant, their spouse, and any family member including adult children who have taken or applied for financial assistance from any of the 9 listed categories of institutions.",
+    "description_hindi": "ऐसी पार्टियों को ऋण स्वीकृत नहीं किया जाएगा जिन्हें पहले से ही सरकार या किसी सरकार-नियंत्रित वित्तीय संस्थान द्वारा समान या समान उद्देश्य के लिए कोई ऋण दिया गया है और उसे ब्याज सहित पूर्ण रूप से चुकाया नहीं गया है या ऋण का दुरुपयोग किया गया है। यह आवेदक, उनके पति/पत्नी, और वयस्क बच्चों सहित किसी भी परिवार के सदस्य पर लागू होता है।",
+    "severity": "critical",
+    "prevention_tip": "Ensure all previous loans from Government/Government-controlled institutions are fully repaid with interest before applying. Disclose any existing loans truthfully in Part E of the application form.",
+    "examples": [
+      "Applicant has an outstanding loan from Delhi Financial Corporation for a similar business",
+      "Applicant's spouse has an unpaid KVIC loan for a cottage industry",
+      "Applicant previously misutilized a DRDA Delhi loan and was declared a defaulter",
+      "Adult child of applicant has pending loan from a Nationalized Bank for similar purpose"
+    ]
+  },
+  {
+    "id": "RULE-RGSRY-MISUTILIZATION-003",
+    "scheme_id": "SCH-DELHI-005",
+    "rule_type": "compliance",
+    "description": "If the borrower utilizes the loan for any purpose other than that for which it was sanctioned, or fails to utilize the loan within the maximum permissible 6-month period (3 months + 3 months grace), the loan is treated as misutilized. The entire principal amount shall be recovered along with 18% penal interest (or as prescribed from time to time by Delhi Govt.). The subsidy component will also be recovered with 18% penal interest.",
+    "description_hindi": "यदि उधारकर्ता ऋण का उपयोग उस उद्देश्य के अलावा किसी अन्य उद्देश्य के लिए करता है जिसके लिए यह स्वीकृत किया गया था, या अधिकतम अनुमत 6 महीने की अवधि (3 महीने + 3 महीने ग्रेस) के भीतर ऋण का उपयोग करने में विफल रहता है, तो ऋण को दुरुपयोग माना जाएगा। संपूर्ण मूल राशि 18% दंडात्मक ब्याज सहित वसूल की जाएगी। सब्सिडी घटक भी 18% दंडात्मक ब्याज सहित वसूल किया जाएगा।",
+    "severity": "critical",
+    "prevention_tip": "Utilize the loan strictly for the sanctioned purpose within 3 months of loan sanction. If more time is needed, apply to the Managing Director for a maximum 3-month grace extension before the initial deadline. Keep all utilization receipts and documentation.",
+    "examples": [
+      "Loan sanctioned for a tailoring unit but used to purchase a personal vehicle",
+      "Loan amount not utilized for 7 months after sanction with no grace extension sought",
+      "Subsidy and loan used for a liquor business instead of the sanctioned trade",
+      "Partial utilization – remaining amount diverted to personal expenses"
+    ]
+  },
+  {
+    "id": "RULE-RGSRY-NON-CONFORMING-004",
+    "scheme_id": "SCH-DELHI-005",
+    "rule_type": "validity",
+    "description": "In residential or non-conforming areas, loan will only be sanctioned for those professional/industrial activities that are permitted under the Delhi Master Plan for those areas. Additionally, applicants must obtain NOC from the High Power Committee (Industries Dept., Govt. of Delhi) and Municipal Corporation License (MCL) for the respective industry. For professional/commercial activities, Registration Certificate from MCD for the concerned trade is additionally required.",
+    "description_hindi": "आवासीय या गैर-अनुरूप क्षेत्रों में, केवल उन पेशेवर/औद्योगिक गतिविधियों के लिए ऋण स्वीकृत किया जाएगा जो उन क्षेत्रों के लिए दिल्ली मास्टर प्लान के तहत अनुमत हैं। इसके अतिरिक्त, आवेदकों को उच्च शक्ति समिति (उद्योग विभाग, दिल्ली सरकार) से अनापत्ति प्रमाण पत्र और संबंधित उद्योग के लिए नगर निगम लाइसेंस प्राप्त करना होगा।",
+    "severity": "high",
+    "prevention_tip": "Before applying, verify that the proposed activity is permitted under the Delhi Master Plan for the area where the unit will be set up. Obtain HPC NOC and MCL before submitting the loan application for non-conforming areas.",
+    "examples": [
+      "Proposing a manufacturing unit in a residential area not permitted under Delhi Master Plan",
+      "Application for industrial activity in non-conforming area without HPC NOC",
+      "Missing Municipal Corporation License for the proposed industry in non-conforming area",
+      "Professional activity in non-conforming area without MCD trade registration"
+    ]
+  },
+  {
+    "id": "RULE-RGSRY-UTILIZATION-TIMEOUT-005",
+    "scheme_id": "SCH-DELHI-005",
+    "rule_type": "timeline",
+    "description": "Loan must be utilized for the specific sanctioned purpose within 3 months. The Managing Director of DKVI Board may grant a maximum 3-month grace extension. After 6 months total, no further concession will be allowed and the loan will be treated as misutilized, inviting recovery of the entire amount along with 18% interest.",
+    "description_hindi": "ऋण का उपयोग विशिष्ट स्वीकृत उद्देश्य के लिए 3 महीने के भीतर किया जाना चाहिए। डीकेवीआई बोर्ड के प्रबंध निदेशक अधिकतम 3 महीने का ग्रेस एक्सटेंशन दे सकते हैं। कुल 6 महीने के बाद कोई और रियायत नहीं दी जाएगी और ऋण को दुरुपयोग माना जाएगा।",
+    "severity": "critical",
+    "prevention_tip": "Plan the project timeline carefully before applying. Begin utilizing the loan immediately after disbursement. If delays are unavoidable, apply to the Managing Director for a grace extension well before the 3-month deadline.",
+    "examples": [
+      "Loan disbursed on 1st January but no machinery purchased or activity started by 1st April",
+      "Grace extension requested after the initial 3-month deadline has already passed",
+      "Partial utilization within 3 months with remaining amount idle for 6+ months"
+    ]
+  },
+  {
+    "id": "RULE-RGSRY-NO-SURETY-006",
+    "scheme_id": "SCH-DELHI-005",
+    "rule_type": "procedural",
+    "description": "Loan will not be sanctioned if the applicant fails to furnish surety from a Government servant working on a non-transferable post in Delhi (State/Central Govt./autonomous bodies/undertakings) or fails to follow the surety procedure as per commercial banks.",
+    "description_hindi": "यदि आवेदक दिल्ली में गैर-स्थानांतरणीय पद पर कार्यरत सरकारी कर्मचारी (राज्य/केंद्र सरकार/स्वायत्त निकाय/उपक्रम) से ज़मानत प्रस्तुत करने में विफल रहता है या वाणिज्यिक बैंकों के अनुसार ज़मानत प्रक्रिया का पालन करने में विफल रहता है, तो ऋण स्वीकृत नहीं किया जाएगा।",
+    "severity": "high",
+    "prevention_tip": "Arrange a surety/guarantor before applying. Under Option A, the guarantor must be a Govt. servant on a non-transferable post in Delhi. Under Option B, follow commercial bank surety procedures. Obtain written consent letter with guarantor's ID and address proof.",
+    "examples": [
+      "No guarantor arranged at time of application",
+      "Guarantor is a Government servant on a transferable post (not eligible under Option A)",
+      "Guarantor's consent letter does not include ID and address proof",
+      "Guarantor is posted outside Delhi"
+    ]
+  },
+  {
+    "id": "RULE-RGSRY-FALSE-INFO-007",
+    "scheme_id": "SCH-DELHI-005",
+    "rule_type": "compliance",
+    "description": "Concealment of facts and providing false information is a punishable offence liable to imprisonment and/or fine as per relevant provisions of law. Benefits availed through false information or concealment of facts are liable to be summarily withdrawn. This includes false declarations regarding previous loan status, cooperative society membership, education, and all documents submitted.",
+    "description_hindi": "तथ्यों को छिपाना और झूठी जानकारी देना दंडनीय अपराध है जो कानून के संबंधित प्रावधानों के अनुसार कारावास और/या जुर्माने से दंडनीय है। झूठी जानकारी या तथ्यों को छिपाकर प्राप्त लाभ तत्काल वापस लिए जा सकते हैं।",
+    "severity": "critical",
+    "prevention_tip": "Provide only truthful and accurate information in all parts of the application form and declarations. Disclose all previous loans, cooperative memberships, and material facts. False information can lead to criminal prosecution, loan recall, and summary withdrawal of all benefits.",
+    "examples": [
+      "Concealing an existing outstanding loan from DKVIB or listed institutions",
+      "Providing forged education certificates to meet eligibility criteria",
+      "Falsely declaring no cooperative society membership when one exists",
+      "Misrepresenting the proposed business activity in the application"
+    ]
+  },
+  {
+    "id": "RULE-RGSRY-COOP-MEMBER-008",
+    "scheme_id": "SCH-DELHI-005",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the applicant or any family member is a member of any Co-operative Society or Registered Institution which has applied for or taken any loan from the departments listed in the self-declaration (Dept. of Industries, KVIC, DKVIB, DRDA, Delhi SC/ST/OBC Corp., DFC, Nationalized/Scheduled Banks, Delhi State Co-operative Bank, or any other Govt./Non-Govt. Financial Agency).",
+    "description_hindi": "यदि आवेदक या कोई परिवार का सदस्य किसी सहकारी समिति या पंजीकृत संस्थान का सदस्य है जिसने स्व-घोषणा में सूचीबद्ध विभागों से ऋण के लिए आवेदन किया है या ऋण लिया है, तो आवेदन अस्वीकार कर दिया जाएगा।",
+    "severity": "high",
+    "prevention_tip": "Declare cooperative society/registered institution memberships truthfully. If any family member's cooperative society has an outstanding loan from listed institutions, the applicant is not eligible.",
+    "examples": [
+      "Applicant is a member of a cooperative society that has an outstanding DKVIB loan",
+      "Spouse is a member of a registered institution that applied for DFC loan",
+      "Family member's cooperative society has unpaid loan from a Nationalized Bank"
+    ]
+  },
+  {
+    "id": "RULE-RGSRY-PROHIBITED-SECTOR-009",
+    "scheme_id": "SCH-DELHI-005",
+    "rule_type": "validity",
+    "description": "Loan will not be sanctioned for activities in prohibited sectors. The Tertiary Sector explicitly excludes Hotels and Restaurants dealing in Liquor and Meat. Additionally, any activity not permitted under the Delhi Master Plan provisions or local body regulations is ineligible. Activities that create environmental problems may also be scrutinized.",
+    "description_hindi": "निषिद्ध क्षेत्रों में गतिविधियों के लिए ऋण स्वीकृत नहीं किया जाएगा। तृतीयक क्षेत्र में शराब और मांस का कारोबार करने वाले होटल और रेस्तरां को स्पष्ट रूप से बाहर रखा गया है। इसके अतिरिक्त, दिल्ली मास्टर प्लान या स्थानीय निकाय नियमों के तहत अनुमत नहीं होने वाली कोई भी गतिविधि अपात्र है।",
+    "severity": "critical",
+    "prevention_tip": "Verify that the proposed business activity falls within the permitted sectors: Secondary (Tiny/Cottage Industries), Tertiary (Trade, Transportation, Hotels/Restaurants WITHOUT Liquor & Meat), or Services (as per local body provisions and Delhi Master Plan). Avoid prohibited activities.",
+    "examples": [
+      "Application for a restaurant serving liquor and meat",
+      "Proposed hotel business involving liquor trade",
+      "Industrial activity that creates environmental pollution problems",
+      "Activity not covered under the Delhi Master Plan provisions"
+    ]
+  },
+  {
+    "id": "RULE-ELSD-NONRESIDENT-001",
+    "scheme_id": "SCH-DELHI-006",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the applicant is not a permanent resident of Delhi. Residency must be established through valid address proof documents.",
+    "description_hindi": "यदि आवेदक दिल्ली का स्थायी निवासी नहीं है तो आवेदन अस्वीकार कर दिया जाएगा।",
+    "severity": "critical",
+    "prevention_tip": "Ensure Aadhaar Card and other address proof documents reflect a Delhi residential address. Obtain an updated Aadhaar if address has changed.",
+    "examples": [
+      "Applicant's Aadhaar Card shows residence in another state",
+      "No valid proof of permanent Delhi residency submitted",
+      "Address proof documents inconsistent across submissions"
+    ]
+  },
+  {
+    "id": "RULE-ELSD-CATEGORY-002",
+    "scheme_id": "SCH-DELHI-006",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the applicant does not belong to one of the eligible target groups — Scheduled Caste (SC), Scheduled Tribe (ST), Other Backward Classes (OBC), Minorities, or Persons with Disabilities (PwD) — or fails to furnish the requisite category certificate.",
+    "description_hindi": "यदि आवेदक अनुसूचित जाति, अनुसूचित जनजाति, अन्य पिछड़ा वर्ग, अल्पसंख्यक, या दिव्यांगजन श्रेणी से नहीं है या आवश्यक श्रेणी प्रमाणपत्र प्रस्तुत नहीं करता है तो आवेदन अस्वीकार कर दिया जाएगा।",
+    "severity": "critical",
+    "prevention_tip": "Obtain the appropriate category certificate before applying — Caste Certificate from SDM/DC for SC/ST/OBC, Affidavit declaring religion for Minorities, or Disability Certificate (40%+) from Government Hospital Medical Board for PwD.",
+    "examples": [
+      "Applicant from General category applies — not eligible",
+      "OBC certificate issued by unauthorized authority",
+      "PwD certificate showing disability below 40%",
+      "Minority affidavit not submitted or not on stamp paper"
+    ]
+  },
+  {
+    "id": "RULE-ELSD-INCOME-003",
+    "scheme_id": "SCH-DELHI-006",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the annual income of parents/guardian exceeds ₹5,00,000/- (Rupees Five Lakhs). Income certificate from the concerned SDM or Form No. 16 of Co-Borrower must establish income below the prescribed limit.",
+    "description_hindi": "यदि माता-पिता/अभिभावक की वार्षिक आय ₹5,00,000/- से अधिक है तो आवेदन अस्वीकार कर दिया जाएगा।",
+    "severity": "critical",
+    "prevention_tip": "Obtain a current income certificate from the SDM of the concerned area explicitly stating annual family income below ₹5,00,000/- before applying.",
+    "examples": [
+      "Income certificate shows annual income of ₹5,50,000/-",
+      "Form 16 of Co-Borrower reflects income exceeding ₹5,00,000/-",
+      "Income from all sources when aggregated crosses the ₹5,00,000/- limit"
+    ]
+  },
+  {
+    "id": "RULE-ELSD-ADMISSION-004",
+    "scheme_id": "SCH-DELHI-006",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the applicant has not secured confirmed admission in a recognized/Government/Technical institution. Mere application to an institution without confirmed admission is insufficient.",
+    "description_hindi": "यदि आवेदक ने मान्यता प्राप्त/सरकारी/तकनीकी संस्थान में पुष्ट प्रवेश प्राप्त नहीं किया है तो आवेदन अस्वीकार कर दिया जाएगा।",
+    "severity": "critical",
+    "prevention_tip": "Submit the loan application only after receiving confirmed admission from the institution, along with the admission letter, demand notice, and payment schedule.",
+    "examples": [
+      "Application submitted before admission confirmation",
+      "Admission in an unrecognized or non-accredited institution",
+      "Conditional admission letter submitted without final confirmation"
+    ]
+  },
+  {
+    "id": "RULE-ELSD-INSTITUTION-005",
+    "scheme_id": "SCH-DELHI-006",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the College/Institute has not been offering the course for the last 3 years, or if it is not recognized by the Central/State Government or by appropriate authorities such as UGC, AICTE, etc.",
+    "description_hindi": "यदि कॉलेज/संस्थान ने पिछले 3 वर्षों से पाठ्यक्रम नहीं चलाया है, या यदि यह केंद्र/राज्य सरकार या यूजीसी, एआईसीटीई आदि द्वारा मान्यता प्राप्त नहीं है, तो आवेदन अस्वीकार कर दिया जाएगा।",
+    "severity": "critical",
+    "prevention_tip": "Verify that the institution and course have been operational for at least 3 years and are duly recognized by Central/State Government or relevant regulatory bodies (UGC, AICTE) before applying.",
+    "examples": [
+      "Newly started course in its first or second year of offering",
+      "Institution not recognized by UGC or AICTE",
+      "Private coaching institute without government recognition",
+      "Course recognition expired or withdrawn"
+    ]
+  },
+  {
+    "id": "RULE-ELSD-DURATION-006",
+    "scheme_id": "SCH-DELHI-006",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the duration of the course exceeds 5 years. Only courses with duration of 5 years or less are eligible under the scheme.",
+    "description_hindi": "यदि पाठ्यक्रम की अवधि 5 वर्ष से अधिक है तो आवेदन अस्वीकार कर दिया जाएगा।",
+    "severity": "high",
+    "prevention_tip": "Confirm that the total course duration (including mandatory internship/training periods) does not exceed 5 years before applying.",
+    "examples": [
+      "6-year integrated course (e.g., certain medical programs)",
+      "Course with extended internship pushing total duration beyond 5 years",
+      "Multiple combined courses exceeding 5-year aggregate"
+    ]
+  },
+  {
+    "id": "RULE-ELSD-DUPLICATE-007",
+    "scheme_id": "SCH-DELHI-006",
+    "rule_type": "validity",
+    "description": "Application will be rejected if the applicant or any member of the family or dependent has previously availed the loan facility under the scheme of DSFDC, Government of India, or any other financial institution for the same purpose. In the event any information is found false or incorrect, the beneficiary shall be liable to refund the entire loan amount along with up-to-date interest to DSFDC.",
+    "description_hindi": "यदि आवेदक या उसके परिवार/आश्रित ने डीएसएफडीसी, भारत सरकार, या किसी अन्य वित्तीय संस्थान से उसी उद्देश्य के लिए ऋण सुविधा प्राप्त की है तो आवेदन अस्वीकार कर दिया जाएगा।",
+    "severity": "critical",
+    "prevention_tip": "Submit an affidavit truthfully declaring that no loan has been availed from any Government agency for the same purpose. Any false information will result in recovery of the entire loan with interest.",
+    "examples": [
+      "Applicant previously took education loan from another government scheme for the same course",
+      "Family member availed similar loan from another state corporation",
+      "Concealment of prior loan availed from a central government scheme"
+    ]
+  },
+  {
+    "id": "RULE-ELSD-INCOMPLETE-008",
+    "scheme_id": "SCH-DELHI-006",
+    "rule_type": "procedural",
+    "description": "Incomplete applications will NOT be accepted. All mandatory fields in the application form must be filled, required documents must be attached, and original documents must be presented for verification at the time of submission.",
+    "description_hindi": "अधूरे आवेदन स्वीकार नहीं किए जाएंगे। आवेदन पत्र के सभी अनिवार्य क्षेत्र भरे जाने चाहिए, आवश्यक दस्तावेज संलग्न होने चाहिए, और प्रस्तुति के समय सत्यापन के लिए मूल दस्तावेज प्रस्तुत किए जाने चाहिए।",
+    "severity": "high",
+    "prevention_tip": "Complete all fields in the application form using the detailed checklist. Carry all original documents at the time of submission for on-the-spot verification. Use the Pre-Sanction and Post-Sanction document checklists provided.",
+    "examples": [
+      "Application form with blank mandatory fields submitted",
+      "Missing Aadhaar Card copy of Guarantor",
+      "Original documents not brought for verification",
+      "Bank statement not covering the required 6-month period"
+    ]
+  },
+  {
+    "id": "RULE-ELSD-UNLAWFUL-009",
+    "scheme_id": "SCH-DELHI-006",
+    "rule_type": "compliance",
+    "description": "Loan may be recalled and benefits revoked if the borrower participates in any unlawful activity that would debar them from pursuing studies, or fails to follow the rules and regulations laid down by the educational institution.",
+    "description_hindi": "यदि उधारकर्ता किसी ऐसी गैरकानूनी गतिविधि में भाग लेता है जो उन्हें पढ़ाई से वंचित करती है, या शैक्षणिक संस्थान द्वारा निर्धारित नियमों और विनियमों का पालन नहीं करता है, तो ऋण वापस लिया जा सकता है।",
+    "severity": "high",
+    "prevention_tip": "Maintain discipline and adhere to all rules and regulations of the educational institution throughout the course duration. Avoid any conduct that could result in expulsion or rustication.",
+    "examples": [
+      "Borrower expelled from institution for misconduct",
+      "Involvement in unlawful activities leading to debarment from studies",
+      "Violation of institutional rules resulting in discontinuation of studies"
+    ]
+  },
+  {
+    "id": "RULE-ELSD-PECUNIARY-010",
+    "scheme_id": "SCH-DELHI-006",
+    "rule_type": "compliance",
+    "description": "Loan may be recalled if the borrower enters into any pecuniary obligation or financial liability during the currency of the loan, in violation of the post-sanction conditions.",
+    "description_hindi": "यदि उधारकर्ता ऋण की अवधि के दौरान किसी आर्थिक दायित्व में प्रवेश करता है तो ऋण वापस लिया जा सकता है।",
+    "severity": "high",
+    "prevention_tip": "Do not take on any additional financial obligations or liabilities during the loan currency period. Focus solely on completing the course.",
+    "examples": [
+      "Taking another loan from a different financial institution during course period",
+      "Incurring significant debt obligations during loan currency",
+      "Becoming a guarantor for another person's loan while own loan is active"
+    ]
+  },
+  {
+    "id": "RULE-ELSD-SECURITY-011",
+    "scheme_id": "SCH-DELHI-006",
+    "rule_type": "procedural",
+    "description": "Application will be rejected if adequate securities commensurate with the loan value are not provided. The applicant must furnish either a personal guarantee from a permanent Government/PSU/Bank/Autonomous Body employee, or original collateral security (NSC/KVP/FDR with lien letter in favour of DSFDC), or original property documents for mortgage with complete chain of documents.",
+    "description_hindi": "यदि ऋण मूल्य के अनुपात में पर्याप्त प्रतिभूतियां प्रदान नहीं की जाती हैं तो आवेदन अस्वीकार कर दिया जाएगा।",
+    "severity": "critical",
+    "prevention_tip": "Arrange for one of the three acceptable security options before applying — personal guarantee from an eligible government employee, collateral security instruments (NSC/KVP/FDR), or property mortgage documents with complete chain.",
+    "examples": [
+      "Guarantor is not a permanent government employee",
+      "Collateral security documents (NSC/KVP/FDR) without lien letter in favour of DSFDC",
+      "Property mortgage documents with incomplete chain of ownership",
+      "Guarantor has already given guarantee to another person in DSFDC"
+    ]
+  }
+]

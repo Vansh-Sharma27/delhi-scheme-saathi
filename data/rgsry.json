@@ -1,0 +1,693 @@
+{
+  "scheme": {
+    "id": "SCH-DELHI-005",
+    "name": "Rajiv Gandhi Swavlamban Rojgar Yojana (RGSRY)",
+    "name_hindi": "राजीव गांधी स्वावलंबन रोज़गार योजना (आरजीएसआरवाई)",
+    "department": "Delhi Khadi & Village Industries Board (DKVIB), Government of NCT of Delhi",
+    "department_hindi": "दिल्ली खादी एवं ग्रामोद्योग बोर्ड (डीकेवीआईबी), दिल्ली सरकार",
+    "level": "state",
+    "description": "Rajiv Gandhi Swavlamban Rojgar Yojana (RGSRY) has been designed, developed and promoted by the Delhi Khadi & Village Industries Board, with the support of the Government of NCT of Delhi, to provide employment opportunities to unemployed youths, artisans, trained professionals, skilled technocrats and entrepreneurs by promotion and expansion of permissible industries, professions, tertiary and service sector in the NCT of Delhi. The scheme provides financial assistance as a loan of up to ₹3,00,000 along with a government subsidy of 15% of project cost (maximum ₹7,500 per entrepreneur). Eligible sectors include the Secondary Sector (Tiny/Cottage Industries), Tertiary Sector (Trade, Transportation, Hotels, Restaurants – without Liquor & Meat, etc.), and Services Sector (under the ambit of various Terms & Conditions, provisions of local bodies and Delhi Master Plan). The loan is repayable in equal quarterly instalments within 5 years, with a 12-month moratorium period from the date of loan release. The scheme also extends marketing support to beneficiaries through product display, DSIIDC/Cooperative stores procurement, trade fair participation, and recognition certificates.",
+    "description_hindi": "राजीव गांधी स्वावलंबन रोज़गार योजना (आरजीएसआरवाई) दिल्ली खादी एवं ग्रामोद्योग बोर्ड द्वारा दिल्ली सरकार के सहयोग से बेरोज़गार युवाओं, कारीगरों, प्रशिक्षित पेशेवरों, कुशल तकनीकी विशेषज्ञों और उद्यमियों को दिल्ली एनसीटी में अनुमत उद्योगों, पेशों, तृतीयक और सेवा क्षेत्र के प्रोत्साहन/विस्तार द्वारा रोज़गार के अवसर प्रदान करने के लिए डिज़ाइन, विकसित और प्रचारित की गई है। यह योजना ₹3,00,000 तक के ऋण के साथ-साथ परियोजना लागत का 15% (अधिकतम ₹7,500 प्रति उद्यमी) की सरकारी सब्सिडी के रूप में वित्तीय सहायता प्रदान करती है। पात्र क्षेत्रों में द्वितीयक क्षेत्र (लघु/कुटीर उद्योग), तृतीयक क्षेत्र (व्यापार, परिवहन, होटल, रेस्तरां – बिना शराब और मांस आदि), और सेवा क्षेत्र शामिल हैं। ऋण 5 वर्षों के भीतर समान त्रैमासिक किस्तों में चुकाना होता है, ऋण जारी होने की तारीख से 12 महीने की मोहलत अवधि के साथ।",
+    "benefits_summary": "Loan of up to ₹3,00,000 for setting up or expanding units in permissible industry, profession, trade or service sectors. Government subsidy of 15% of project cost (maximum ₹7,500 per entrepreneur). For weaker sections (SC/ST/OBC/Physically Handicapped/Women/Ex-Servicemen), entrepreneur's contribution is reduced from 10% to 5%. Additional marketing support through product display, DSIIDC/Cooperative stores, trade fair participation, and recognition certificates.",
+    "benefits_amount": 300000,
+    "benefits_frequency": "as-needed",
+    "eligibility": {
+      "min_age": 18,
+      "max_age": 50,
+      "genders": [
+        "all"
+      ],
+      "categories": [
+        "General",
+        "SC",
+        "ST",
+        "OBC",
+        "Physically Handicapped",
+        "Women",
+        "Ex-Servicemen"
+      ],
+      "weaker_sections": [
+        "SC",
+        "ST",
+        "OBC",
+        "Physically Handicapped",
+        "Women",
+        "Ex-Servicemen"
+      ],
+      "max_income": null,
+      "income_by_category": null,
+      "vertical_wise_eligibility": null,
+      "domicile_required": null,
+      "domicile_states": [
+        "delhi"
+      ],
+      "employment_statuses": [
+        "unemployed",
+        "self-employed",
+        "artisan",
+        "entrepreneur"
+      ],
+      "education_levels": [
+        "all"
+      ],
+      "bpl_required": null,
+      "disability_required": null,
+      "disability_min_percentage": null,
+      "eligible_applicant_categories": {
+        "a": "School/College dropouts (above age 18 years)",
+        "b": "Individual entrepreneur",
+        "c": "Trade Professionals",
+        "d": "Artisan",
+        "e": "Passed out candidates from any technical/professional institute recognized by the Government or its authorized undertakings/bodies, without further training",
+        "f": "Small-Scale Industrial units with total investment in plant, machinery and equipment not exceeding the ceiling prescribed for small-scale units by the Central Government from time to time, located within NCT of Delhi"
+      },
+      "eligible_sectors": {
+        "secondary": "Tiny/Cottage Industries",
+        "tertiary": "Trade, Transportation, Hotels, Restaurants (without Liquor & Meat, etc.)",
+        "services": "Under the ambit of various Terms & Conditions, provisions of local bodies and Delhi Master Plan"
+      },
+      "beneficiary_family_definition": "As per self-declaration: applicant, spouse, and adult children (for purpose of verifying no prior loan from listed institutions).",
+      "other_conditions": [
+        "Applicant must be aged between 18 years and 50 years.",
+        "Applicant must fall under one of the eligible categories: school/college dropout, individual entrepreneur, trade professional, artisan, passed-out candidate from Govt./authorized technical/professional institute, or SSI unit located in NCT Delhi.",
+        "Loan shall NOT be sanctioned to parties who have already received a loan for the same or similar purpose from Government or any Government-controlled financial institution AND have not repaid in full with interest OR have misutilized the loan.",
+        "For units in residential/non-conforming areas: only those professional/industrial activities permitted under the Delhi Master Plan for those areas are eligible for loan.",
+        "For units in non-conforming areas: applicant must additionally submit NOC from High Power Committee (Industries Dept., Govt. of Delhi) and Municipal Corporation License (MCL) for the respective industry.",
+        "For professional/commercial activities in non-conforming areas: Registration Certificate from MCD for the concerned trade is additionally required.",
+        "Loan must be utilized within 3 months of sanction; Managing Director may grant maximum 3 months additional grace (total 6 months).",
+        "Non-utilization of funds within maximum permissible 6-month period → loan treated as misutilized → entire amount + 18% penal interest recoverable.",
+        "Utilization contrary to provisions of loan rules or DKVI Board instructions → loan treated as misutilized → principal + 18% penal interest recoverable.",
+        "Borrower must provide surety from a Govt. servant on a non-transferable post in Delhi (State/Central Govt./Autonomous bodies/Undertakings) OR follow procedure as per commercial banks.",
+        "Neither the applicant, nor spouse, nor any family member including adult children should have taken loan or applied for financial assistance from any of: Dept. of Industries (Delhi), KVIC (GoI), DKVIB, DRDA Delhi, Delhi SC/ST/OBC Development & Financial Corporation, Delhi Financial Corporation, any Nationalized/Scheduled Bank, Delhi State Co-operative Bank, or any other Govt./Non-Govt. Financial Agency/Institution – unless fully repaid.",
+        "Neither the applicant nor any family member should be a member of any Co-operative Society/Registered Institution which has applied for or taken any loan from the listed departments."
+      ],
+      "special_focus_groups": [
+        "SC/ST applicants (reduced 5% contribution)",
+        "OBC applicants (reduced 5% contribution)",
+        "Physically Handicapped applicants (reduced 5% contribution)",
+        "Women applicants (reduced 5% contribution)",
+        "Ex-Servicemen (reduced 5% contribution)"
+      ]
+    },
+    "description_embedding": [],
+    "documents_required": [
+      "DOC-AADHAAR",
+      "DOC-PHOTOGRAPHS",
+      "DOC-EDUCATION-PROOF",
+      "DOC-WORKSITE-DETAILS",
+      "DOC-ELECTRICITY-BILL",
+      "DOC-MCD-REGISTRATION",
+      "DOC-SELF-DECLARATION",
+      "DOC-SURETY-CONSENT",
+      "DOC-EQUITY-PROOF"
+    ],
+    "rejection_rules": [
+      "RULE-RGSRY-AGE-LIMIT-001",
+      "RULE-RGSRY-PRIOR-LOAN-002",
+      "RULE-RGSRY-MISUTILIZATION-003",
+      "RULE-RGSRY-NON-CONFORMING-004",
+      "RULE-RGSRY-UTILIZATION-TIMEOUT-005",
+      "RULE-RGSRY-NO-SURETY-006",
+      "RULE-RGSRY-FALSE-INFO-007",
+      "RULE-RGSRY-COOP-MEMBER-008",
+      "RULE-RGSRY-PROHIBITED-SECTOR-009"
+    ],
+    "application_url": "https://rgsry.co.in/",
+    "application_steps": [
+      "Step 1: Visit the RGSRY online application portal (https://rgsry.co.in/) or the e-District portal of GNCTD (https://edistrict.delhigovt.nic.in/) to apply online. Alternatively, download the application form from www.dkvib.delhigovt.nic.in for offline submission.",
+      "Step 2: Fill Part A (Personal Details) – Name, father's/husband's name, date of birth, category (SC/ST/OBC/General/PH/Women/Ex-Serviceman), residential address, permanent address, and worksite address.",
+      "Step 3: Fill Part B (Project Details Applied) – Proposed cost of project (capital expenditure + working capital), funding pattern (subsidy + applicant's contribution + term loan from DKVIB), estimated employment generation, estimated annual turnover and profit, and environmental/utility compliance declarations.",
+      "Step 4: Fill Part C (Project at a Glance) – Detailed applicant background, project description with market demand, total cost breakdown, machinery/furniture list, raw material details, manpower requirements, and complete profitability analysis with production cost breakdown and estimated annual sale/profit.",
+      "Step 5: Sign Part D (Declaration by Applicant) – declaring compliance with all RGSRY scheme conditions and authenticity of all documents.",
+      "Step 6: Complete Part E (Undertaking/Self-Declaration) – declare previous loan status (Option A: no previous loan from any listed institution OR Option B: details of any existing loan), date of birth, education qualification, cooperative society membership status, and final affirmation of truthfulness. Paste self-attested photograph on the declaration.",
+      "Step 7: Collect and attach all required documents – identity proof, 2 attested photographs, education proof, worksite details, electricity bill (residence), MCD Registration/NOC (as applicable), declaration in prescribed format, surety/guarantor consent letter, and proof of equity/self-contribution.",
+      "Step 8: Submit the complete application either online through the portal or offline at Delhi Khadi & Village Industries Board, 5th Floor, Nigam Bhawan (Old Hindu College), Kashmere Gate, Delhi-110006.",
+      "Step 9: Application is processed on First Come First Serve basis. Identity and photograph of the applicant are verified by ADO/Supervisor. For inquiry and assistance, contact the Facilitation Centre at 9311702507 (Sh. Inder Singh, ADO)."
+    ],
+    "offline_process": "Submit the prescribed Loan Application Form along with all required documents directly at the Delhi Khadi & Village Industries Board office at 5th Floor, Nigam Bhawan (Old Hindu College), Kashmere Gate, Delhi-110006. Application form can be downloaded from www.dkvib.delhigovt.nic.in. Applications are processed on First Come First Serve basis. A Facilitation Centre with a Technical/Field Officer is available daily at the same address for scheme inquiry and assistance.",
+    "processing_time": "First Come First Serve basis; no specific timeline prescribed in scheme literature",
+    "helpline": {
+      "phone": [
+        "9311702507"
+      ],
+      "phone_contact_person": "Sh. Inder Singh, ADO (Assistant Development Officer)",
+      "whatsapp": null,
+      "email": null,
+      "grievance_portal": null,
+      "address": "Delhi Khadi & Village Industries Board, 5th Floor, Nigam Bhawan (Old Hindu College), Kashmere Gate, Delhi-110006",
+      "facilitation_centre": "Technical/Field Officer available daily at 5th Floor, Nigam Bhawan, Old Hindu College, Kashmere Gate, Delhi-110006 for scheme inquiry and assistance"
+    },
+    "life_events": [
+      "BUSINESS_STARTUP",
+      "JOB_LOSS"
+    ],
+    "tags": [
+      "loan",
+      "subsidy",
+      "self_employment",
+      "entrepreneurship",
+      "MSME",
+      "cottage_industry",
+      "trade",
+      "Delhi",
+      "GNCTD",
+      "DKVIB",
+      "khadi",
+      "village_industries",
+      "artisan",
+      "professional",
+      "technician",
+      "SSI",
+      "small_scale",
+      "youth_employment",
+      "SC_ST_OBC",
+      "women",
+      "ex_servicemen",
+      "physically_handicapped"
+    ],
+    "official_url": "https://dkvib.delhi.gov.in/dkvib/salient-features-rajiv-gandhi-swavlamban-rojgar-yojna",
+    "metadata": {
+      "benefits_amount_detail": {
+        "maximum_loan": "₹3,00,000",
+        "subsidy_rate": "15% of project cost",
+        "maximum_subsidy": "₹7,500 per entrepreneur",
+        "subsidy_partnership": "For partnership projects, subsidy calculated separately for each partner at 15% of their share in the project cost, limited to ₹7,500 per partner",
+        "subsidy_adjustment": "Subsidy component adjusted to the borrower's loan account after 2 years from the date of disbursement of loan",
+        "applicant_contribution_general": "Minimum 10% of loan amount demanded",
+        "applicant_contribution_weaker_sections": "Minimum 5% of loan amount demanded (for SC/ST/OBC/Physically Handicapped/Women/Ex-Servicemen)"
+      },
+      "benefits_frequency_detail": {
+        "loan_disbursement": "As per sanction terms; may be disbursed in instalments",
+        "repayment_period": "Full repayment within 5 years in equal quarterly instalments",
+        "moratorium_period": "Recovery of principal starts after 12 months from the date of release of loan amount",
+        "interest_recovery": "Interest on released amount recoverable from the first quarter, from the date of release of loan amount",
+        "security_mechanism": "Equal number of post-dated cheques for quarterly instalments of principal amount including interest due as on date of instalment fixed by the Board",
+        "subsidy_credit": "Subsidy adjusted to borrower's loan account after 2 years from disbursement"
+      },
+      "processing_time_detail": {
+        "application_processing": "First Come First Serve basis; no specific timeline prescribed in scheme literature",
+        "loan_utilization_deadline": "Within 3 months of loan sanction (Managing Director may grant maximum 3 months additional grace; total maximum 6 months)",
+        "moratorium_period": "12 months from date of release of loan amount (no principal recovery during this period; interest recoverable from first quarter)",
+        "repayment_period": "Full repayment within 5 years in equal quarterly instalments",
+        "subsidy_adjustment": "Subsidy adjusted to borrower's loan account after 2 years from date of disbursement"
+      },
+      "documents_required_detailed": [
+        "Copy of Electoral Card / Valid Passport / Aadhaar Card – as identity proof.",
+        "Two passport-size attested photographs of the applicant.",
+        "Education proof – certificate or marksheet of highest qualification.",
+        "Work Site details – proof of ownership/possession, Rent Agreement, No Objection Certificate from Owner, Electricity Bill of work premises, etc.",
+        "Electricity Bill (Residence) – as address proof of the applicant.",
+        "For Shop/Business/Professions: MCD Registration Certificate for the concerned trade. For Industrial unit in non-conforming area: NOC of High Power Committee (HPC) AND Municipal Corporation License (MCL).",
+        "Declaration in prescribed format (proforma attached with application form) – self-declaration regarding previous loan status, date of birth, education qualification, cooperative society membership, and affirmation of truthfulness.",
+        "Consent letter of Surety/Guarantor with their ID and address proof – surety from any Govt. servant on a non-transferable post in Delhi OR as per commercial bank procedure.",
+        "Proof of equity/self-contribution – bank statement or affidavit showing minimum 10% (General) or 5% (Weaker Sections) of loan amount."
+      ],
+      "notes": [
+        "The loan application form has five parts: Part A (Personal Details), Part B (Project Details Applied), Part C (Project at a Glance with profitability analysis), Part D (Declaration by Applicant), and Part E (Undertaking/Self-Declaration regarding advanced loan).",
+        "Part B requires: proposed project cost breakdown (capital expenditure + working capital), funding pattern (grant/subsidy + applicant's contribution + term loan), estimated employment generation, estimated annual turnover and profit, and environmental/utility compliance declarations.",
+        "Part C requires: detailed applicant background (education, experience related to project), project brief with market demand, cost breakdown, machinery/furniture list with costs, raw material details, manpower requirements, and full profitability analysis (production cost, estimated annual sale, estimated annual profit).",
+        "Application processing is on First Come First Serve basis.",
+        "Concealment of facts and giving false information is a punishable offence; benefits availed through false information are liable to be summarily withdrawn.",
+        "Identity and photograph of the applicant are verified by ADO/Supervisor at the DKVI Board office."
+      ],
+      "urls": {
+        "application_form_pdf": "https://dkvib.delhi.gov.in/sites/default/files/DKVIB/generic_multiple_files/rgsry-form.pdf",
+        "myscheme_url": "https://www.myscheme.gov.in/schemes/rgsry",
+        "application_portal_url": "https://rgsry.co.in/",
+        "salient_features_pdf": "https://dkvib.delhi.gov.in/sites/default/files/2022-11/salient-features-of-rgsry.pdf",
+        "board_website": "https://dkvib.delhi.gov.in/",
+        "edistrict_portal_url": "https://edistrict.delhigovt.nic.in/"
+      },
+      "life_events_original": [
+        "starting_business",
+        "self_employment",
+        "entrepreneurship",
+        "skill_utilization",
+        "unemployment",
+        "business_expansion"
+      ]
+    },
+    "last_verified": "2026-02-28T00:00:00Z",
+    "is_active": true
+  },
+  "documents": [
+    {
+      "id": "DOC-AADHAAR",
+      "name": "Aadhaar Card",
+      "name_hindi": "आधार कार्ड",
+      "issuing_authority": "Unique Identification Authority of India (UIDAI)",
+      "alternate_authority": "Common Service Centre (CSC)",
+      "online_portal": "https://uidai.gov.in/",
+      "prerequisites": [],
+      "fee": "0",
+      "fee_bpl": "0",
+      "processing_time": "15-30 days",
+      "validity_period": "Lifetime (update required every 10 years)",
+      "format_requirements": [
+        "12-digit unique identification number",
+        "Biometric data (fingerprints and iris scan)",
+        "Photograph must be recent",
+        "Address must be complete with PIN code",
+        "Must be self-attested, scanned, and uploaded on e-District portal",
+        "Aadhaar must be linked to bank account via NPCI for DBT pension credit",
+        "Aadhaar must not be locked at time of application",
+        "Any ONE of the following is accepted: Copy of Electoral Card (Voter ID), Valid Passport, or Aadhaar Card",
+        "Must clearly show the applicant's name, photograph, and identification number",
+        "Copy to be submitted with the loan application",
+        "Copy of Aadhaar Card required for Borrower (Applicant), Co-Borrower (Parents/Guardian), and Guarantor — all three",
+        "Photograph and address must be current"
+      ],
+      "common_mistakes": [
+        "Incorrect mobile number during registration",
+        "Poor quality biometric capture",
+        "Address proof documents don't match current residence",
+        "Name spelling doesn't match other documents",
+        "Aadhaar not linked to bank account via NPCI – pension will not be credited",
+        "Aadhaar number locked for security but not unlocked before applying on e-District portal",
+        "Name or address mismatch between Aadhaar and bank account",
+        "Application portal will not function without valid Aadhaar number",
+        "Expired passport submitted as identity proof",
+        "Name on identity proof does not match the application form",
+        "Blurred or illegible photocopy submitted",
+        "None of the three specified documents available",
+        "Missing Aadhaar card of Guarantor — all three Aadhaar copies are mandatory",
+        "Name spelling mismatch between Aadhaar and other submitted documents",
+        "Address on Aadhaar does not reflect Delhi residence"
+      ],
+      "delhi_offices": [
+        "OFF-CSC-DWARKA-001",
+        "OFF-CSC-ROHINI-002"
+      ]
+    },
+    {
+      "id": "DOC-SELF-DECLARATION",
+      "name": "Self-Declaration / Affidavit",
+      "name_hindi": "स्व-घोषणा / शपथ पत्र",
+      "issuing_authority": "Notary Public / Executive Magistrate",
+      "alternate_authority": "Self-attested (where applicable)",
+      "online_portal": null,
+      "prerequisites": [
+        "DOC-AADHAAR"
+      ],
+      "fee": "Varies (typically ₹10-100 for notarization)",
+      "fee_bpl": "0",
+      "processing_time": "Instant (notarization)",
+      "validity_period": "Valid for the application period",
+      "format_requirements": [
+        "Must state that beneficiary does not own a pucca house anywhere in India",
+        "Must declare no benefits availed from any Central/State/Local housing scheme in last 20 years",
+        "Must be signed by the applicant",
+        "Notarization or attestation by competent authority where required by State/UT",
+        "Must declare: patient's disease, hospital where treatment is being done, approximate expenditure as certified by hospital",
+        "Must declare total family monthly income with specific source details",
+        "Must include family details table: spouse and children up to 21 years (name, age, relation, profession, monthly income)",
+        "Must declare inability to bear treatment expenses",
+        "Must acknowledge that false statements are punishable under relevant Acts and laws",
+        "Must include verification clause with date and place (New Delhi)",
+        "Must be signed by TWO witnesses with their names and addresses",
+        "Deponent rules: Minor patient → Father signs; Housewife patient → Husband signs; Adult self-dependent → Patient signs; Adult dependent on father → Father signs (+ separate affidavit of dependency required)",
+        "Must be in the format available on the e-District portal",
+        "Must declare annual income from all sources (including rent, interest, dividends, farm earnings, property sale proceeds, etc.)",
+        "Annual income declared must be less than ₹1,00,000",
+        "No recommendation or attestation from any external authority is required; only self-declaration by applicant",
+        "Must be self-attested, scanned, and uploaded on e-District portal",
+        "Must be in the prescribed format (proforma attached with the RGSRY application form)",
+        "Part D: Declaration of scheme compliance and document authenticity",
+        "Part E: Undertaking regarding previous loan status – must select Option (a) 'No Previous Loan' or Option (b) 'Previous Loan Details' with full disclosure of outstanding amounts",
+        "Part E must include: date of birth, education qualification, cooperative society membership status, and final affirmation of truthfulness",
+        "Must include self-attested photograph pasted with half signature on photograph and half on paper",
+        "Must declare that neither the applicant, spouse, nor any family member including adult children have taken or applied for loans from any of the listed 9 categories of institutions (unless fully repaid)",
+        "Must declare that no family member is a member of any Co-operative Society/Registered Institution that has applied for or taken loan from the listed departments",
+        "Affidavit stating that no loan has been availed from any Government Agency for the same purpose",
+        "Must state that no member of the family or dependent has availed the loan facility under the scheme of this Corporation, Government of India, or any other financial institution for the said purpose",
+        "Must be notarized or attested as applicable"
+      ],
+      "common_mistakes": [
+        "Declaration not covering all family members (husband, wife, unmarried children)",
+        "Missing notary stamp or seal",
+        "Not declaring previous housing benefits availed",
+        "Incorrect factual statements leading to disqualification",
+        "Wrong deponent signing (e.g., patient signing when they are a dependent minor)",
+        "Missing witness signatures or incomplete witness details",
+        "Family income details not matching the income certificate",
+        "Not disclosing all sources of income",
+        "Missing affidavit of dependency when adult patient is dependent on father",
+        "Incomplete family details table",
+        "Not acknowledging the penal consequences of false statements",
+        "Not using the prescribed format available on the e-District portal",
+        "Declaring income that exceeds the ₹1,00,000 annual limit",
+        "Not disclosing all sources of income (rent, interest, dividends, farm earnings, property sale proceeds, etc.)",
+        "False income declaration – punishable with penal action, penalty, pension stoppage, and recovery of amount",
+        "Not using the prescribed proforma format",
+        "Checking Option (a) 'No Previous Loan' when a previous loan exists",
+        "Not disclosing spouse's or adult children's loans from listed institutions",
+        "Missing self-attested photograph with half-signature placement",
+        "Not acknowledging penal consequences of false information",
+        "Concealing cooperative society membership",
+        "Not covering all family members in the declaration",
+        "Previously availed loan from another government scheme for the same purpose not disclosed"
+      ],
+      "delhi_offices": []
+    },
+    {
+      "id": "DOC-PHOTOGRAPHS",
+      "name": "Attested Passport-Size Photographs of Patient",
+      "name_hindi": "रोगी के सत्यापित पासपोर्ट आकार के फोटो",
+      "issuing_authority": "Any photo studio (attestation by Medical Superintendent / Treating Doctor / Consultant of Government Hospital)",
+      "alternate_authority": null,
+      "online_portal": null,
+      "prerequisites": [],
+      "fee": "Nominal (photo studio charges)",
+      "fee_bpl": "Nominal",
+      "processing_time": "Instant (photographs); attestation depends on hospital availability",
+      "validity_period": "Must be recent photographs",
+      "format_requirements": [
+        "Two passport-size photographs of the patient required",
+        "Must be duly attested by the Medical Superintendent or treating doctor/consultant of the concerned Government Hospital",
+        "One photograph must be pasted on the Estimate Certificate (Part B)",
+        "One photograph must be pasted on the Application Form (Part A)",
+        "One passport-size photograph of the applicant",
+        "Must be recent and clearly identifiable",
+        "Must be scanned and uploaded on the e-District portal during application",
+        "Two passport-size photographs required",
+        "Must be attested",
+        "One photograph to be pasted on the self-declaration (Part E) with half signature on photograph and half on paper",
+        "Four passport-size photographs each of the Borrower, Co-Borrower, and Guarantor",
+        "One full-size photograph of the Borrower if the applicant belongs to PwD category",
+        "Photographs should be recent and clearly identifiable"
+      ],
+      "common_mistakes": [
+        "Photographs not attested by hospital authority",
+        "Only one photograph submitted instead of two",
+        "Photographs pasted on wrong form sections",
+        "Photographs not recent or not clearly identifiable",
+        "Photograph too old or not clearly identifiable",
+        "Photograph not in passport-size format",
+        "Blurred or low-resolution scan uploaded on the portal",
+        "Photographs not attested",
+        "Self-attested photograph on Part E not done correctly (half-signature placement)",
+        "Old or unclear photographs",
+        "Insufficient number of photographs (need 4 each for borrower, co-borrower, and guarantor)",
+        "Missing full-size photograph for PwD category applicant"
+      ],
+      "delhi_offices": []
+    },
+    {
+      "id": "DOC-EDUCATION-PROOF",
+      "name": "Education Proof (Certificate / Marksheet)",
+      "name_hindi": "शिक्षा प्रमाण (प्रमाण पत्र / अंकपत्र)",
+      "issuing_authority": "Educational Institution / Board of Education / University",
+      "alternate_authority": null,
+      "online_portal": null,
+      "prerequisites": [],
+      "fee": "Varies",
+      "fee_bpl": "0",
+      "processing_time": "Varies by institution",
+      "validity_period": "Lifetime",
+      "format_requirements": [
+        "Certificate or marksheet of highest qualification attained",
+        "For school/college dropouts: proof of last class attended",
+        "For passed-out candidates from Govt./authorized technical/professional institutes: certificate from the recognized institute",
+        "For artisans: any relevant skill/trade certificate",
+        "Copy of Mark Sheet of the last examination on the basis of which the applicant has obtained admission in the present/particular course",
+        "Must clearly show marks/grades obtained",
+        "Self-attested copy required"
+      ],
+      "common_mistakes": [
+        "Education proof not matching the applicant category claimed in the application",
+        "Certificate from an institute not recognized by the Government or its authorized undertakings",
+        "Missing or incomplete certificate/marksheet",
+        "Submitting mark sheet of an examination other than the one qualifying for admission",
+        "Mark sheet not self-attested",
+        "Illegible or incomplete copies"
+      ],
+      "delhi_offices": []
+    },
+    {
+      "id": "DOC-WORKSITE-DETAILS",
+      "name": "Work Site Details & Proof",
+      "name_hindi": "कार्यस्थल विवरण एवं प्रमाण",
+      "issuing_authority": "Varies – Sub-Registrar (ownership documents), Landlord (rent agreement/NOC), Electricity Company (bills)",
+      "alternate_authority": null,
+      "online_portal": null,
+      "prerequisites": [],
+      "fee": "Varies by document type",
+      "fee_bpl": "Varies",
+      "processing_time": "Varies by document type",
+      "validity_period": "Must be current and valid at time of application",
+      "format_requirements": [
+        "Must include one or more of: Proof of ownership/possession of work premises, Rent Agreement for work premises, No Objection Certificate (NOC) from Owner/Landlord, Electricity Bill of work premises",
+        "Worksite must be located within NCT of Delhi",
+        "For units in non-conforming areas: must additionally provide NOC from HPC and MCL",
+        "For professional/commercial activities: MCD Registration Certificate for the concerned trade"
+      ],
+      "common_mistakes": [
+        "Worksite located outside NCT of Delhi",
+        "Rent agreement expired or not covering the proposed project period",
+        "NOC from landlord missing for rented premises",
+        "Work premises electricity bill not in applicant's or landlord's name",
+        "Activity proposed in non-conforming area without required HPC NOC and MCL"
+      ],
+      "delhi_offices": []
+    },
+    {
+      "id": "DOC-ELECTRICITY-BILL",
+      "name": "Electricity Bill (Residence)",
+      "name_hindi": "बिजली बिल (निवास)",
+      "issuing_authority": "Electricity Distribution Company (BSES Rajdhani / BSES Yamuna / TPDDL / NDPL)",
+      "alternate_authority": null,
+      "online_portal": null,
+      "prerequisites": [],
+      "fee": "0 (bill is part of regular utility service)",
+      "fee_bpl": "0",
+      "processing_time": "Monthly billing cycle",
+      "validity_period": "Must be recent (typically within last 3 months)",
+      "format_requirements": [
+        "Must be a residential electricity bill showing the applicant's Delhi address",
+        "Used as address proof for the applicant",
+        "Should clearly show the consumer name and address"
+      ],
+      "common_mistakes": [
+        "Electricity bill not in applicant's name",
+        "Bill for a non-Delhi address",
+        "Very old bill (more than 3 months)",
+        "Commercial electricity bill submitted instead of residential"
+      ],
+      "delhi_offices": []
+    },
+    {
+      "id": "DOC-MCD-REGISTRATION",
+      "name": "MCD Registration Certificate / HPC NOC & MCL",
+      "name_hindi": "एमसीडी पंजीकरण प्रमाण पत्र / एचपीसी अनापत्ति प्रमाण पत्र एवं एमसीएल",
+      "issuing_authority": "Municipal Corporation of Delhi (MCD) / High Power Committee (Industries Department, Govt. of Delhi)",
+      "alternate_authority": null,
+      "online_portal": null,
+      "prerequisites": [],
+      "fee": "Varies as per MCD/Industries Department norms",
+      "fee_bpl": "Varies",
+      "processing_time": "Varies (typically 15-30 days for MCD registration; HPC NOC may take longer)",
+      "validity_period": "As per MCD registration period / HPC NOC validity",
+      "format_requirements": [
+        "For Shop/Business/Professions: MCD Registration Certificate for the concerned trade",
+        "For Industrial unit in non-conforming area: NOC from High Power Committee (HPC) constituted by Industries Department, Govt. of Delhi AND Municipal Corporation License (MCL) for the respective industry",
+        "For professional/commercial activities in non-conforming areas: additionally, Registration Certificate from MCD for the concerned trade",
+        "Must be valid and current at time of loan application"
+      ],
+      "common_mistakes": [
+        "MCD Registration not obtained before applying for loan",
+        "HPC NOC not obtained for unit in non-conforming area",
+        "MCL expired or not covering the specific industry proposed",
+        "Trade registration does not match the proposed business activity in the application"
+      ],
+      "delhi_offices": []
+    },
+    {
+      "id": "DOC-SURETY-CONSENT",
+      "name": "Consent Letter of Surety / Guarantor",
+      "name_hindi": "ज़मानतदार / गारंटर की सहमति पत्र",
+      "issuing_authority": "Government servant (for Option A) / Bank (for Option B)",
+      "alternate_authority": null,
+      "online_portal": null,
+      "prerequisites": [],
+      "fee": "0",
+      "fee_bpl": "0",
+      "processing_time": "Varies (depends on availability of guarantor)",
+      "validity_period": "Valid for the loan tenure (5 years)",
+      "format_requirements": [
+        "Consent letter from the surety/guarantor agreeing to guarantee the loan",
+        "Option A: Surety from any Govt. servant working on a non-transferable post in Delhi in any office of State Government/Central Government or its autonomous bodies/undertakings",
+        "Option B: Surety/guarantee as per commercial bank procedures",
+        "Must include surety's/guarantor's ID proof and address proof",
+        "Surety remains liable for the entire loan tenure and any default by the borrower"
+      ],
+      "common_mistakes": [
+        "Guarantor is on a transferable post (not valid under Option A)",
+        "Guarantor is not a Delhi-based government servant (for Option A)",
+        "Consent letter missing guarantor's ID and address proof",
+        "Guarantor unaware of their liability in case of borrower default",
+        "No surety/guarantor arranged at all"
+      ],
+      "delhi_offices": []
+    },
+    {
+      "id": "DOC-EQUITY-PROOF",
+      "name": "Proof of Equity / Self-Contribution",
+      "name_hindi": "स्वयं के योगदान का प्रमाण",
+      "issuing_authority": "Bank (for bank statement) / Notary Public (for affidavit)",
+      "alternate_authority": null,
+      "online_portal": null,
+      "prerequisites": [],
+      "fee": "0 (bank statement); varies for affidavit notarization",
+      "fee_bpl": "0",
+      "processing_time": "Instant (bank statement); 1 day (affidavit)",
+      "validity_period": "Must be current at time of application",
+      "format_requirements": [
+        "Bank statement or affidavit showing capacity to contribute the required equity",
+        "General category: minimum 10% of loan amount demanded from DKVIB",
+        "Weaker sections (SC/ST/OBC/Physically Handicapped/Women/Ex-Servicemen): minimum 5% of loan amount demanded from DKVIB",
+        "Must clearly demonstrate availability of the self-contribution amount"
+      ],
+      "common_mistakes": [
+        "Bank statement does not show sufficient balance for the required contribution percentage",
+        "Claiming weaker section reduced contribution (5%) without proper category certificate",
+        "Old bank statement that does not reflect current financial capacity",
+        "Affidavit not notarized"
+      ],
+      "delhi_offices": []
+    }
+  ],
+  "rejection_rules": [
+    {
+      "id": "RULE-RGSRY-AGE-LIMIT-001",
+      "scheme_id": "SCH-DELHI-005",
+      "rule_type": "validity",
+      "description": "Application will be rejected if the applicant is below 18 years or above 50 years of age. The scheme is exclusively for applicants aged between 18 years and 50 years.",
+      "description_hindi": "यदि आवेदक की आयु 18 वर्ष से कम या 50 वर्ष से अधिक है तो आवेदन अस्वीकार कर दिया जाएगा। यह योजना विशेष रूप से 18 से 50 वर्ष की आयु के आवेदकों के लिए है।",
+      "severity": "critical",
+      "prevention_tip": "Verify age from identity documents before applying. Applicant must be between 18 and 50 years of age at the time of application.",
+      "examples": [
+        "17-year-old school dropout applying for a loan",
+        "51-year-old entrepreneur applying for financial assistance",
+        "Date of birth on application does not match identity proof, revealing ineligible age"
+      ]
+    },
+    {
+      "id": "RULE-RGSRY-PRIOR-LOAN-002",
+      "scheme_id": "SCH-DELHI-005",
+      "rule_type": "validity",
+      "description": "Loan shall NOT be sanctioned to parties who have already been advanced any loan for the same or similar purpose by the Government or any Government-controlled financial institution AND have not repaid in full with interest OR have misutilized the loan. This extends to the applicant, their spouse, and any family member including adult children who have taken or applied for financial assistance from any of the 9 listed categories of institutions.",
+      "description_hindi": "ऐसी पार्टियों को ऋण स्वीकृत नहीं किया जाएगा जिन्हें पहले से ही सरकार या किसी सरकार-नियंत्रित वित्तीय संस्थान द्वारा समान या समान उद्देश्य के लिए कोई ऋण दिया गया है और उसे ब्याज सहित पूर्ण रूप से चुकाया नहीं गया है या ऋण का दुरुपयोग किया गया है। यह आवेदक, उनके पति/पत्नी, और वयस्क बच्चों सहित किसी भी परिवार के सदस्य पर लागू होता है।",
+      "severity": "critical",
+      "prevention_tip": "Ensure all previous loans from Government/Government-controlled institutions are fully repaid with interest before applying. Disclose any existing loans truthfully in Part E of the application form.",
+      "examples": [
+        "Applicant has an outstanding loan from Delhi Financial Corporation for a similar business",
+        "Applicant's spouse has an unpaid KVIC loan for a cottage industry",
+        "Applicant previously misutilized a DRDA Delhi loan and was declared a defaulter",
+        "Adult child of applicant has pending loan from a Nationalized Bank for similar purpose"
+      ]
+    },
+    {
+      "id": "RULE-RGSRY-MISUTILIZATION-003",
+      "scheme_id": "SCH-DELHI-005",
+      "rule_type": "compliance",
+      "description": "If the borrower utilizes the loan for any purpose other than that for which it was sanctioned, or fails to utilize the loan within the maximum permissible 6-month period (3 months + 3 months grace), the loan is treated as misutilized. The entire principal amount shall be recovered along with 18% penal interest (or as prescribed from time to time by Delhi Govt.). The subsidy component will also be recovered with 18% penal interest.",
+      "description_hindi": "यदि उधारकर्ता ऋण का उपयोग उस उद्देश्य के अलावा किसी अन्य उद्देश्य के लिए करता है जिसके लिए यह स्वीकृत किया गया था, या अधिकतम अनुमत 6 महीने की अवधि (3 महीने + 3 महीने ग्रेस) के भीतर ऋण का उपयोग करने में विफल रहता है, तो ऋण को दुरुपयोग माना जाएगा। संपूर्ण मूल राशि 18% दंडात्मक ब्याज सहित वसूल की जाएगी। सब्सिडी घटक भी 18% दंडात्मक ब्याज सहित वसूल किया जाएगा।",
+      "severity": "critical",
+      "prevention_tip": "Utilize the loan strictly for the sanctioned purpose within 3 months of loan sanction. If more time is needed, apply to the Managing Director for a maximum 3-month grace extension before the initial deadline. Keep all utilization receipts and documentation.",
+      "examples": [
+        "Loan sanctioned for a tailoring unit but used to purchase a personal vehicle",
+        "Loan amount not utilized for 7 months after sanction with no grace extension sought",
+        "Subsidy and loan used for a liquor business instead of the sanctioned trade",
+        "Partial utilization – remaining amount diverted to personal expenses"
+      ]
+    },
+    {
+      "id": "RULE-RGSRY-NON-CONFORMING-004",
+      "scheme_id": "SCH-DELHI-005",
+      "rule_type": "validity",
+      "description": "In residential or non-conforming areas, loan will only be sanctioned for those professional/industrial activities that are permitted under the Delhi Master Plan for those areas. Additionally, applicants must obtain NOC from the High Power Committee (Industries Dept., Govt. of Delhi) and Municipal Corporation License (MCL) for the respective industry. For professional/commercial activities, Registration Certificate from MCD for the concerned trade is additionally required.",
+      "description_hindi": "आवासीय या गैर-अनुरूप क्षेत्रों में, केवल उन पेशेवर/औद्योगिक गतिविधियों के लिए ऋण स्वीकृत किया जाएगा जो उन क्षेत्रों के लिए दिल्ली मास्टर प्लान के तहत अनुमत हैं। इसके अतिरिक्त, आवेदकों को उच्च शक्ति समिति (उद्योग विभाग, दिल्ली सरकार) से अनापत्ति प्रमाण पत्र और संबंधित उद्योग के लिए नगर निगम लाइसेंस प्राप्त करना होगा।",
+      "severity": "high",
+      "prevention_tip": "Before applying, verify that the proposed activity is permitted under the Delhi Master Plan for the area where the unit will be set up. Obtain HPC NOC and MCL before submitting the loan application for non-conforming areas.",
+      "examples": [
+        "Proposing a manufacturing unit in a residential area not permitted under Delhi Master Plan",
+        "Application for industrial activity in non-conforming area without HPC NOC",
+        "Missing Municipal Corporation License for the proposed industry in non-conforming area",
+        "Professional activity in non-conforming area without MCD trade registration"
+      ]
+    },
+    {
+      "id": "RULE-RGSRY-UTILIZATION-TIMEOUT-005",
+      "scheme_id": "SCH-DELHI-005",
+      "rule_type": "timeline",
+      "description": "Loan must be utilized for the specific sanctioned purpose within 3 months. The Managing Director of DKVI Board may grant a maximum 3-month grace extension. After 6 months total, no further concession will be allowed and the loan will be treated as misutilized, inviting recovery of the entire amount along with 18% interest.",
+      "description_hindi": "ऋण का उपयोग विशिष्ट स्वीकृत उद्देश्य के लिए 3 महीने के भीतर किया जाना चाहिए। डीकेवीआई बोर्ड के प्रबंध निदेशक अधिकतम 3 महीने का ग्रेस एक्सटेंशन दे सकते हैं। कुल 6 महीने के बाद कोई और रियायत नहीं दी जाएगी और ऋण को दुरुपयोग माना जाएगा।",
+      "severity": "critical",
+      "prevention_tip": "Plan the project timeline carefully before applying. Begin utilizing the loan immediately after disbursement. If delays are unavoidable, apply to the Managing Director for a grace extension well before the 3-month deadline.",
+      "examples": [
+        "Loan disbursed on 1st January but no machinery purchased or activity started by 1st April",
+        "Grace extension requested after the initial 3-month deadline has already passed",
+        "Partial utilization within 3 months with remaining amount idle for 6+ months"
+      ]
+    },
+    {
+      "id": "RULE-RGSRY-NO-SURETY-006",
+      "scheme_id": "SCH-DELHI-005",
+      "rule_type": "procedural",
+      "description": "Loan will not be sanctioned if the applicant fails to furnish surety from a Government servant working on a non-transferable post in Delhi (State/Central Govt./autonomous bodies/undertakings) or fails to follow the surety procedure as per commercial banks.",
+      "description_hindi": "यदि आवेदक दिल्ली में गैर-स्थानांतरणीय पद पर कार्यरत सरकारी कर्मचारी (राज्य/केंद्र सरकार/स्वायत्त निकाय/उपक्रम) से ज़मानत प्रस्तुत करने में विफल रहता है या वाणिज्यिक बैंकों के अनुसार ज़मानत प्रक्रिया का पालन करने में विफल रहता है, तो ऋण स्वीकृत नहीं किया जाएगा।",
+      "severity": "high",
+      "prevention_tip": "Arrange a surety/guarantor before applying. Under Option A, the guarantor must be a Govt. servant on a non-transferable post in Delhi. Under Option B, follow commercial bank surety procedures. Obtain written consent letter with guarantor's ID and address proof.",
+      "examples": [
+        "No guarantor arranged at time of application",
+        "Guarantor is a Government servant on a transferable post (not eligible under Option A)",
+        "Guarantor's consent letter does not include ID and address proof",
+        "Guarantor is posted outside Delhi"
+      ]
+    },
+    {
+      "id": "RULE-RGSRY-FALSE-INFO-007",
+      "scheme_id": "SCH-DELHI-005",
+      "rule_type": "compliance",
+      "description": "Concealment of facts and providing false information is a punishable offence liable to imprisonment and/or fine as per relevant provisions of law. Benefits availed through false information or concealment of facts are liable to be summarily withdrawn. This includes false declarations regarding previous loan status, cooperative society membership, education, and all documents submitted.",
+      "description_hindi": "तथ्यों को छिपाना और झूठी जानकारी देना दंडनीय अपराध है जो कानून के संबंधित प्रावधानों के अनुसार कारावास और/या जुर्माने से दंडनीय है। झूठी जानकारी या तथ्यों को छिपाकर प्राप्त लाभ तत्काल वापस लिए जा सकते हैं।",
+      "severity": "critical",
+      "prevention_tip": "Provide only truthful and accurate information in all parts of the application form and declarations. Disclose all previous loans, cooperative memberships, and material facts. False information can lead to criminal prosecution, loan recall, and summary withdrawal of all benefits.",
+      "examples": [
+        "Concealing an existing outstanding loan from DKVIB or listed institutions",
+        "Providing forged education certificates to meet eligibility criteria",
+        "Falsely declaring no cooperative society membership when one exists",
+        "Misrepresenting the proposed business activity in the application"
+      ]
+    },
+    {
+      "id": "RULE-RGSRY-COOP-MEMBER-008",
+      "scheme_id": "SCH-DELHI-005",
+      "rule_type": "validity",
+      "description": "Application will be rejected if the applicant or any family member is a member of any Co-operative Society or Registered Institution which has applied for or taken any loan from the departments listed in the self-declaration (Dept. of Industries, KVIC, DKVIB, DRDA, Delhi SC/ST/OBC Corp., DFC, Nationalized/Scheduled Banks, Delhi State Co-operative Bank, or any other Govt./Non-Govt. Financial Agency).",
+      "description_hindi": "यदि आवेदक या कोई परिवार का सदस्य किसी सहकारी समिति या पंजीकृत संस्थान का सदस्य है जिसने स्व-घोषणा में सूचीबद्ध विभागों से ऋण के लिए आवेदन किया है या ऋण लिया है, तो आवेदन अस्वीकार कर दिया जाएगा।",
+      "severity": "high",
+      "prevention_tip": "Declare cooperative society/registered institution memberships truthfully. If any family member's cooperative society has an outstanding loan from listed institutions, the applicant is not eligible.",
+      "examples": [
+        "Applicant is a member of a cooperative society that has an outstanding DKVIB loan",
+        "Spouse is a member of a registered institution that applied for DFC loan",
+        "Family member's cooperative society has unpaid loan from a Nationalized Bank"
+      ]
+    },
+    {
+      "id": "RULE-RGSRY-PROHIBITED-SECTOR-009",
+      "scheme_id": "SCH-DELHI-005",
+      "rule_type": "validity",
+      "description": "Loan will not be sanctioned for activities in prohibited sectors. The Tertiary Sector explicitly excludes Hotels and Restaurants dealing in Liquor and Meat. Additionally, any activity not permitted under the Delhi Master Plan provisions or local body regulations is ineligible. Activities that create environmental problems may also be scrutinized.",
+      "description_hindi": "निषिद्ध क्षेत्रों में गतिविधियों के लिए ऋण स्वीकृत नहीं किया जाएगा। तृतीयक क्षेत्र में शराब और मांस का कारोबार करने वाले होटल और रेस्तरां को स्पष्ट रूप से बाहर रखा गया है। इसके अतिरिक्त, दिल्ली मास्टर प्लान या स्थानीय निकाय नियमों के तहत अनुमत नहीं होने वाली कोई भी गतिविधि अपात्र है।",
+      "severity": "critical",
+      "prevention_tip": "Verify that the proposed business activity falls within the permitted sectors: Secondary (Tiny/Cottage Industries), Tertiary (Trade, Transportation, Hotels/Restaurants WITHOUT Liquor & Meat), or Services (as per local body provisions and Delhi Master Plan). Avoid prohibited activities.",
+      "examples": [
+        "Application for a restaurant serving liquor and meat",
+        "Proposed hotel business involving liquor trade",
+        "Industrial activity that creates environmental pollution problems",
+        "Activity not covered under the Delhi Master Plan provisions"
+      ]
+    }
+  ]
+}

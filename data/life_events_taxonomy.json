@@ -1,0 +1,155 @@
+{
+  "_comment": "Life Events Taxonomy for Delhi Scheme Saathi - Maps lowercase event strings to UPPERCASE taxonomy keys",
+  "taxonomy": {
+    "HOUSING": {
+      "display_name": "Housing & Property",
+      "display_name_hindi": "आवास एवं संपत्ति",
+      "aliases": [
+        "buying_home",
+        "constructing_home",
+        "renting_home",
+        "property_purchase",
+        "home_purchase"
+      ]
+    },
+    "MARRIAGE": {
+      "display_name": "Marriage",
+      "display_name_hindi": "विवाह",
+      "aliases": [
+        "marriage",
+        "wedding",
+        "getting_married"
+      ]
+    },
+    "CHILDBIRTH": {
+      "display_name": "Childbirth & Parenting",
+      "display_name_hindi": "जन्म एवं पालन-पोषण",
+      "aliases": [
+        "starting_family",
+        "child_birth",
+        "having_children",
+        "new_baby"
+      ]
+    },
+    "EDUCATION": {
+      "display_name": "Education",
+      "display_name_hindi": "शिक्षा",
+      "aliases": [
+        "education",
+        "higher_education",
+        "professional_course",
+        "studying",
+        "studying_abroad"
+      ]
+    },
+    "HEALTH_CRISIS": {
+      "display_name": "Health Emergency",
+      "display_name_hindi": "स्वास्थ्य आपातकाल",
+      "aliases": [
+        "illness",
+        "hospitalization",
+        "medical_emergency",
+        "chronic_disease",
+        "surgery",
+        "health_issue"
+      ]
+    },
+    "DEATH_IN_FAMILY": {
+      "display_name": "Death in Family",
+      "display_name_hindi": "परिवार में मृत्यु",
+      "aliases": [
+        "death_of_spouse",
+        "widowhood",
+        "death_in_family",
+        "bereavement"
+      ]
+    },
+    "MARITAL_DISTRESS": {
+      "display_name": "Marital Distress",
+      "display_name_hindi": "वैवाहिक कठिनाई",
+      "aliases": [
+        "divorce",
+        "separation",
+        "abandonment",
+        "destitution",
+        "deserted"
+      ]
+    },
+    "JOB_LOSS": {
+      "display_name": "Job Loss & Unemployment",
+      "display_name_hindi": "नौकरी छूटना एवं बेरोजगारी",
+      "aliases": [
+        "unemployment",
+        "job_loss",
+        "retrenchment",
+        "laid_off"
+      ]
+    },
+    "BUSINESS_STARTUP": {
+      "display_name": "Starting a Business",
+      "display_name_hindi": "व्यवसाय शुरू करना",
+      "aliases": [
+        "starting_business",
+        "self_employment",
+        "entrepreneurship",
+        "skill_utilization",
+        "business_expansion"
+      ]
+    },
+    "WOMEN_EMPOWERMENT": {
+      "display_name": "Women Empowerment",
+      "display_name_hindi": "महिला सशक्तिकरण",
+      "aliases": [
+        "women_empowerment",
+        "women_welfare",
+        "girl_child"
+      ]
+    }
+  },
+  "mapping": {
+    "buying_home": "HOUSING",
+    "constructing_home": "HOUSING",
+    "renting_home": "HOUSING",
+    "property_purchase": "HOUSING",
+    "home_purchase": "HOUSING",
+    "marriage": "MARRIAGE",
+    "wedding": "MARRIAGE",
+    "getting_married": "MARRIAGE",
+    "starting_family": "CHILDBIRTH",
+    "child_birth": "CHILDBIRTH",
+    "having_children": "CHILDBIRTH",
+    "new_baby": "CHILDBIRTH",
+    "education": "EDUCATION",
+    "higher_education": "EDUCATION",
+    "professional_course": "EDUCATION",
+    "studying": "EDUCATION",
+    "studying_abroad": "EDUCATION",
+    "illness": "HEALTH_CRISIS",
+    "hospitalization": "HEALTH_CRISIS",
+    "medical_emergency": "HEALTH_CRISIS",
+    "chronic_disease": "HEALTH_CRISIS",
+    "surgery": "HEALTH_CRISIS",
+    "health_issue": "HEALTH_CRISIS",
+    "death_of_spouse": "DEATH_IN_FAMILY",
+    "widowhood": "DEATH_IN_FAMILY",
+    "death_in_family": "DEATH_IN_FAMILY",
+    "bereavement": "DEATH_IN_FAMILY",
+    "divorce": "MARITAL_DISTRESS",
+    "separation": "MARITAL_DISTRESS",
+    "abandonment": "MARITAL_DISTRESS",
+    "destitution": "MARITAL_DISTRESS",
+    "deserted": "MARITAL_DISTRESS",
+    "unemployment": "JOB_LOSS",
+    "job_loss": "JOB_LOSS",
+    "retrenchment": "JOB_LOSS",
+    "laid_off": "JOB_LOSS",
+    "starting_business": "BUSINESS_STARTUP",
+    "self_employment": "BUSINESS_STARTUP",
+    "entrepreneurship": "BUSINESS_STARTUP",
+    "skill_utilization": "BUSINESS_STARTUP",
+    "business_expansion": "BUSINESS_STARTUP",
+    "women_empowerment": "WOMEN_EMPOWERMENT",
+    "women_welfare": "WOMEN_EMPOWERMENT",
+    "girl_child": "WOMEN_EMPOWERMENT"
+  }
+}

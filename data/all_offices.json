@@ -1,0 +1,288 @@
+[
+  {
+    "id": "OFF-CSC-DWARKA-001",
+    "name": "CSC Digital Seva Kendra - Dwarka",
+    "type": "CSC",
+    "address": "Shop No. 12, Sector 10 Market, Dwarka, New Delhi",
+    "district": "South West Delhi",
+    "pincode": "110075",
+    "latitude": 28.5921,
+    "longitude": 77.046,
+    "phone": "+91-11-25089012",
+    "working_hours": "9:00 AM - 6:00 PM (Mon-Sat)",
+    "services": [
+      "DOC-AADHAAR",
+      "DOC-INCOME-CERT",
+      "DOC-DOMICILE",
+      "DOC-BIRTH-CERT"
+    ],
+    "fee_structure": {
+      "DOC-AADHAAR": "50",
+      "DOC-INCOME-CERT": "30",
+      "DOC-DOMICILE": "30"
+    },
+    "operator_name": "Rajesh Kumar",
+    "last_verified": "2025-01-10T00:00:00Z"
+  },
+  {
+    "id": "OFF-SDM-CENTRAL-001",
+    "name": "SDM Office - Central Delhi",
+    "type": "SDM",
+    "address": "SDM Office, 5 Deen Dayal Upadhyay Marg, New Delhi",
+    "district": "Central Delhi",
+    "pincode": "110002",
+    "latitude": 28.6358,
+    "longitude": 77.2245,
+    "phone": "+91-11-23221088",
+    "working_hours": "9:30 AM - 5:30 PM (Mon-Fri)",
+    "services": [
+      "DOC-INCOME-CERT",
+      "DOC-DOMICILE",
+      "DOC-CASTE-CERT"
+    ],
+    "fee_structure": {
+      "DOC-INCOME-CERT": "10",
+      "DOC-DOMICILE": "10",
+      "DOC-CASTE-CERT": "10"
+    },
+    "operator_name": null,
+    "last_verified": "2025-01-08T00:00:00Z"
+  },
+  {
+    "id": "OFF-CSC-ROHINI-002",
+    "name": "CSC Digital Seva Kendra - Rohini",
+    "type": "CSC",
+    "address": "Plot No. 45, Sector 7, Rohini, New Delhi",
+    "district": "North West Delhi",
+    "pincode": "110085",
+    "latitude": 28.7041,
+    "longitude": 77.1025,
+    "phone": "+91-11-27555123",
+    "working_hours": "10:00 AM - 7:00 PM (Mon-Sat)",
+    "services": [
+      "DOC-AADHAAR",
+      "DOC-PAN",
+      "DOC-VOTER-ID"
+    ],
+    "fee_structure": {
+      "DOC-AADHAAR": "50",
+      "DOC-PAN": "100",
+      "DOC-VOTER-ID": "30"
+    },
+    "operator_name": "Priya Sharma",
+    "last_verified": "2025-01-12T00:00:00Z"
+  },
+  {
+    "id": "OFF-TEHSIL-SOUTH-002",
+    "name": "Tehsildar Office - South Delhi",
+    "type": "Tehsildar",
+    "address": "Tehsil Office, Defence Colony, New Delhi",
+    "district": "South Delhi",
+    "pincode": "110024",
+    "latitude": 28.5707,
+    "longitude": 77.231,
+    "phone": "+91-11-24335678",
+    "working_hours": "10:00 AM - 5:00 PM (Mon-Fri)",
+    "services": [
+      "DOC-INCOME-CERT",
+      "DOC-DOMICILE",
+      "DOC-CASTE-CERT",
+      "DOC-LAND-RECORDS"
+    ],
+    "fee_structure": {
+      "DOC-INCOME-CERT": "10",
+      "DOC-DOMICILE": "10",
+      "DOC-CASTE-CERT": "10"
+    },
+    "operator_name": null,
+    "last_verified": "2025-01-05T00:00:00Z"
+  },
+  {
+    "id": "OFF-MCD-CENTRAL",
+    "name": "MCD Office - Central Zone",
+    "type": "District",
+    "address": "Town Hall, Chandni Chowk, New Delhi",
+    "district": "Central Delhi",
+    "pincode": "110006",
+    "latitude": 28.6506,
+    "longitude": 77.2303,
+    "phone": "+91-11-23968600",
+    "working_hours": "9:00 AM - 5:00 PM (Mon-Fri)",
+    "services": [
+      "DOC-BIRTH-CERT",
+      "DOC-DEATH-CERT",
+      "DOC-TRADE-LICENSE"
+    ],
+    "fee_structure": {
+      "DOC-BIRTH-CERT": "0",
+      "DOC-DEATH-CERT": "0",
+      "DOC-TRADE-LICENSE": "500"
+    },
+    "operator_name": null,
+    "last_verified": "2025-01-07T00:00:00Z"
+  },
+  {
+    "id": "OFF-DHS-KARKARDOOMA",
+    "name": "Patient Welfare Cell, Directorate of Health Services",
+    "type": "Department",
+    "address": "Room No. 1, 6th Floor, Directorate of Health Services, F-17 Karkardooma (Near Karkardooma Court), Delhi-110032",
+    "district": "East Delhi",
+    "pincode": "110032",
+    "phone": "011-22306851",
+    "working_hours": "9:30 AM - 5:30 PM (Mon-Fri)",
+    "services": [
+      "DOC-ESTIMATE-CERT"
+    ],
+    "fee_structure": {}
+  },
+  {
+    "id": "OFF-WCD-KASHMERE-GATE",
+    "name": "Department of Women & Child Development",
+    "type": "Department",
+    "address": "Maharana Pratap ISBT Building, Kashmere Gate, Delhi-110006",
+    "district": "North Delhi",
+    "pincode": "110006",
+    "phone": "+91-11-23070378, +91-11-23380513",
+    "working_hours": "9:30 AM - 5:30 PM (Mon-Fri)",
+    "services": [],
+    "fee_structure": {}
+  },
+  {
+    "id": "OFF-DSFDC-ROHINI",
+    "name": "DSFDC Head Office - Ambedkar Bhawan",
+    "type": "Department",
+    "address": "Room No. 208, IInd Floor, Ambedkar Bhawan, Institutional Area, Sector-16, Rohini, Delhi-110085",
+    "district": "North West Delhi",
+    "pincode": "110085",
+    "phone": "011-27574521, 011-27574377",
+    "working_hours": "9:30 AM - 5:30 PM (Mon-Fri)",
+    "services": [],
+    "fee_structure": {}
+  },
+  {
+    "id": "OFF-DSFDC-RAJPUR",
+    "name": "DSFDC Branch - Rajpur Road",
+    "type": "Department",
+    "address": "2-Battery Lane, Rajpur Road, Delhi-54",
+    "district": "North Delhi",
+    "pincode": "110054",
+    "phone": "",
+    "working_hours": "9:30 AM - 5:30 PM (Mon-Fri)",
+    "services": [],
+    "fee_structure": {}
+  },
+  {
+    "id": "OFF-DSFDC-MANGOLPURI",
+    "name": "DSFDC Branch - Mangol Puri",
+    "type": "Department",
+    "address": "A-33-38, B-Block, Lal Building, Opposite Police Station, Mangol Puri, Delhi",
+    "district": "North West Delhi",
+    "pincode": "110083",
+    "phone": "",
+    "working_hours": "9:30 AM - 5:30 PM (Mon-Fri)",
+    "services": [],
+    "fee_structure": {}
+  },
+  {
+    "id": "OFF-DSFDC-NANDNAGRI",
+    "name": "DSFDC Branch - Nand Nagri",
+    "type": "Department",
+    "address": "A-Block, 1st Floor, Bunker Vihar, Deputy Commissioner's Office (North East), Opposite Gagan Cinema, Nand Nagri, Delhi",
+    "district": "North East Delhi",
+    "pincode": "110093",
+    "phone": "",
+    "working_hours": "9:30 AM - 5:30 PM (Mon-Fri)",
+    "services": [],
+    "fee_structure": {}
+  },
+  {
+    "id": "OFF-DKVIB-KASHMERE-GATE",
+    "name": "Delhi Khadi & Village Industries Board",
+    "type": "Department",
+    "address": "5th Floor, Nigam Bhawan (Old Hindu College), Kashmere Gate, Delhi-110006",
+    "district": "North Delhi",
+    "pincode": "110006",
+    "phone": "9311702507",
+    "working_hours": "9:30 AM - 5:30 PM (Mon-Fri)",
+    "services": [],
+    "fee_structure": {}
+  },
+  {
+    "id": "OFF-SDM-NORTH-003",
+    "name": "SDM Office - North Delhi",
+    "type": "SDM",
+    "address": "SDM Office, Model Town, Delhi",
+    "district": "North Delhi",
+    "pincode": "110009",
+    "phone": "",
+    "working_hours": "9:30 AM - 5:30 PM (Mon-Fri)",
+    "services": [
+      "DOC-INCOME-CERT",
+      "DOC-DOMICILE",
+      "DOC-CASTE-CERT"
+    ],
+    "fee_structure": {
+      "DOC-INCOME-CERT": "10",
+      "DOC-DOMICILE": "10",
+      "DOC-CASTE-CERT": "10"
+    }
+  },
+  {
+    "id": "OFF-SDM-EAST-004",
+    "name": "SDM Office - East Delhi",
+    "type": "SDM",
+    "address": "SDM Office, Preet Vihar, Delhi",
+    "district": "East Delhi",
+    "pincode": "110092",
+    "phone": "",
+    "working_hours": "9:30 AM - 5:30 PM (Mon-Fri)",
+    "services": [
+      "DOC-INCOME-CERT",
+      "DOC-DOMICILE",
+      "DOC-CASTE-CERT"
+    ],
+    "fee_structure": {
+      "DOC-INCOME-CERT": "10",
+      "DOC-DOMICILE": "10",
+      "DOC-CASTE-CERT": "10"
+    }
+  },
+  {
+    "id": "OFF-SDM-WEST-005",
+    "name": "SDM Office - West Delhi",
+    "type": "SDM",
+    "address": "SDM Office, Rajouri Garden, Delhi",
+    "district": "West Delhi",
+    "pincode": "110027",
+    "phone": "",
+    "working_hours": "9:30 AM - 5:30 PM (Mon-Fri)",
+    "services": [
+      "DOC-INCOME-CERT",
+      "DOC-DOMICILE",
+      "DOC-CASTE-CERT"
+    ],
+    "fee_structure": {
+      "DOC-INCOME-CERT": "10",
+      "DOC-DOMICILE": "10",
+      "DOC-CASTE-CERT": "10"
+    }
+  },
+  {
+    "id": "OFF-MCD-SOUTH",
+    "name": "MCD Office - South Zone",
+    "type": "District",
+    "address": "MCD Office, Saket, New Delhi",
+    "district": "South Delhi",
+    "pincode": "110017",
+    "phone": "",
+    "working_hours": "9:00 AM - 5:00 PM (Mon-Fri)",
+    "services": [
+      "DOC-BIRTH-CERT",
+      "DOC-DEATH-CERT"
+    ],
+    "fee_structure": {
+      "DOC-BIRTH-CERT": "0",
+      "DOC-DEATH-CERT": "0"
+    }
+  }
+]
