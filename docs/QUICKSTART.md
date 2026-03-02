@@ -146,15 +146,68 @@ curl "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getWebhookInfo"
 ## Running Tests
 
 ```bash
-# Install dev dependencies
+# Create virtual environment and install dev dependencies
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements-dev.txt
 
 # Run tests
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5434/delhi_scheme_saathi"
 pytest tests/ -v
 
 # Run with coverage
 pytest tests/ --cov=src --cov-report=term-missing
 ```
+
+## Step 8: Voice Integration with Sarvam AI (Optional)
+
+Sarvam AI provides high-quality Indian language voice services with 1000 free credits on signup.
+
+### Getting Sarvam AI API Keys
+
+1. Visit [Sarvam AI Console](https://console.sarvam.ai/)
+2. Sign up for a developer account (1000 free credits included)
+3. Create an API subscription key from the dashboard
+4. Add to your `.env` file:
+
+```env
+SARVAM_API_KEY=your-api-subscription-key
+```
+
+### Alternative: Bhashini (Fallback)
+
+If Sarvam AI is unavailable, you can use Bhashini (requires paid subscription):
+1. Visit [Bhashini ULCA Portal](https://bhashini.gov.in/ulca)
+2. Register for a developer account
+3. Add to `.env`:
+
+```env
+BHASHINI_API_KEY=your-api-key
+BHASHINI_USER_ID=your-user-id
+```
+
+### Testing Voice Integration
+
+```bash
+# With virtual environment activated
+python scripts/test_voice_integration.py
+```
+
+The script will:
+- Test TTS (text-to-speech) in Hindi using Sarvam AI
+- Test STT (speech-to-text) transcription
+- Test language detection
+
+### Voice Features
+
+When configured, the bot will:
+- Accept Hindi voice messages via Telegram
+- Transcribe voice to text using Sarvam AI ASR (Saaras v3 model with transcribe mode)
+- Respond with both text and audio (TTS via bulbul:v3 model)
+
+**Supported Languages:** Hindi, English, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Odia
+
+**Note:** Voice features gracefully degrade to text-only when no voice API is configured.
 
 ## Stopping Services
 
