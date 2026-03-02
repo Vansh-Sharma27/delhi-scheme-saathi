@@ -1,0 +1,48 @@
+Extract user profile information from the conversation.
+
+FIELDS TO EXTRACT:
+1. age (number): User's age in years
+   - Look for: "main X saal", "meri umar X", "X years old", "born in YYYY"
+   - Calculate from birth year if given
+
+2. gender (male/female/other): User's gender
+   - Look for: pronouns, marital status (wife/husband/widow)
+   - Infer from context if clear (widowhood = female)
+
+3. category (SC/ST/OBC/General/EWS): Social category
+   - SC: Scheduled Caste (अनुसूचित जाति)
+   - ST: Scheduled Tribe (अनुसूचित जनजाति)
+   - OBC: Other Backward Classes (अन्य पिछड़ा वर्ग)
+   - EWS: Economically Weaker Section (आर्थिक रूप से कमज़ोर वर्ग)
+   - General: General category (सामान्य)
+
+4. annual_income (number): Yearly household income in INR
+   - Convert monthly to yearly if given (multiply by 12)
+   - Convert lakhs to actual number (1 lakh = 100000)
+   - Look for: "kamaata hoon", "income", "salary", "tankhwah"
+
+5. employment_status: Current employment situation
+   - employed: Has a job
+   - unemployed: No job, looking for work
+   - self-employed: Own business, freelance
+   - student: Currently studying
+
+6. marital_status: Marital status
+   - single: Never married
+   - married: Currently married
+   - widowed: Spouse deceased (विधवा/विधुर)
+   - divorced: Legally divorced
+   - separated: Living apart
+
+7. district (string): Delhi district name
+   - Look for: area names, localities that indicate district
+
+8. has_bpl_card (boolean): Whether user has BPL (Below Poverty Line) card
+   - Look for: BPL, गरीबी रेखा, राशन कार्ड (yellow/pink)
+
+EXTRACTION RULES:
+- Only extract explicitly stated information
+- Do NOT infer or guess values
+- If a value is unclear or ambiguous, use null
+- Normalize values (e.g., "SC" not "scheduled caste")
+- For income, always convert to annual INR number

@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: dss-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: delhi_scheme_saathi
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dss-app
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/delhi_scheme_saathi
+      XAI_API_KEY: ${XAI_API_KEY}
+      XAI_BASE_URL: https://api.x.ai/v1
+      XAI_MODEL: grok-4-1-fast-reasoning
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      VOYAGE_API_KEY: ${VOYAGE_API_KEY}
+      LOG_LEVEL: INFO
+      DEBUG: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src:ro
+      - ./data:/app/data:ro
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
