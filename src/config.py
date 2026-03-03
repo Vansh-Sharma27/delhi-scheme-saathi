@@ -40,10 +40,17 @@ class Settings(BaseSettings):
     # Telegram
     telegram_bot_token: str = Field(default="", description="Telegram Bot API token")
 
-    # Voyage AI for embeddings
-    voyage_api_key: str = Field(default="", description="Voyage AI API key")
+    # Embeddings (Jina AI primary, Voyage AI fallback)
+    # Jina AI - 10M free tokens, 89 languages including Hindi/Bengali/Urdu
+    jina_api_key: str = Field(default="", description="Jina AI API key (primary)")
+    jina_model: str = Field(default="jina-embeddings-v3", description="Jina embedding model")
+    # Voyage AI - fallback for reliability
+    voyage_api_key: str = Field(default="", description="Voyage AI API key (fallback)")
 
-    # Bhashini Voice (Phase 5)
+    # Sarvam AI Voice (primary voice provider)
+    sarvam_api_key: str = Field(default="", description="Sarvam AI API key")
+
+    # Bhashini Voice (fallback)
     bhashini_api_key: str = Field(default="", description="Bhashini API key")
     bhashini_user_id: str = Field(default="", description="Bhashini user ID")
     bhashini_ulca_api_key: str = Field(default="", description="Bhashini ULCA API key")
@@ -52,6 +59,15 @@ class Settings(BaseSettings):
     aws_region: str = Field(default="ap-south-1", description="AWS region")
     session_table_name: str = Field(default="dss-sessions", description="DynamoDB table")
     audio_bucket: str = Field(default="dss-audio", description="S3 bucket for audio")
+    # AWS Bedrock (primary LLM)
+    bedrock_model: str = Field(
+        default="amazon.nova-2-lite-v1:0",
+        description="Bedrock model ID for LLM"
+    )
+    use_bedrock: bool = Field(
+        default=False,
+        description="Use Bedrock as primary LLM (requires AWS credentials)"
+    )
 
     # Application
     log_level: str = Field(default="INFO", description="Logging level")

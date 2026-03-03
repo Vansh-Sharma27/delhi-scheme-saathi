@@ -58,11 +58,47 @@ async def lifespan(app: FastAPI):
         logger.error(f"Failed to initialize database: {e}")
         db_pool = None
 
+    # Configure session store based on environment
+    _configure_session_store()
+
     yield
 
     # Cleanup
     logger.info("Shutting down...")
     await close_db_pool()
+
+
+def _configure_session_store() -> None:
+    """Configure session store based on environment.
+
+    Uses DynamoDB when SESSION_TABLE_NAME is set (production/Lambda),
+    otherwise uses in-memory store (local development).
+    """
+    from src.db.session_store import (
+        configure_session_store,
+        InMemorySessionStore,
+        DynamoDBSessionStore,
+    )
+
+    settings = get_settings()
+
+    # Check if running in AWS Lambda or production environment
+    if settings.session_table_name and settings.session_table_name != "dss-sessions":
+        # DynamoDB configured (production)
+        try:
+            store = DynamoDBSessionStore(
+                table_name=settings.session_table_name,
+                region=settings.aws_region,
+            )
+            configure_session_store(store)
+            logger.info(f"Session store: DynamoDB ({settings.session_table_name})")
+        except Exception as e:
+            logger.warning(f"DynamoDB init failed, using in-memory: {e}")
+            configure_session_store(InMemorySessionStore())
+    else:
+        # Local development - use in-memory store
+        configure_session_store(InMemorySessionStore())
+        logger.info("Session store: In-memory (local development)")
 
 
 # Create FastAPI app

@@ -1,0 +1,256 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Delhi Scheme Saathi - Telegram chatbot for government welfare scheme discovery
+
+  SAM Template for deploying the MVP to AWS Lambda + API Gateway
+
+Parameters:
+  Stage:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - dev
+      - prod
+    Description: Deployment stage
+
+  DatabaseUrl:
+    Type: String
+    Description: PostgreSQL connection URL
+    NoEcho: true
+
+  XaiApiKey:
+    Type: String
+    Description: xAI (Grok) API key
+    NoEcho: true
+
+  TelegramBotToken:
+    Type: String
+    Description: Telegram Bot API token
+    NoEcho: true
+
+  JinaApiKey:
+    Type: String
+    Description: Jina AI API key for embeddings
+    NoEcho: true
+    Default: ""
+
+  VoyageApiKey:
+    Type: String
+    Description: Voyage AI API key (fallback)
+    NoEcho: true
+    Default: ""
+
+  SarvamApiKey:
+    Type: String
+    Description: Sarvam AI API key for voice
+    NoEcho: true
+    Default: ""
+
+  UseBedrock:
+    Type: String
+    Default: "false"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: Use Bedrock as primary LLM
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 1024
+    Runtime: python3.11
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        LOG_LEVEL: INFO
+        AWS_REGION: !Ref AWS::Region
+
+Resources:
+  # DynamoDB table for session storage
+  SessionTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub dss-sessions-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      Tags:
+        - Key: Application
+          Value: delhi-scheme-saathi
+        - Key: Stage
+          Value: !Ref Stage
+
+  # S3 bucket for audio files (TTS responses)
+  AudioBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub dss-audio-${Stage}-${AWS::AccountId}
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldAudio
+            Status: Enabled
+            ExpirationInDays: 1  # Auto-delete after 24 hours
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Application
+          Value: delhi-scheme-saathi
+        - Key: Stage
+          Value: !Ref Stage
+
+  # Lambda function for the API
+  DelhiSchemeSaathiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub delhi-scheme-saathi-${Stage}
+      CodeUri: .
+      Handler: src.lambda_handler.handler
+      Description: Delhi Scheme Saathi API - Telegram webhook handler
+      Environment:
+        Variables:
+          DATABASE_URL: !Ref DatabaseUrl
+          XAI_API_KEY: !Ref XaiApiKey
+          TELEGRAM_BOT_TOKEN: !Ref TelegramBotToken
+          JINA_API_KEY: !Ref JinaApiKey
+          VOYAGE_API_KEY: !Ref VoyageApiKey
+          SARVAM_API_KEY: !Ref SarvamApiKey
+          USE_BEDROCK: !Ref UseBedrock
+          SESSION_TABLE_NAME: !Ref SessionTable
+          AUDIO_BUCKET: !Ref AudioBucket
+          STAGE: !Ref Stage
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - S3CrudPolicy:
+            BucketName: !Ref AudioBucket
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+              Resource: "*"
+              Condition:
+                StringEquals:
+                  aws:RequestedRegion: !Ref AWS::Region
+      Events:
+        TelegramWebhook:
+          Type: Api
+          Properties:
+            Path: /webhook/telegram
+            Method: POST
+            RestApiId: !Ref ApiGateway
+        Health:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: GET
+            RestApiId: !Ref ApiGateway
+        GetScheme:
+          Type: Api
+          Properties:
+            Path: /api/scheme/{scheme_id}
+            Method: GET
+            RestApiId: !Ref ApiGateway
+        GetSchemes:
+          Type: Api
+          Properties:
+            Path: /api/schemes
+            Method: GET
+            RestApiId: !Ref ApiGateway
+        GetDocument:
+          Type: Api
+          Properties:
+            Path: /api/document/{document_id}
+            Method: GET
+            RestApiId: !Ref ApiGateway
+        GetNearestOffices:
+          Type: Api
+          Properties:
+            Path: /api/csc/nearest
+            Method: GET
+            RestApiId: !Ref ApiGateway
+
+  # API Gateway
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+      Description: Delhi Scheme Saathi API Gateway
+      EndpointConfiguration:
+        Type: REGIONAL
+      TracingEnabled: true
+      AccessLogSetting:
+        DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
+        Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","path":"$context.path","status":"$context.status","responseLength":"$context.responseLength"}'
+      Tags:
+        Application: delhi-scheme-saathi
+        Stage: !Ref Stage
+
+  # CloudWatch Log Group for API Gateway
+  ApiGatewayLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/apigateway/delhi-scheme-saathi-${Stage}
+      RetentionInDays: 14
+
+  # CloudWatch Log Group for Lambda
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/delhi-scheme-saathi-${Stage}
+      RetentionInDays: 14
+
+  # CloudWatch Alarm for Lambda errors
+  LambdaErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub delhi-scheme-saathi-${Stage}-errors
+      AlarmDescription: Alarm when Lambda errors exceed threshold
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref DelhiSchemeSaathiFunction
+      TreatMissingData: notBreaching
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}
+
+  TelegramWebhookUrl:
+    Description: URL to set as Telegram webhook
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/webhook/telegram
+
+  HealthCheckUrl:
+    Description: Health check endpoint
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/health
+
+  SessionTableName:
+    Description: DynamoDB session table name
+    Value: !Ref SessionTable
+
+  AudioBucketName:
+    Description: S3 bucket for audio files
+    Value: !Ref AudioBucket
+
+  LambdaFunctionArn:
+    Description: Lambda function ARN
+    Value: !GetAtt DelhiSchemeSaathiFunction.Arn
