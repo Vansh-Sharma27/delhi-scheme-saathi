@@ -114,7 +114,7 @@ async def handle_telegram_update(
         logger.error(f"Failed to send Telegram message: {e}", exc_info=True)
         # Try sending without any formatting
         try:
-            await telegram.send_text(chat_id, response.text[:4000])
+            await telegram.send_text(chat_id, _clean_for_telegram(response.text)[:4000])
         except Exception:
             pass
 
@@ -214,23 +214,25 @@ async def _send_response(
     """
     voice_client = _get_voice_client()
 
+    clean_text = _clean_for_telegram(response.text)
+
     # If we have inline keyboard (scheme selection)
     if response.inline_keyboard:
         await telegram.send_inline_keyboard(
             chat_id=chat_id,
-            text=response.text,
+            text=clean_text,
             buttons=response.inline_keyboard,
         )
     else:
         # Send plain text
-        await telegram.send_text(chat_id, response.text)
+        await telegram.send_text(chat_id, clean_text)
 
     # For voice requests, also send audio response if voice service is configured
     if is_voice and voice_client.api_key:
         try:
             # Generate TTS audio
             tts_result = await voice_client.text_to_speech(
-                text=_clean_for_tts(response.text),
+                text=_clean_for_tts(clean_text),
                 target_lang="hi",
             )
 
@@ -238,6 +240,24 @@ async def _send_response(
                 await telegram.send_voice(chat_id, tts_result.audio_bytes)
         except Exception as e:
             logger.warning(f"TTS failed, skipping voice response: {e}")
+
+
+def _clean_for_telegram(text: str) -> str:
+    """Normalize markdown-heavy LLM output for plain Telegram text rendering."""
+    import re
+
+    if not text:
+        return ""
+
+    # Remove markdown headers and emphasis/code markers that appear raw in Telegram.
+    text = re.sub(r"^\s{0,3}#{1,6}\s*", "", text, flags=re.MULTILINE)
+    text = re.sub(r"\*{1,3}([^*]+)\*{1,3}", r"\1", text)
+    text = re.sub(r"`{1,3}([^`]+)`{1,3}", r"\1", text)
+    text = re.sub(r"_([^_]+)_", r"\1", text)
+
+    # Normalize spacing while preserving readable line breaks.
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
 
 
 def _clean_for_tts(text: str) -> str:

@@ -27,7 +27,7 @@ VOYAGE_MODEL = "voyage-multilingual-2"
 
 class EmbeddingProvider(Protocol):
     """Protocol for embedding providers."""
-    async def get_embedding(self, text: str) -> list[float]: ...
+    async def get_embedding(self, text: str) -> list[float] | None: ...
     async def get_embeddings_batch(self, texts: list[str]) -> list[list[float]]: ...
 
 
@@ -51,16 +51,14 @@ class FallbackEmbeddingClient:
             self._http_client = httpx.AsyncClient(timeout=30.0)
         return self._http_client
 
-    async def get_embedding(self, text: str) -> list[float]:
+    async def get_embedding(self, text: str) -> list[float] | None:
         """Get embedding with automatic fallback.
 
         Args:
             text: Text to embed (user query or scheme description)
 
         Returns:
-            1024-dimensional embedding vector. Returns zero vector
-            only if all providers fail (search will still work but
-            won't rank by semantic similarity).
+            1024-dimensional embedding vector, or None if all providers fail.
         """
         # Try Jina first (better Indian language support)
         if self._jina_key:
@@ -76,9 +74,9 @@ class FallbackEmbeddingClient:
             except Exception as e:
                 logger.error(f"Voyage embedding also failed: {e}")
 
-        # Last resort: zero vector (search will still work, just no semantic ranking)
-        logger.error("All embedding providers failed, returning zero vector")
-        return [0.0] * EMBEDDING_DIM
+        # Last resort: return None so callers can skip vector ranking.
+        logger.error("All embedding providers failed, returning None")
+        return None
 
     async def get_embeddings_batch(self, texts: list[str]) -> list[list[float]]:
         """Get embeddings for multiple texts with fallback.
@@ -106,9 +104,9 @@ class FallbackEmbeddingClient:
             except Exception as e:
                 logger.error(f"Voyage batch embedding also failed: {e}")
 
-        # Last resort: zero vectors
-        logger.error("All embedding providers failed for batch, returning zero vectors")
-        return [[0.0] * EMBEDDING_DIM for _ in texts]
+        # Last resort: return empty batch for explicit failure handling by caller.
+        logger.error("All embedding providers failed for batch, returning empty list")
+        return []
 
     async def _jina_embedding(self, text: str) -> list[float]:
         """Get embedding from Jina AI."""

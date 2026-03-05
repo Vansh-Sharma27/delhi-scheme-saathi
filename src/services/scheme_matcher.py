@@ -6,7 +6,7 @@ from typing import Any
 import asyncpg
 
 from src.db.scheme_repo import hybrid_search, get_schemes_by_life_event
-from src.integrations.embedding_client import get_embedding_client
+from src.integrations.embedding_client import EMBEDDING_DIM, get_embedding_client
 from src.models.scheme import SchemeMatch
 from src.models.session import UserProfile
 
@@ -30,7 +30,16 @@ async def match_schemes(
     if query_text:
         try:
             embedding_client = get_embedding_client()
-            query_embedding = await embedding_client.get_embedding(query_text)
+            embedding = await embedding_client.get_embedding(query_text)
+            if embedding and len(embedding) == EMBEDDING_DIM:
+                query_embedding = embedding
+            elif embedding:
+                logger.warning(
+                    f"Skipping vector ranking: expected {EMBEDDING_DIM}-dim embedding, "
+                    f"received {len(embedding)}"
+                )
+            else:
+                logger.warning("Skipping vector ranking: embedding unavailable from all providers")
         except Exception as e:
             logger.warning(f"Failed to get query embedding: {e}")
 

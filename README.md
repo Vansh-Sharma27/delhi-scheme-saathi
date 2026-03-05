@@ -119,6 +119,12 @@ Run unit tests:
 pytest tests/ -v
 ```
 
+Rapid AWS redeploy + Telegram session reset:
+```bash
+./scripts/rapid_redeploy.sh --user-id 780045592
+```
+This will rebuild, redeploy, delete that user session from DynamoDB, and run `/health`.
+
 Test the chat API directly:
 ```bash
 curl -X POST http://localhost:8000/api/chat \

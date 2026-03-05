@@ -8,4 +8,4 @@ from mangum import Mangum
 from src.main import app
 
 # Create Lambda handler
-handler = Mangum(app, lifespan="off")
+handler = Mangum(app, lifespan="auto")

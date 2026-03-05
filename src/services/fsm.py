@@ -22,6 +22,7 @@ def get_valid_transitions(state: ConversationState) -> list[ConversationState]:
     """Get valid next states from current state."""
     transitions = {
         ConversationState.GREETING: [
+            ConversationState.GREETING,  # Stay for greeting response
             ConversationState.UNDERSTANDING,
         ],
         ConversationState.UNDERSTANDING: [
@@ -83,8 +84,9 @@ def determine_next_state(
     current_state: ConversationState,
     profile: UserProfile,
     intent: str,
-    has_schemes: bool = False,
+    has_schemes: bool | None = None,
     selected_scheme_id: str | None = None,
+    has_selected_scheme: bool = False,
 ) -> ConversationState:
     """Determine the next state based on current state, profile, and intent.
 
@@ -95,6 +97,8 @@ def determine_next_state(
 
     match current_state:
         case ConversationState.GREETING:
+            if intent == "greeting":
+                return ConversationState.GREETING
             return ConversationState.UNDERSTANDING
 
         case ConversationState.UNDERSTANDING:
@@ -103,6 +107,9 @@ def determine_next_state(
             return ConversationState.UNDERSTANDING
 
         case ConversationState.MATCHING:
+            # If matching has not run yet in this turn, stay in MATCHING.
+            if has_schemes is None:
+                return ConversationState.MATCHING
             if has_schemes:
                 return ConversationState.PRESENTING
             return ConversationState.HANDOFF
@@ -115,8 +122,12 @@ def determine_next_state(
             return ConversationState.PRESENTING
 
         case ConversationState.DETAILS:
-            if intent == "selection" and selected_scheme_id is None:
-                return ConversationState.PRESENTING
+            if intent == "selection":
+                # If user is already in DETAILS with an active selection,
+                # treat confirmation-like replies (e.g. "yes explain it") as staying in DETAILS.
+                if selected_scheme_id is None and not has_selected_scheme:
+                    return ConversationState.PRESENTING
+                return ConversationState.DETAILS
             if intent in ["question", "clarification"]:
                 return ConversationState.APPLICATION
             return ConversationState.DETAILS

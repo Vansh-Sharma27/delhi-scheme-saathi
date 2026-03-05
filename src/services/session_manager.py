@@ -164,12 +164,16 @@ def set_language(session: Session, language: str) -> Session:
     )
 
 
-def get_conversation_history(session: Session) -> list[dict[str, str]]:
+def get_conversation_history(
+    session: Session,
+    include_assistant: bool = True,
+) -> list[dict[str, str]]:
     """Get conversation history as list of dicts."""
-    return [
-        {"role": m.role, "content": m.content}
-        for m in session.messages
-    ]
+    messages = session.messages
+    if not include_assistant:
+        messages = [m for m in messages if m.role == "user"]
+
+    return [{"role": m.role, "content": m.content} for m in messages]
 
 
 def reset_session(session: Session) -> Session:

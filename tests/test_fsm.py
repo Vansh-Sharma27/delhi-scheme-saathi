@@ -72,25 +72,50 @@ class TestFSMTransitions:
 class TestDetermineNextState:
     """Tests for automatic state determination."""
 
-    def test_greeting_to_understanding(self):
-        """Test greeting intent transitions to understanding."""
+    def test_greeting_stays_for_greeting_intent(self):
+        """Test greeting intent stays in GREETING to deliver greeting."""
         profile = UserProfile()
         next_state = determine_next_state(
             current_state=ConversationState.GREETING,
             profile=profile,
             intent="greeting",
         )
+        assert next_state == ConversationState.GREETING
+
+    def test_greeting_to_understanding_for_non_greeting_intent(self):
+        """Test non-greeting intent transitions to UNDERSTANDING."""
+        profile = UserProfile()
+        next_state = determine_next_state(
+            current_state=ConversationState.GREETING,
+            profile=profile,
+            intent="question",
+        )
         assert next_state == ConversationState.UNDERSTANDING
 
-    def test_understanding_with_life_event_triggers_matching(self):
-        """Test understanding with complete profile triggers matching."""
-        profile = UserProfile(life_event="HOUSING")
+    def test_understanding_with_complete_profile_triggers_matching(self):
+        """Test understanding with required profile fields triggers matching."""
+        profile = UserProfile(
+            life_event="HOUSING",
+            age=28,
+            category="SC",
+            annual_income=300000,
+        )
         next_state = determine_next_state(
             current_state=ConversationState.UNDERSTANDING,
             profile=profile,
             intent="question",
         )
         assert next_state == ConversationState.MATCHING
+
+    def test_understanding_with_incomplete_profile_stays_understanding(self):
+        """Test understanding stays in profile collection when data is incomplete."""
+        profile = UserProfile(life_event="HOUSING")
+        next_state = determine_next_state(
+            current_state=ConversationState.UNDERSTANDING,
+            profile=profile,
+            intent="question",
+        )
+        assert next_state == ConversationState.UNDERSTANDING
 
     def test_matching_with_schemes_to_presenting(self):
         """Test matching with schemes transitions to presenting."""
@@ -114,6 +139,17 @@ class TestDetermineNextState:
         )
         assert next_state == ConversationState.HANDOFF
 
+    def test_matching_without_result_stays_matching(self):
+        """Test matching stays in MATCHING when results are not computed yet."""
+        profile = UserProfile(life_event="HOUSING")
+        next_state = determine_next_state(
+            current_state=ConversationState.MATCHING,
+            profile=profile,
+            intent="question",
+            has_schemes=None,
+        )
+        assert next_state == ConversationState.MATCHING
+
     def test_presenting_with_selection_to_details(self):
         """Test presenting with scheme selection transitions to details."""
         profile = UserProfile(life_event="HOUSING")
@@ -124,6 +160,30 @@ class TestDetermineNextState:
             selected_scheme_id="SCH-001",
         )
         assert next_state == ConversationState.DETAILS
+
+    def test_details_selection_without_new_id_stays_details_when_selected_exists(self):
+        """Avoid DETAILS -> PRESENTING loop on confirmation replies."""
+        profile = UserProfile(life_event="EDUCATION")
+        next_state = determine_next_state(
+            current_state=ConversationState.DETAILS,
+            profile=profile,
+            intent="selection",
+            selected_scheme_id=None,
+            has_selected_scheme=True,
+        )
+        assert next_state == ConversationState.DETAILS
+
+    def test_details_selection_without_any_selected_scheme_goes_presenting(self):
+        """If no scheme is selected, ask user to pick one."""
+        profile = UserProfile(life_event="EDUCATION")
+        next_state = determine_next_state(
+            current_state=ConversationState.DETAILS,
+            profile=profile,
+            intent="selection",
+            selected_scheme_id=None,
+            has_selected_scheme=False,
+        )
+        assert next_state == ConversationState.PRESENTING
 
     def test_goodbye_resets_to_greeting(self):
         """Test goodbye intent always goes to greeting."""

@@ -54,15 +54,17 @@ def extract_by_patterns(text: str) -> dict[str, Any]:
                 pass
 
     # Category extraction
-    category_map = {
-        "sc": "SC", "scheduled caste": "SC", "अनुसूचित जाति": "SC",
-        "st": "ST", "scheduled tribe": "ST", "अनुसूचित जनजाति": "ST",
-        "obc": "OBC", "other backward": "OBC", "अन्य पिछड़ा": "OBC", "पिछड़ा वर्ग": "OBC",
-        "ews": "EWS", "economically weaker": "EWS", "आर्थिक रूप से कमज़ोर": "EWS",
-        "general": "General", "सामान्य": "General",
-    }
-    for keyword, category in category_map.items():
-        if keyword in text_lower:
+    # Use word-boundary/phrase matching to avoid false positives:
+    # e.g. "study" should NOT map to "ST", "schemes" should NOT map to "SC".
+    category_patterns: list[tuple[str, str]] = [
+        (r"\bscheduled\s+caste\b|अनुसूचित\s*जाति|\bsc\b", "SC"),
+        (r"\bscheduled\s+tribe\b|अनुसूचित\s*जनजाति|\bst\b", "ST"),
+        (r"\bother\s+backward\b|अन्य\s*पिछड़ा|पिछड़ा\s*वर्ग|\bobc\b", "OBC"),
+        (r"\beconomically\s+weaker\b|आर्थिक\s*रूप\s*से\s*कमज़ोर|\bews\b", "EWS"),
+        (r"\bgeneral\b|सामान्य", "General"),
+    ]
+    for pattern, category in category_patterns:
+        if re.search(pattern, text_lower):
             extracted["category"] = category
             break
 
@@ -189,16 +191,16 @@ def get_next_question(profile: UserProfile, language: str = "hi") -> str | None:
             "en": "Please tell me, what kind of assistance do you need today? (e.g., housing, health, education, employment)",
         },
         "age": {
-            "hi": "आपकी उम्र कितनी है?",
-            "en": "What is your age?",
+            "hi": "आवेदक (या लाभार्थी) की उम्र कितनी है?",
+            "en": "What is the applicant/beneficiary age?",
         },
         "category": {
-            "hi": "आप किस श्रेणी में आते हैं? (SC/ST/OBC/General/EWS)",
-            "en": "What is your caste category? (SC/ST/OBC/General/EWS)",
+            "hi": "आवेदक की श्रेणी क्या है? (SC/ST/OBC/General/EWS)",
+            "en": "What is the applicant's caste category? (SC/ST/OBC/General/EWS)",
         },
         "annual_income": {
-            "hi": "आपकी वार्षिक पारिवारिक आय लगभग कितनी है?",
-            "en": "What is your approximate annual family income?",
+            "hi": "आवेदक के परिवार की वार्षिक आय लगभग कितनी है?",
+            "en": "What is the applicant's approximate annual family income?",
         },
         "gender": {
             "hi": "आप पुरुष हैं या महिला?",

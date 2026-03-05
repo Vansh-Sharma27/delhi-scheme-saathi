@@ -16,9 +16,19 @@ class TestUserProfile:
         assert profile.life_event is None
         assert profile.is_complete_for_matching is False
 
-    def test_profile_with_life_event(self):
-        """Test profile with life event is complete for matching."""
+    def test_profile_with_only_life_event_not_complete(self):
+        """Matching requires core eligibility fields, not just life event."""
         profile = UserProfile(life_event="HOUSING")
+        assert profile.is_complete_for_matching is False
+
+    def test_profile_complete_for_matching(self):
+        """Profile is complete when required matching fields are present."""
+        profile = UserProfile(
+            life_event="HOUSING",
+            age=30,
+            category="SC",
+            annual_income=250000,
+        )
         assert profile.is_complete_for_matching is True
 
     def test_profile_merge(self):
@@ -113,6 +123,14 @@ class TestSession:
 
         # New session has new state
         assert new_session.state == ConversationState.UNDERSTANDING
+
+    def test_to_dynamodb_item_serializes_message_timestamps(self):
+        """Test DynamoDB serialization converts message datetime fields to strings."""
+        session = Session(user_id="user123").add_message("user", "Hello")
+        item = session.to_dynamodb_item()
+
+        assert "messages" in item
+        assert isinstance(item["messages"][0]["timestamp"], str)
 
 
 class TestEligibilityCriteria:

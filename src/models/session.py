@@ -50,7 +50,12 @@ class UserProfile(BaseModel):
     @property
     def is_complete_for_matching(self) -> bool:
         """Check if profile has minimum required fields for scheme matching."""
-        return self.life_event is not None
+        return (
+            self.life_event is not None
+            and self.age is not None
+            and self.category is not None
+            and self.annual_income is not None
+        )
 
     @property
     def completeness_score(self) -> int:
@@ -156,7 +161,15 @@ class Session(BaseModel):
             "user_id": self.user_id,
             "state": self.state.value,
             "user_profile": self.user_profile.model_dump(),
-            "messages": [m.model_dump() for m in self.messages],
+            # DynamoDB serializer does not support datetime objects directly.
+            "messages": [
+                {
+                    "role": m.role,
+                    "content": m.content,
+                    "timestamp": m.timestamp.isoformat(),
+                }
+                for m in self.messages
+            ],
             "conversation_summary": self.conversation_summary,
             "discussed_schemes": self.discussed_schemes,
             "selected_scheme_id": self.selected_scheme_id,

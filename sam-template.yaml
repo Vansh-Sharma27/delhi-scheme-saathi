@@ -49,11 +49,16 @@ Parameters:
 
   UseBedrock:
     Type: String
-    Default: "false"
+    Default: "true"
     AllowedValues:
       - "true"
       - "false"
     Description: Use Bedrock as primary LLM
+
+  BedrockModel:
+    Type: String
+    Default: "amazon.nova-2-lite-v1:0"
+    Description: Bedrock model ID or inference profile ID/ARN
 
 Globals:
   Function:
@@ -65,7 +70,6 @@ Globals:
     Environment:
       Variables:
         LOG_LEVEL: INFO
-        AWS_REGION: !Ref AWS::Region
 
 Resources:
   # DynamoDB table for session storage
@@ -127,6 +131,7 @@ Resources:
           VOYAGE_API_KEY: !Ref VoyageApiKey
           SARVAM_API_KEY: !Ref SarvamApiKey
           USE_BEDROCK: !Ref UseBedrock
+          BEDROCK_MODEL: !Ref BedrockModel
           SESSION_TABLE_NAME: !Ref SessionTable
           AUDIO_BUCKET: !Ref AudioBucket
           STAGE: !Ref Stage
@@ -140,10 +145,9 @@ Resources:
               Action:
                 - bedrock:InvokeModel
                 - bedrock:InvokeModelWithResponseStream
-              Resource: "*"
-              Condition:
-                StringEquals:
-                  aws:RequestedRegion: !Ref AWS::Region
+              Resource:
+                - arn:aws:bedrock:*::foundation-model/*
+                - arn:aws:bedrock:*:*:inference-profile/*
       Events:
         TelegramWebhook:
           Type: Api
@@ -181,10 +185,48 @@ Resources:
             Path: /api/csc/nearest
             Method: GET
             RestApiId: !Ref ApiGateway
+        GetLifeEvents:
+          Type: Api
+          Properties:
+            Path: /api/life-events
+            Method: GET
+            RestApiId: !Ref ApiGateway
+        Chat:
+          Type: Api
+          Properties:
+            Path: /api/chat
+            Method: POST
+            RestApiId: !Ref ApiGateway
+
+  # API Gateway account-level role for CloudWatch logging
+  ApiGatewayCloudWatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+      Tags:
+        - Key: Application
+          Value: delhi-scheme-saathi
+        - Key: Stage
+          Value: !Ref Stage
+
+  ApiGatewayAccount:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt ApiGatewayCloudWatchRole.Arn
 
   # API Gateway
   ApiGateway:
     Type: AWS::Serverless::Api
+    DependsOn:
+      - ApiGatewayAccount
     Properties:
       StageName: !Ref Stage
       Description: Delhi Scheme Saathi API Gateway

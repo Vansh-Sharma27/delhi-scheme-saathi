@@ -312,6 +312,24 @@ class TestCleanForTTS:
         assert len(result) <= 500
 
 
+class TestCleanForTelegram:
+    """Tests for Telegram text cleaning."""
+
+    def test_removes_markdown_artifacts(self):
+        """Headers and markdown markers should be normalized for plain text."""
+        from src.webhook.handler import _clean_for_telegram
+
+        text = "### Welcome\n\n**Bold** text and `code` with _italics_."
+        result = _clean_for_telegram(text)
+
+        assert "###" not in result
+        assert "**" not in result
+        assert "`" not in result
+        assert "_italics_" not in result
+        assert "Welcome" in result
+        assert "Bold text" in result
+
+
 class TestExtractLocation:
     """Tests for location extraction."""
 

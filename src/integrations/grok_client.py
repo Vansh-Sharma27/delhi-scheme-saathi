@@ -82,7 +82,7 @@ Analyze the user's message and respond with a JSON object containing:
 }}
 
 Current conversation state: {current_state}
-Current user profile: {json.dumps(user_profile)}
+Current user profile: {json.dumps(user_profile, default=str)}
 
 IMPORTANT: Extract information ONLY from what the user explicitly stated.
 Do NOT infer or guess values. If unsure, use null.
@@ -105,15 +105,8 @@ Do NOT infer or guess values. If unsure, use null.
 
         except Exception as e:
             logger.error(f"LLM analysis failed: {e}")
-            return {
-                "intent": "unknown",
-                "life_event": None,
-                "extracted_fields": {},
-                "language": "hi",
-                "selected_scheme_id": None,
-                "needs_clarification": False,
-                "error": str(e),
-            }
+            # Re-raise so the fallback wrapper can route to safe defaults.
+            raise
 
     async def generate_response(
         self,
@@ -138,7 +131,7 @@ Do NOT infer or guess values. If unsure, use null.
 Generate a helpful, empathetic response in {'Hindi' if user_language == 'hi' else 'English' if user_language == 'en' else 'Hinglish (mix of Hindi and English)'}.
 
 Context:
-{json.dumps(context, ensure_ascii=False, indent=2)}
+{json.dumps(context, ensure_ascii=False, indent=2, default=str)}
 
 CRITICAL RULES:
 1. NEVER generate scheme facts (eligibility, benefits, documents) - use ONLY data from context
@@ -166,7 +159,8 @@ Generate response:
 
         except Exception as e:
             logger.error(f"LLM response generation failed: {e}")
-            return "माफ़ कीजिए, कुछ तकनीकी समस्या है। कृपया थोड़ी देर बाद प्रयास करें।"
+            # Re-raise so the fallback wrapper can decide the final response.
+            raise
 
     async def summarize_conversation(
         self,
@@ -192,7 +186,7 @@ Summarize this conversation, focusing on:
 Previous summary: {current_summary or 'None'}
 
 Recent messages:
-{json.dumps(messages, ensure_ascii=False)}
+{json.dumps(messages, ensure_ascii=False, default=str)}
 
 Provide a 2-3 sentence summary in English:
 """
@@ -210,7 +204,8 @@ Provide a 2-3 sentence summary in English:
 
         except Exception as e:
             logger.error(f"Conversation summarization failed: {e}")
-            return current_summary or ""
+            # Re-raise so the fallback wrapper can decide fallback behavior.
+            raise
 
 
 # Global client instance

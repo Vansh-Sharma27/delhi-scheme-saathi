@@ -103,7 +103,7 @@ Analyze the user's message and respond with a JSON object containing:
 }}
 
 Current conversation state: {current_state}
-Current user profile: {json.dumps(user_profile)}
+Current user profile: {json.dumps(user_profile, default=str)}
 
 User message: {user_message}
 
@@ -183,7 +183,7 @@ Respond with ONLY the JSON object, no other text.
 Generate a helpful, empathetic response in {'Hindi' if user_language == 'hi' else 'English' if user_language == 'en' else 'Hinglish (mix of Hindi and English)'}.
 
 Context:
-{json.dumps(context, ensure_ascii=False, indent=2)}
+{json.dumps(context, ensure_ascii=False, indent=2, default=str)}
 
 CRITICAL RULES:
 1. NEVER generate scheme facts (eligibility, benefits, documents) - use ONLY data from context
@@ -256,7 +256,7 @@ Summarize this conversation, focusing on:
 Previous summary: {current_summary or 'None'}
 
 Recent messages:
-{json.dumps(messages, ensure_ascii=False)}
+{json.dumps(messages, ensure_ascii=False, default=str)}
 
 Provide a 2-3 sentence summary in English:
 """
