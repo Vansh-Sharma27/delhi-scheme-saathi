@@ -177,7 +177,7 @@ Current immediate status at pause/resume point:
    - `aws rds start-db-instance --db-instance-identifier dss-postgres --region ap-south-1 --profile delhi-sso`
    - `aws rds wait db-instance-available --db-instance-identifier dss-postgres --region ap-south-1 --profile delhi-sso`
 3. Run rapid redeploy + session reset:
-   - `cd /home/Ubuntu/ai-for-bharat/delhi-scheme-saathi`
+   - `cd /home/ubuntu/ai-for-bharat/delhi-scheme-saathi`
    - `./scripts/rapid_redeploy.sh --user-id 780045592`
 4. Re-set Telegram webhook (if needed) and re-test key flows.
 

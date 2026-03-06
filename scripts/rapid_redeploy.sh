@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+TEMPLATE_FILE="sam-template.yaml"
+BUILD_TEMPLATE=".aws-sam/build/template.yaml"
+
 usage() {
   cat <<'EOF'
 Usage:
@@ -10,6 +13,7 @@ Options:
   --user-id <id>       Telegram user_id to delete from DynamoDB session table
   --stack-name <name>  CloudFormation stack name (default: delhi-scheme-saathi)
   --region <region>    AWS region (default: ap-south-1)
+  --profile <name>     AWS profile (default: AWS_PROFILE / AWS_DEFAULT_PROFILE)
   --config-env <env>   samconfig environment (default: default)
   --table-name <name>  DynamoDB table name (optional; auto-resolved from stack output)
   --skip-build         Skip `sam build`
@@ -27,9 +31,55 @@ log() {
   printf '[%s] %s\n' "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" "$*"
 }
 
-STACK_NAME="delhi-scheme-saathi"
-REGION="ap-south-1"
-CONFIG_ENV="default"
+die() {
+  echo "Error: $*" >&2
+  exit 1
+}
+
+require_arg() {
+  local flag="$1"
+  local value="${2-}"
+
+  if [[ -z "${value}" || "${value}" == --* ]]; then
+    die "${flag} requires a value."
+  fi
+}
+
+require_command() {
+  local cmd="$1"
+  local help_text="$2"
+
+  if ! command -v "${cmd}" >/dev/null 2>&1; then
+    die "Required command '${cmd}' not found. ${help_text}"
+  fi
+}
+
+check_docker_access() {
+  if ! docker info >/dev/null 2>&1; then
+    die "Docker daemon is not reachable. Start Docker and ensure this shell can access /var/run/docker.sock."
+  fi
+}
+
+check_aws_auth() {
+  if ! aws sts get-caller-identity >/dev/null 2>&1; then
+    if [[ -n "${PROFILE}" ]]; then
+      die "AWS authentication failed for profile '${PROFILE}'. Run 'aws sso login --profile ${PROFILE} --use-device-code' and retry."
+    fi
+    die "AWS authentication failed. Export AWS_PROFILE or configure default credentials, then retry."
+  fi
+}
+
+stack_exists() {
+  aws cloudformation describe-stacks \
+    --stack-name "${STACK_NAME}" \
+    --region "${REGION}" \
+    >/dev/null 2>&1
+}
+
+STACK_NAME=""
+REGION=""
+PROFILE=""
+CONFIG_ENV=""
 TABLE_NAME=""
 USER_ID="${TG_USER_ID:-}"
 SKIP_BUILD=0
@@ -40,22 +90,32 @@ NO_HEALTH=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --user-id)
+      require_arg "$1" "${2-}"
       USER_ID="${2:-}"
       shift 2
       ;;
     --stack-name)
+      require_arg "$1" "${2-}"
       STACK_NAME="${2:-}"
       shift 2
       ;;
     --region)
+      require_arg "$1" "${2-}"
       REGION="${2:-}"
       shift 2
       ;;
+    --profile)
+      require_arg "$1" "${2-}"
+      PROFILE="${2:-}"
+      shift 2
+      ;;
     --config-env)
+      require_arg "$1" "${2-}"
       CONFIG_ENV="${2:-}"
       shift 2
       ;;
     --table-name)
+      require_arg "$1" "${2-}"
       TABLE_NAME="${2:-}"
       shift 2
       ;;
@@ -96,22 +156,65 @@ fi
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${PROJECT_ROOT}"
 
-if [[ "${NO_CLEAN}" -eq 0 ]]; then
+STACK_NAME="${STACK_NAME:-delhi-scheme-saathi}"
+REGION="${REGION:-${AWS_REGION:-${AWS_DEFAULT_REGION:-ap-south-1}}}"
+PROFILE="${PROFILE:-${AWS_PROFILE:-${AWS_DEFAULT_PROFILE:-}}}"
+CONFIG_ENV="${CONFIG_ENV:-default}"
+
+export AWS_REGION="${REGION}"
+export AWS_DEFAULT_REGION="${REGION}"
+if [[ -n "${PROFILE}" ]]; then
+  export AWS_PROFILE="${PROFILE}"
+  export AWS_DEFAULT_PROFILE="${PROFILE}"
+fi
+
+if [[ ! -f "${TEMPLATE_FILE}" ]]; then
+  die "Template file '${TEMPLATE_FILE}' not found in ${PROJECT_ROOT}."
+fi
+if [[ ! -f "samconfig.toml" ]]; then
+  die "samconfig.toml not found. rapid_redeploy expects the repo's SAM config to exist."
+fi
+
+if [[ "${SKIP_BUILD}" -eq 0 || "${SKIP_DEPLOY}" -eq 0 ]]; then
+  require_command "sam" "Install AWS SAM CLI and ensure it is on PATH."
+fi
+require_command "aws" "Install AWS CLI and configure credentials or AWS SSO."
+if [[ "${SKIP_BUILD}" -eq 0 ]]; then
+  require_command "docker" "Docker is required for 'sam build --use-container'."
+  check_docker_access
+fi
+if [[ "${NO_HEALTH}" -eq 0 ]]; then
+  require_command "curl" "curl is required for the final health check."
+fi
+
+check_aws_auth
+
+if [[ "${SKIP_DEPLOY}" -eq 0 && ! stack_exists ]]; then
+  die "Stack '${STACK_NAME}' does not exist in region '${REGION}'. rapid_redeploy is intended for redeploying an existing stack; perform the initial SAM deploy separately with the required parameter overrides."
+fi
+
+if [[ "${NO_CLEAN}" -eq 0 && "${SKIP_BUILD}" -eq 0 ]]; then
   log "Cleaning previous SAM build artifacts"
   rm -rf .aws-sam
+elif [[ "${NO_CLEAN}" -eq 0 ]]; then
+  log "Skipping clean because --skip-build requires existing build artifacts"
 fi
 
 if [[ "${SKIP_BUILD}" -eq 0 ]]; then
   log "Building SAM application"
-  sam build -t sam-template.yaml --use-container
+  sam build -t "${TEMPLATE_FILE}" --use-container
 else
   log "Skipping build"
+fi
+
+if [[ ! -f "${BUILD_TEMPLATE}" ]]; then
+  die "Built template '${BUILD_TEMPLATE}' not found. Re-run without --skip-build."
 fi
 
 if [[ "${SKIP_DEPLOY}" -eq 0 ]]; then
   log "Deploying stack ${STACK_NAME} (${REGION})"
   sam deploy \
-    -t .aws-sam/build/template.yaml \
+    -t "${BUILD_TEMPLATE}" \
     --stack-name "${STACK_NAME}" \
     --region "${REGION}" \
     --config-env "${CONFIG_ENV}" \
@@ -168,7 +271,7 @@ if [[ "${NO_HEALTH}" -eq 0 ]]; then
   if [[ -n "${API_ENDPOINT}" && "${API_ENDPOINT}" != "None" ]]; then
     HEALTH_URL="${API_ENDPOINT%/}/health"
     log "Health check: ${HEALTH_URL}"
-    curl -sS "${HEALTH_URL}"
+    curl -fsS "${HEALTH_URL}"
     printf '\n'
   else
     log "Skipping health check (ApiEndpoint not found)"

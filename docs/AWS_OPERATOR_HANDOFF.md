@@ -32,7 +32,7 @@ aws rds wait db-instance-available --db-instance-identifier dss-postgres --regio
 
 3. Redeploy + reset Telegram test session:
 ```bash
-cd /home/Ubuntu/ai-for-bharat/delhi-scheme-saathi
+cd /home/ubuntu/ai-for-bharat/delhi-scheme-saathi
 ./scripts/rapid_redeploy.sh --user-id 780045592
 ```
 
