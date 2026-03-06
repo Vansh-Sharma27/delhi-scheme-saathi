@@ -45,6 +45,8 @@ docker compose ps
 docker compose logs -f app
 ```
 
+On first boot with a fresh Docker volume, the app container auto-loads the bundled seed JSON into PostgreSQL.
+
 The services will be available at:
 - **API**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
@@ -60,11 +62,11 @@ curl http://localhost:8000/health
 # {"status":"ok","database":"connected","schemes_count":5}
 ```
 
-If `schemes_count` is 0, the database may need seeding (see Step 4).
+If `schemes_count` is 0 after the first boot, inspect `docker compose logs app` because local seeding should have happened automatically.
 
-## Step 4: Seed Database (if needed)
+## Step 4: Reseed Database (if needed)
 
-The database is automatically seeded on first startup via Docker init scripts. If you need to reseed:
+Local Docker startup now seeds the database automatically. If you need to reseed from scratch:
 
 ```bash
 # Stop containers and remove volume

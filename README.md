@@ -60,6 +60,8 @@ cp .env.example .env
 docker compose up -d
 ```
 
+On a fresh local volume, the app container now auto-seeds the bundled scheme data during startup.
+
 3. Verify health:
 ```bash
 curl http://localhost:8000/health

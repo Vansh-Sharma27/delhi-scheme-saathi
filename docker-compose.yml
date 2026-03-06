@@ -24,6 +24,7 @@ services:
     container_name: dss-app
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/delhi_scheme_saathi
+      AUTO_SEED_DATA: "true"
       XAI_API_KEY: ${XAI_API_KEY}
       XAI_BASE_URL: https://api.x.ai/v1
       XAI_MODEL: grok-4-1-fast-reasoning

@@ -12,9 +12,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code and local bootstrap scripts
 COPY src/ ./src/
 COPY data/ ./data/
+COPY scripts/ ./scripts/
 
 # Set environment
 ENV PYTHONPATH=/app
@@ -26,4 +27,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Run the app
 EXPOSE 8000
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "scripts.container_start"]
