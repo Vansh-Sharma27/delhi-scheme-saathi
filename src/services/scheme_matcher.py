@@ -52,6 +52,27 @@ async def match_schemes(
         limit=limit,
     )
 
+    # Post-filter: remove schemes where user's category is explicitly ineligible.
+    # If a scheme lists specific categories and the user's category isn't among
+    # them, the user cannot apply — showing it would be misleading.
+    if profile.category and matches:
+        filtered = []
+        for match in matches:
+            elig_cats = match.scheme.eligibility.categories
+            if not elig_cats:
+                # Empty list = no category restriction (all categories eligible)
+                filtered.append(match)
+            elif profile.category.upper() in [c.upper() for c in elig_cats]:
+                filtered.append(match)
+            else:
+                logger.info(
+                    "Filtered out scheme %s: user category '%s' not in %s",
+                    match.scheme.id,
+                    profile.category,
+                    elig_cats,
+                )
+        matches = filtered
+
     logger.info(
         f"Matched {len(matches)} schemes for life_event={profile.life_event}, "
         f"age={profile.age}, income={profile.annual_income}"

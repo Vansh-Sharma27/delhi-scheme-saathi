@@ -27,6 +27,7 @@ class LLMProvider(Protocol):
         current_state: str,
         user_profile: dict[str, Any],
         system_prompt: str,
+        session_language: str = "hi",
     ) -> dict[str, Any]: ...
 
     async def generate_response(
@@ -79,6 +80,7 @@ class FallbackLLMClient:
         current_state: str,
         user_profile: dict[str, Any],
         system_prompt: str,
+        session_language: str = "hi",
     ) -> dict[str, Any]:
         """Analyze message with automatic LLM fallback.
 
@@ -92,7 +94,8 @@ class FallbackLLMClient:
                 bedrock = self._get_bedrock_client()
                 result = await bedrock.analyze_message(
                     user_message, conversation_history,
-                    current_state, user_profile, system_prompt
+                    current_state, user_profile, system_prompt,
+                    session_language,
                 )
                 logger.debug("Used Bedrock for message analysis")
                 return result
@@ -105,7 +108,8 @@ class FallbackLLMClient:
                 grok = self._get_grok_client()
                 result = await grok.analyze_message(
                     user_message, conversation_history,
-                    current_state, user_profile, system_prompt
+                    current_state, user_profile, system_prompt,
+                    session_language,
                 )
                 logger.debug("Used Grok for message analysis")
                 return result
@@ -118,10 +122,12 @@ class FallbackLLMClient:
             "intent": "unknown",
             "life_event": None,
             "extracted_fields": {},
-            "language": "hi",
+            "language": session_language,
             "selected_scheme_id": None,
+            "action": None,
             "needs_clarification": True,
             "clarification_question": None,
+            "response_text": None,
             "error": "LLM service unavailable",
         }
 

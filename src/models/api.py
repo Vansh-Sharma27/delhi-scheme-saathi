@@ -67,6 +67,7 @@ class ChatResponse(BaseModel):
     offices: list[Office] = Field(default_factory=list)
     inline_keyboard: list[list[dict[str, str]]] | None = None
     next_state: str | None = None
+    language: str = "hi"  # User's current language preference (hi, en, hinglish)
 
 
 class TelegramUpdate(BaseModel):
@@ -98,7 +99,7 @@ class TelegramUpdate(BaseModel):
     def text(self) -> str | None:
         """Extract text content from update."""
         if self.message:
-            return self.message.get("text")
+            return self.message.get("text") or self.message.get("caption")
         if self.callback_query:
             return self.callback_query.get("data")
         return None
@@ -109,11 +110,28 @@ class TelegramUpdate(BaseModel):
         return bool(self.message and self.message.get("voice"))
 
     @property
+    def is_audio(self) -> bool:
+        """Check if update contains an audio file message."""
+        return bool(self.message and self.message.get("audio"))
+
+    @property
     def voice_file_id(self) -> str | None:
         """Get voice file ID if present."""
         if self.message and self.message.get("voice"):
             return self.message["voice"].get("file_id")
         return None
+
+    @property
+    def audio_file_id(self) -> str | None:
+        """Get audio file ID if present."""
+        if self.message and self.message.get("audio"):
+            return self.message["audio"].get("file_id")
+        return None
+
+    @property
+    def media_file_id(self) -> str | None:
+        """Get the file ID for voice-like media updates."""
+        return self.voice_file_id or self.audio_file_id
 
     @property
     def is_callback(self) -> bool:

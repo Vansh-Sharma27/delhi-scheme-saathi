@@ -19,6 +19,15 @@ class TelegramClient:
         self._base_url = f"https://api.telegram.org/bot{self._token}"
         self._client = httpx.AsyncClient(timeout=30.0)
 
+    @staticmethod
+    def _parse_response(response: httpx.Response) -> dict[str, Any]:
+        """Raise on Telegram transport/API errors and return JSON payload."""
+        response.raise_for_status()
+        payload = response.json()
+        if not payload.get("ok", True):
+            raise ValueError(f"Telegram API error: {payload}")
+        return payload
+
     async def send_message(
         self,
         chat_id: int | str,
@@ -43,8 +52,7 @@ class TelegramClient:
                 f"{self._base_url}/sendMessage",
                 json=payload,
             )
-            response.raise_for_status()
-            return response.json()
+            return self._parse_response(response)
         except httpx.HTTPStatusError as e:
             logger.error(f"Telegram API error: {e.response.text}")
             # Retry without parse_mode if markdown fails
@@ -54,7 +62,7 @@ class TelegramClient:
                     f"{self._base_url}/sendMessage",
                     json=payload,
                 )
-                return response.json()
+                return self._parse_response(response)
             raise
 
     async def send_text(
@@ -107,18 +115,35 @@ class TelegramClient:
             f"{self._base_url}/answerCallbackQuery",
             json=payload,
         )
-        return response.json()
+        return self._parse_response(response)
 
     async def send_voice(
         self,
         chat_id: int | str,
-        voice_url: str,
+        voice_data: bytes | str,
         caption: str | None = None,
+        filename: str = "response.ogg",
+        content_type: str = "audio/ogg",
     ) -> dict[str, Any]:
-        """Send voice message."""
+        """Send voice message from either a Telegram URL/file_id or raw bytes."""
+        if isinstance(voice_data, bytes):
+            files = {
+                "voice": (filename, voice_data, content_type),
+            }
+            data: dict[str, Any] = {"chat_id": chat_id}
+            if caption:
+                data["caption"] = caption
+
+            response = await self._client.post(
+                f"{self._base_url}/sendVoice",
+                data=data,
+                files=files,
+            )
+            return self._parse_response(response)
+
         payload: dict[str, Any] = {
             "chat_id": chat_id,
-            "voice": voice_url,
+            "voice": voice_data,
         }
         if caption:
             payload["caption"] = caption
@@ -127,7 +152,7 @@ class TelegramClient:
             f"{self._base_url}/sendVoice",
             json=payload,
         )
-        return response.json()
+        return self._parse_response(response)
 
     async def send_audio(
         self,
@@ -135,21 +160,22 @@ class TelegramClient:
         audio_bytes: bytes,
         filename: str = "response.ogg",
         caption: str | None = None,
+        content_type: str = "audio/ogg",
     ) -> dict[str, Any]:
-        """Send audio file as voice message."""
+        """Send audio file using Telegram's generic audio endpoint."""
         files = {
-            "voice": (filename, audio_bytes, "audio/ogg"),
+            "audio": (filename, audio_bytes, content_type),
         }
         data: dict[str, Any] = {"chat_id": chat_id}
         if caption:
             data["caption"] = caption
 
         response = await self._client.post(
-            f"{self._base_url}/sendVoice",
+            f"{self._base_url}/sendAudio",
             data=data,
             files=files,
         )
-        return response.json()
+        return self._parse_response(response)
 
     async def get_file(self, file_id: str) -> dict[str, Any]:
         """Get file info for downloading."""
@@ -157,7 +183,7 @@ class TelegramClient:
             f"{self._base_url}/getFile",
             json={"file_id": file_id},
         )
-        return response.json()
+        return self._parse_response(response)
 
     async def download_file(self, file_path: str) -> bytes:
         """Download file content."""
@@ -181,19 +207,19 @@ class TelegramClient:
             f"{self._base_url}/setWebhook",
             json={"url": url},
         )
-        return response.json()
+        return self._parse_response(response)
 
     async def delete_webhook(self) -> dict[str, Any]:
         """Delete webhook."""
         response = await self._client.post(
             f"{self._base_url}/deleteWebhook",
         )
-        return response.json()
+        return self._parse_response(response)
 
     async def get_me(self) -> dict[str, Any]:
         """Get bot info."""
         response = await self._client.get(f"{self._base_url}/getMe")
-        return response.json()
+        return self._parse_response(response)
 
     async def send_chat_action(
         self,
@@ -205,7 +231,7 @@ class TelegramClient:
             f"{self._base_url}/sendChatAction",
             json={"chat_id": chat_id, "action": action},
         )
-        return response.json()
+        return self._parse_response(response)
 
     async def close(self) -> None:
         """Close the HTTP client."""

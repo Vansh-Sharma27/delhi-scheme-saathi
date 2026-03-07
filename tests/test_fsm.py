@@ -185,6 +185,40 @@ class TestDetermineNextState:
         )
         assert next_state == ConversationState.PRESENTING
 
+    def test_details_questions_stay_in_details(self):
+        """Ordinary follow-up questions should not jump to APPLICATION."""
+        profile = UserProfile(life_event="EDUCATION")
+        next_state = determine_next_state(
+            current_state=ConversationState.DETAILS,
+            profile=profile,
+            intent="question",
+            action="request_details",
+            has_selected_scheme=True,
+        )
+        assert next_state == ConversationState.DETAILS
+
+    def test_details_apply_request_moves_to_application(self):
+        """Explicit apply requests should move from DETAILS to APPLICATION."""
+        profile = UserProfile(life_event="EDUCATION")
+        next_state = determine_next_state(
+            current_state=ConversationState.DETAILS,
+            profile=profile,
+            intent="question",
+            action="request_application",
+            has_selected_scheme=True,
+        )
+        assert next_state == ConversationState.APPLICATION
+
+    def test_application_clarification_stays_application(self):
+        """Clarifications inside application flow should not jump to HANDOFF."""
+        profile = UserProfile(life_event="EDUCATION")
+        next_state = determine_next_state(
+            current_state=ConversationState.APPLICATION,
+            profile=profile,
+            intent="clarification",
+        )
+        assert next_state == ConversationState.APPLICATION
+
     def test_goodbye_resets_to_greeting(self):
         """Test goodbye intent always goes to greeting."""
         profile = UserProfile(life_event="HOUSING")

@@ -30,24 +30,12 @@ class InMemorySessionStore:
 
     async def get(self, user_id: str) -> Session | None:
         """Get session by user ID."""
-        return self._sessions.get(user_id)
+        session = self._sessions.get(user_id)
+        return session.model_copy(deep=True) if session else None
 
     async def save(self, session: Session) -> None:
         """Save or update session."""
-        # Create new session object with updated timestamp (immutable)
-        updated = Session(
-            user_id=session.user_id,
-            state=session.state,
-            user_profile=session.user_profile,
-            messages=session.messages,
-            conversation_summary=session.conversation_summary,
-            discussed_schemes=session.discussed_schemes,
-            selected_scheme_id=session.selected_scheme_id,
-            language_preference=session.language_preference,
-            created_at=session.created_at,
-            updated_at=datetime.utcnow(),
-            metadata=session.metadata,
-        )
+        updated = session.copy_with(updated_at=datetime.utcnow())
         self._sessions[session.user_id] = updated
 
     async def delete(self, user_id: str) -> None:

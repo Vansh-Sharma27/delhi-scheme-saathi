@@ -52,6 +52,7 @@ def get_valid_transitions(state: ConversationState) -> list[ConversationState]:
         ConversationState.HANDOFF: [
             ConversationState.GREETING,  # Start over
             ConversationState.PRESENTING,  # Back to schemes
+            ConversationState.UNDERSTANDING,  # User asks a new question
         ],
     }
     return transitions.get(state, [])
@@ -87,6 +88,7 @@ def determine_next_state(
     has_schemes: bool | None = None,
     selected_scheme_id: str | None = None,
     has_selected_scheme: bool = False,
+    action: str | None = None,
 ) -> ConversationState:
     """Determine the next state based on current state, profile, and intent.
 
@@ -117,29 +119,43 @@ def determine_next_state(
         case ConversationState.PRESENTING:
             if selected_scheme_id:
                 return ConversationState.DETAILS
+            if action == "request_handoff":
+                return ConversationState.HANDOFF
             if intent == "clarification":
                 return ConversationState.UNDERSTANDING
             return ConversationState.PRESENTING
 
         case ConversationState.DETAILS:
+            if action == "request_application":
+                return ConversationState.APPLICATION
+            if action == "request_handoff":
+                return ConversationState.HANDOFF
             if intent == "selection":
-                # If user is already in DETAILS with an active selection,
-                # treat confirmation-like replies (e.g. "yes explain it") as staying in DETAILS.
                 if selected_scheme_id is None and not has_selected_scheme:
                     return ConversationState.PRESENTING
                 return ConversationState.DETAILS
+            if action == "request_details":
+                return ConversationState.DETAILS
             if intent in ["question", "clarification"]:
-                return ConversationState.APPLICATION
+                return ConversationState.DETAILS
             return ConversationState.DETAILS
 
         case ConversationState.APPLICATION:
-            if intent == "clarification":
+            if action == "request_handoff":
                 return ConversationState.HANDOFF
+            if selected_scheme_id:
+                return ConversationState.DETAILS
+            if action == "request_details":
+                return ConversationState.DETAILS
             return ConversationState.APPLICATION
 
         case ConversationState.HANDOFF:
             if intent == "greeting":
                 return ConversationState.GREETING
+            if selected_scheme_id:
+                return ConversationState.DETAILS
+            if intent in ("question", "clarification", "selection"):
+                return ConversationState.UNDERSTANDING
             return ConversationState.HANDOFF
 
     return current_state

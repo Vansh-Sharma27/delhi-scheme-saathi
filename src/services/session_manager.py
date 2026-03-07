@@ -78,18 +78,9 @@ async def update_summary(session: Session) -> Session:
             current_summary=session.conversation_summary,
         )
 
-        return Session(
-            user_id=session.user_id,
-            state=session.state,
-            user_profile=session.user_profile,
-            messages=session.messages,
+        return session.copy_with(
             conversation_summary=new_summary,
-            discussed_schemes=session.discussed_schemes,
-            selected_scheme_id=session.selected_scheme_id,
-            language_preference=session.language_preference,
-            created_at=session.created_at,
             updated_at=datetime.utcnow(),
-            metadata=session.metadata,
         )
 
     except Exception as e:
@@ -113,18 +104,9 @@ def add_discussed_scheme(session: Session, scheme_id: str) -> Session:
     if scheme_id not in session.discussed_schemes:
         discussed = list(session.discussed_schemes)
         discussed.append(scheme_id)
-        return Session(
-            user_id=session.user_id,
-            state=session.state,
-            user_profile=session.user_profile,
-            messages=session.messages,
-            conversation_summary=session.conversation_summary,
+        return session.copy_with(
             discussed_schemes=discussed,
-            selected_scheme_id=session.selected_scheme_id,
-            language_preference=session.language_preference,
-            created_at=session.created_at,
             updated_at=datetime.utcnow(),
-            metadata=session.metadata,
         )
     return session
 
@@ -132,35 +114,63 @@ def add_discussed_scheme(session: Session, scheme_id: str) -> Session:
 def select_scheme(session: Session, scheme_id: str) -> Session:
     """Set selected scheme and add to discussed."""
     session = add_discussed_scheme(session, scheme_id)
-    return Session(
-        user_id=session.user_id,
-        state=session.state,
-        user_profile=session.user_profile,
-        messages=session.messages,
-        conversation_summary=session.conversation_summary,
-        discussed_schemes=session.discussed_schemes,
+    return session.copy_with(
         selected_scheme_id=scheme_id,
-        language_preference=session.language_preference,
-        created_at=session.created_at,
         updated_at=datetime.utcnow(),
-        metadata=session.metadata,
     )
 
 
-def set_language(session: Session, language: str) -> Session:
+def set_language(session: Session, language: str, locked: bool | None = None) -> Session:
     """Set language preference."""
-    return Session(
-        user_id=session.user_id,
-        state=session.state,
-        user_profile=session.user_profile,
-        messages=session.messages,
-        conversation_summary=session.conversation_summary,
-        discussed_schemes=session.discussed_schemes,
-        selected_scheme_id=session.selected_scheme_id,
-        language_preference=language,
-        created_at=session.created_at,
+    updates = {
+        "language_preference": language,
+        "updated_at": datetime.utcnow(),
+    }
+    if locked is not None:
+        updates["language_locked"] = locked
+    return session.copy_with(**updates)
+
+
+def set_currently_asking(session: Session, field: str | None) -> Session:
+    """Update which field is being asked in the current flow."""
+    return session.copy_with(
+        currently_asking=field,
         updated_at=datetime.utcnow(),
-        metadata=session.metadata,
+    )
+
+
+def set_skipped_fields(session: Session, skipped_fields: list[str]) -> Session:
+    """Persist skipped profile fields."""
+    return session.copy_with(
+        skipped_fields=list(skipped_fields),
+        updated_at=datetime.utcnow(),
+    )
+
+
+def set_presented_schemes(
+    session: Session,
+    presented_schemes: list[dict[str, str]],
+) -> Session:
+    """Persist the last scheme list shown to the user."""
+    return session.copy_with(
+        presented_schemes=presented_schemes,
+        updated_at=datetime.utcnow(),
+    )
+
+
+def set_awaiting_profile_change(session: Session, awaiting: bool) -> Session:
+    """Track whether matching should wait for meaningful profile changes."""
+    return session.copy_with(
+        awaiting_profile_change=awaiting,
+        updated_at=datetime.utcnow(),
+    )
+
+
+def clear_selection(session: Session) -> Session:
+    """Clear the currently selected scheme."""
+    return session.copy_with(
+        selected_scheme_id=None,
+        updated_at=datetime.utcnow(),
     )
 
 
@@ -176,12 +186,16 @@ def get_conversation_history(
     return [{"role": m.role, "content": m.content} for m in messages]
 
 
-def reset_session(session: Session) -> Session:
-    """Reset session to initial state (keep user_id)."""
+def reset_session(session: Session, preserve_language: bool = True) -> Session:
+    """Reset session to initial state while optionally preserving language lock."""
+    language_preference = session.language_preference if preserve_language else "auto"
+    language_locked = session.language_locked if preserve_language else False
     return Session(
         user_id=session.user_id,
         state=ConversationState.GREETING,
         user_profile=UserProfile(),
+        language_preference=language_preference,
+        language_locked=language_locked,
         created_at=session.created_at,
         updated_at=datetime.utcnow(),
     )

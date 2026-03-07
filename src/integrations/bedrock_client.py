@@ -52,6 +52,7 @@ class BedrockLLMClient:
         current_state: str,
         user_profile: dict[str, Any],
         system_prompt: str,
+        session_language: str = "hi",
     ) -> dict[str, Any]:
         """Analyze user message using Bedrock Converse API.
 
@@ -63,6 +64,7 @@ class BedrockLLMClient:
             current_state: Current FSM state
             user_profile: Extracted user profile data
             system_prompt: System context for the LLM
+            session_language: User's preferred language from session
 
         Returns:
             dict with intent, life_event, extracted_fields, language, etc.
@@ -79,12 +81,47 @@ class BedrockLLMClient:
                 "content": [{"text": msg["content"]}],
             })
 
+        # Build missing-fields hint so the LLM knows what to ask next
+        missing_fields = []
+        field_priority = [
+            ("life_event", "what kind of help they need (housing, health, education, employment, etc.)"),
+            ("age", "the applicant/beneficiary age"),
+            ("category", "caste category (SC/ST/OBC/General/EWS)"),
+            ("annual_income", "approximate annual family income"),
+        ]
+        for field, description in field_priority:
+            if user_profile.get(field) is None:
+                missing_fields.append(description)
+
+        missing_hint = ""
+        if missing_fields:
+            missing_hint = f"\nProfile fields still needed (ask for the FIRST one naturally): {', '.join(missing_fields)}"
+
+        # What field the bot last asked about (for contextual interpretation)
+        currently_asking = user_profile.pop("_currently_asking", None)
+        currently_asking_hint = ""
+        if currently_asking:
+            field_descriptions = {
+                "life_event": "what kind of help/situation they need",
+                "age": "the applicant/beneficiary's age",
+                "category": "caste category (SC/ST/OBC/General/EWS)",
+                "annual_income": "approximate annual family income",
+                "gender": "gender (male/female)",
+            }
+            desc = field_descriptions.get(currently_asking, currently_asking)
+            currently_asking_hint = f"\nThe bot's LAST question asked about: {desc}"
+
+        # Session language hint
+        lang_name = {"hi": "Hindi (Devanagari script)", "en": "English", "hinglish": "Hinglish (Hindi-English mix)"}.get(session_language, "Hindi")
+        session_lang_hint = f"\nUser's PREFERRED LANGUAGE: {lang_name} — ALL response_text MUST be in this language."
+
         # Add current message with analysis instruction
         analysis_prompt = f"""
 Analyze the user's message and respond with a JSON object containing:
 
 {{
   "intent": "greeting|question|clarification|selection|location|goodbye|unknown",
+  "action": "change_language|ask_field_reason|skip_field|select_scheme|switch_scheme|request_details|request_application|request_handoff|start_over|goodbye|answer_field|none",
   "life_event": "HOUSING|MARRIAGE|CHILDBIRTH|EDUCATION|HEALTH_CRISIS|DEATH_IN_FAMILY|MARITAL_DISTRESS|JOB_LOSS|BUSINESS_STARTUP|WOMEN_EMPOWERMENT|null",
   "extracted_fields": {{
     "age": number or null,
@@ -99,16 +136,45 @@ Analyze the user's message and respond with a JSON object containing:
   "language": "hi|en|hinglish",
   "selected_scheme_id": string or null,
   "needs_clarification": boolean,
-  "clarification_question": string or null
+  "clarification_question": string or null,
+  "response_text": "A natural conversational response IN THE USER'S PREFERRED LANGUAGE (see rules below)"
 }}
 
 Current conversation state: {current_state}
 Current user profile: {json.dumps(user_profile, default=str)}
+{missing_hint}
+{currently_asking_hint}
+{session_lang_hint}
 
 User message: {user_message}
 
-IMPORTANT: Extract information ONLY from what the user explicitly stated.
-Do NOT infer or guess values. If unsure, use null.
+IMPORTANT RULES:
+1. Extract information ONLY from what the user explicitly stated. Do NOT infer or guess values. If unsure, use null.
+2. CONTEXTUAL EXTRACTION: If the bot last asked about a specific field and the user replies with a bare number or short answer, interpret it in that context. For example, if the bot asked about age and the user replies "19", extract age=19.
+3. VALIDATION: When extracting fields, validate the values:
+   - age: must be between 1-120. If user gives birth year (e.g., "2005"), calculate age. If invalid (0, negative, >120), set to null.
+   - category: must be one of SC/ST/OBC/General/EWS. Map common variations ("open"→General, "backward class"→OBC).
+   - annual_income: must be positive number. Convert lakhs/crores appropriately.
+4. For response_text, generate a warm, natural reply following these scenarios:
+   a) User answered the asked question correctly → acknowledge briefly and ask for the NEXT missing field
+   b) User gave INVALID value (e.g., age=200, unrecognized category) → gently explain what's needed: "I need age as a number between 1-120" or "Please specify SC/ST/OBC/General/EWS"
+   c) User gave DIFFERENT info than asked → acknowledge what they shared, then gently circle back: "Thanks for that! I also need to know [asked field] — could you share that?"
+   d) User said something unrelated or confusing → be understanding and redirect: "I appreciate that! To find the right schemes, could you tell me [asked field]?"
+   e) User says "I don't know" or refuses → be respectful: "No problem! We can work with approximate values or skip this for now." Then move to the next field.
+   f) User asks a question like "why do you need this?" → explain briefly why the field matters (e.g., "Age helps us find age-appropriate schemes") and re-ask gently
+   g) User sends just a number → interpret in context (age if asking age, income if asking income) and acknowledge accordingly
+   h) CRITICAL: response_text MUST be in the user's PREFERRED LANGUAGE ({lang_name}). Do NOT switch languages.
+   i) Keep it 1-3 sentences max, conversational tone
+   j) NEVER mention any scheme names, benefits, eligibility, or document details — that comes from the database later
+5. Set action conservatively:
+   - change_language only when the user explicitly asks for another language
+   - ask_field_reason when the user asks why a requested field matters
+   - skip_field when they say they do not know / want to skip
+   - request_application only for explicit apply/application requests
+   - request_handoff only for explicit human-help/CSC/center requests
+   - request_details for translation/document/detail/explanation follow-ups
+   - select_scheme or switch_scheme only when the user picks a specific scheme
+   - otherwise use answer_field or none
 Respond with ONLY the JSON object, no other text.
 """
 

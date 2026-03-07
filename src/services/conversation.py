@@ -11,6 +11,7 @@ This is the brain of Delhi Scheme Saathi. It:
 """
 
 import logging
+import re
 from typing import Any
 
 import asyncpg
@@ -51,6 +52,210 @@ LIFE_EVENT_ICONS = {
     "MARRIAGE": "💒",
 }
 
+MATCH_RELEVANT_FIELDS = {"life_event", "age", "category", "annual_income", "gender"}
+SCHEME_SELECTION_CUES = (
+    "scheme",
+    "yojana",
+    "योजना",
+    "option",
+    "number",
+    "no",
+    "select",
+    "choose",
+    "pick",
+    "details",
+    "detail",
+    "about",
+    "show",
+    "explain",
+)
+SCHEME_NAME_STOPWORDS = {
+    "scheme",
+    "yojana",
+    "योजना",
+    "the",
+    "a",
+    "an",
+    "this",
+    "that",
+    "please",
+    "detail",
+    "details",
+    "about",
+    "show",
+    "explain",
+    "tell",
+    "me",
+    "for",
+    "of",
+    "apply",
+    "application",
+    "option",
+    "number",
+    "no",
+    "select",
+    "choose",
+    "pick",
+    "open",
+    "want",
+    "need",
+    "ki",
+    "ke",
+    "ka",
+    "ko",
+    "mein",
+    "mai",
+}
+
+
+def _text_variant(language: str, hi: str, en: str, hinglish: str | None = None) -> str:
+    """Select a language-specific string."""
+    if language == "hi":
+        return hi
+    if language == "hinglish":
+        return hinglish or en
+    return en
+
+
+def _normalize_language(language: str | None) -> str:
+    """Normalize language codes to supported response variants."""
+    if language in {"hi", "en", "hinglish"}:
+        return language
+    return "hi"
+
+
+def _infer_text_language(text: str) -> str:
+    """Infer the user's language from the raw text when no session lock exists."""
+    devanagari_chars = sum(1 for char in text if "\u0900" <= char <= "\u097F")
+    alpha_chars = sum(1 for char in text if char.isalpha())
+    if alpha_chars and devanagari_chars / alpha_chars > 0.3:
+        return "hi"
+
+    text_lower = text.lower()
+    hinglish_markers = (
+        "mujhe", "chahiye", "batao", "batayiye", "kyu", "kaise",
+        "sahayata", "madad", "mera", "meri", "mere", "kripya",
+    )
+    marker_hits = sum(
+        1 for marker in hinglish_markers
+        if re.search(rf"(?<!\w){re.escape(marker)}(?!\w)", text_lower)
+    )
+    if marker_hits >= 2:
+        return "hinglish"
+    return "en"
+
+
+def _detect_explicit_language_request(text: str) -> str | None:
+    """Detect when the user explicitly asks for a specific language."""
+    text_lower = text.lower()
+    language_patterns = {
+        "en": [
+            r"\benglish\b",
+            r"\buse english\b",
+            r"\bplease use english\b",
+            r"\bi don't understand hindi\b",
+        ],
+        "hi": [
+            r"\bhindi\b",
+            r"हिंदी",
+            r"\buse hindi\b",
+            r"\bhindi language\b",
+        ],
+        "hinglish": [
+            r"\bhinglish\b",
+            r"\buse hinglish\b",
+            r"\broman hindi\b",
+        ],
+    }
+
+    for language, patterns in language_patterns.items():
+        if any(re.search(pattern, text_lower) for pattern in patterns):
+            return language
+    return None
+
+
+def _detect_reason_request(text: str) -> bool:
+    """Detect when the user asks why a field is needed."""
+    text_lower = text.lower()
+    patterns = [
+        r"\bwhy\b",
+        r"\breason\b",
+        r"\bwhy do you need\b",
+        r"\bwhat(?:'s| is) the matter\b",
+        r"\bkyu\b",
+        r"\bkyon\b",
+        r"क्यों",
+    ]
+    return any(re.search(pattern, text_lower) for pattern in patterns)
+
+
+def _detect_action_override(
+    text: str,
+    current_state: ConversationState,
+    currently_asking: str | None,
+    resolved_scheme_id: str | None,
+) -> str | None:
+    """Infer high-signal actions deterministically."""
+    text_lower = text.lower().strip()
+
+    if _detect_explicit_language_request(text):
+        return "change_language"
+    if re.search(
+        r"\b(start over|restart|reset|begin again|from scratch|new search)\b|फिर से|शुरू से",
+        text_lower,
+    ):
+        return "start_over"
+    if currently_asking and _detect_reason_request(text):
+        return "ask_field_reason"
+    if _wants_to_skip(text):
+        return "skip_field"
+    if resolved_scheme_id:
+        return "switch_scheme" if current_state in {
+            ConversationState.DETAILS,
+            ConversationState.APPLICATION,
+        } else "select_scheme"
+    if re.search(r"\b(apply|application|apply kar|apply kare|अवेदन|आवेदन)\b", text_lower):
+        return "request_application"
+    if re.search(r"\b(csc|human help|service center|service centre|nearest center|operator|contact center)\b", text_lower):
+        return "request_handoff"
+    if re.search(r"\b(detail|details|document|documents|eligibility|benefit|explain|translate|translation)\b", text_lower):
+        return "request_details"
+    return None
+
+
+def _matching_field_changes(
+    before_profile: UserProfile,
+    after_profile: UserProfile,
+) -> set[str]:
+    """Return search-relevant profile fields that changed value."""
+    changed_fields = set()
+    for field in MATCH_RELEVANT_FIELDS:
+        if getattr(before_profile, field) != getattr(after_profile, field):
+            changed_fields.add(field)
+    return changed_fields
+
+
+def _tokenize_scheme_reference(text: str) -> set[str]:
+    """Tokenize user text for safe scheme-name matching."""
+    tokens = set()
+    for token in re.findall(r"[a-z0-9\u0900-\u097F]+", text.lower()):
+        if len(token) <= 1:
+            continue
+        if token in SCHEME_NAME_STOPWORDS:
+            continue
+        tokens.add(token)
+    return tokens
+
+
+def _is_selection_phrase(text: str) -> bool:
+    """Return True when the message looks like a scheme selection request."""
+    stripped = text.strip().lower()
+    if re.fullmatch(r"\d+", stripped):
+        return True
+    if len(stripped.split()) <= 4:
+        return True
+    return any(cue in stripped for cue in SCHEME_SELECTION_CUES)
+
 
 # ---------------------------------------------------------------------------
 # Plain-text formatting helpers (no MarkdownV2 — sent as plain Telegram text)
@@ -71,6 +276,53 @@ def _format_currency_plain(amount: int | float | None, language: str = "hi") -> 
     return f"₹{amount:,.0f}"
 
 
+def _truncate_at_word(text: str, max_len: int, ellipsis: str = "...") -> str:
+    """Truncate text at word boundary to avoid cutting words mid-way.
+
+    Example: _truncate_at_word("pursuing professional and technical", 32)
+             returns "pursuing professional and..." (not "pursuing professional and techni...")
+    """
+    if len(text) <= max_len:
+        return text
+    # Leave room for ellipsis
+    truncated = text[: max_len - len(ellipsis)]
+    # Find last space to avoid cutting mid-word
+    last_space = truncated.rfind(" ")
+    if last_space > max_len * 0.5:  # Only use space if we keep >50% of text
+        truncated = truncated[:last_space]
+    return truncated.rstrip() + ellipsis
+
+
+def _wrap_long_text(text: str, max_line_len: int = 70, prefix: str = "     ") -> str:
+    """Wrap long text into multiple lines for readability.
+
+    Used for long database fields like issuing_authority.
+    """
+    if len(text) <= max_line_len:
+        return text
+
+    words = text.split()
+    lines = []
+    current_line = ""
+
+    for word in words:
+        test_line = f"{current_line} {word}".strip()
+        if len(test_line) <= max_line_len:
+            current_line = test_line
+        else:
+            if current_line:
+                lines.append(current_line)
+            current_line = word
+
+    if current_line:
+        lines.append(current_line)
+
+    # Join with prefix for subsequent lines
+    if len(lines) <= 1:
+        return text
+    return lines[0] + "\n" + "\n".join(f"{prefix}{line}" for line in lines[1:])
+
+
 def _build_scheme_list_text(
     schemes: list[SchemeMatch],
     profile: UserProfile,
@@ -78,9 +330,19 @@ def _build_scheme_list_text(
 ) -> str:
     """Build a numbered, plain-text scheme list with eligibility info."""
     if not schemes:
-        return "कोई योजना नहीं मिली।" if language == "hi" else "No matching schemes found."
+        return _text_variant(
+            language,
+            "कोई योजना नहीं मिली।",
+            "No matching schemes found.",
+            "Koi matching scheme nahi mili.",
+        )
 
-    header = "🎯 आपके लिए ये योजनाएं मिली हैं:" if language == "hi" else "🎯 Found these schemes for you:"
+    header = _text_variant(
+        language,
+        "🎯 आपके लिए ये योजनाएं मिली हैं:",
+        "🎯 Found these schemes for you:",
+        "🎯 Aapke liye ye schemes mili hain:",
+    )
     lines = [header, ""]
 
     for i, match in enumerate(schemes[:5], 1):
@@ -99,20 +361,20 @@ def _build_scheme_list_text(
         if scheme.benefits_amount:
             amount_str = _format_currency_plain(scheme.benefits_amount, language)
             freq_map = {
-                "monthly": "मासिक" if language == "hi" else "/month",
-                "yearly": "वार्षिक" if language == "hi" else "/year",
-                "one-time": "एकमुश्त" if language == "hi" else "one-time",
-                "installments": "किश्तों में" if language == "hi" else "in installments",
+                "monthly": _text_variant(language, "मासिक", "/month", "per month"),
+                "yearly": _text_variant(language, "वार्षिक", "/year", "per year"),
+                "one-time": _text_variant(language, "एकमुश्त", "one-time", "one-time"),
+                "installments": _text_variant(language, "किश्तों में", "in installments", "installments mein"),
             }
             freq_display = freq_map.get(scheme.benefits_frequency or "", "")
-            benefit_label = "लाभ" if language == "hi" else "Benefit"
+            benefit_label = _text_variant(language, "लाभ", "Benefit", "Benefit")
             lines.append(f"   💰 {benefit_label}: {amount_str} {freq_display}".rstrip())
 
         # Department
         dept = scheme.department_hindi if language == "hi" else scheme.department
         if len(dept) > 40:
             dept = dept[:37] + "..."
-        dept_label = "विभाग" if language == "hi" else "Dept"
+        dept_label = _text_variant(language, "विभाग", "Dept", "Dept")
         lines.append(f"   🏛️ {dept_label}: {dept}")
 
         # Eligibility match
@@ -131,12 +393,21 @@ def _build_scheme_list_text(
                 parts.append(f"{lbl} {mark}")
 
             all_match = all(match.eligibility_match.values())
-            prefix = ("✅ पात्र" if language == "hi" else "✅ Eligible") if all_match else ("⚠️ जाँचें" if language == "hi" else "⚠️ Check")
+            prefix = (
+                _text_variant(language, "✅ पात्र", "✅ Eligible", "✅ Eligible")
+                if all_match
+                else _text_variant(language, "⚠️ जाँचें", "⚠️ Check", "⚠️ Check")
+            )
             lines.append(f"   {prefix}: {' • '.join(parts)}")
 
         lines.append("")  # blank line between schemes
 
-    footer = "👆 नीचे बटन दबाएं या नंबर बताएं।" if language == "hi" else "👆 Tap a button below or type the number."
+    footer = _text_variant(
+        language,
+        "👆 नीचे बटन दबाएं या नंबर बताएं।",
+        "👆 Tap a button below or type the number.",
+        "👆 Neeche button dabaiye ya number type kijiye.",
+    )
     lines.append(footer)
     return "\n".join(lines)
 
@@ -147,10 +418,18 @@ async def _build_scheme_details_text(
     profile: UserProfile,
     language: str,
 ) -> str:
-    """Build rich plain-text scheme details with documents and warnings."""
+    """Build rich plain-text scheme details with documents and warnings.
+
+    Visual hierarchy:
+    - Section dividers (───) between major blocks
+    - Blank lines for breathing room
+    - No harsh truncation on rejection descriptions
+    """
     scheme = await scheme_repo.get_scheme_by_id(pool, scheme_id)
     if not scheme:
-        return "योजना नहीं मिली।" if language == "hi" else "Scheme not found."
+        return _text_variant(language, "योजना नहीं मिली।", "Scheme not found.", "Scheme nahi mili.")
+
+    DIVIDER = "───────────────────"
 
     icon = "📋"
     for event in scheme.life_events:
@@ -161,94 +440,135 @@ async def _build_scheme_details_text(
     name = scheme.name_hindi if language == "hi" else scheme.name
     lines = [f"{icon} {name}", ""]
 
-    # Short description
+    # Description (word-boundary-aware truncation)
     desc = scheme.description_hindi if language == "hi" else scheme.description
-    if len(desc) > 250:
-        desc = desc[:247] + "..."
+    desc = _truncate_at_word(desc, 400)
     lines.append(desc)
     lines.append("")
 
-    # Benefits
+    # Benefits + Eligibility block
     if scheme.benefits_amount:
         amount_str = _format_currency_plain(scheme.benefits_amount, language)
-        benefit_label = "लाभ राशि" if language == "hi" else "Benefit"
+        benefit_label = _text_variant(language, "लाभ राशि", "Benefit", "Benefit")
         lines.append(f"💰 {benefit_label}: {amount_str}")
 
-    # Eligibility summary
     elig = scheme.eligibility
     elig_parts = []
     if elig.min_age or elig.max_age:
-        age_lbl = "आयु" if language == "hi" else "Age"
+        age_lbl = _text_variant(language, "आयु", "Age", "Age")
         elig_parts.append(f"{age_lbl}: {elig.min_age or 18}-{elig.max_age or '∞'}")
     if elig.max_income:
         income_str = _format_currency_plain(elig.max_income, language)
-        income_lbl = "अधिकतम आय" if language == "hi" else "Max income"
+        income_lbl = _text_variant(language, "अधिकतम आय", "Max income", "Max income")
         elig_parts.append(f"{income_lbl}: {income_str}")
     if elig.categories:
-        cat_lbl = "श्रेणी" if language == "hi" else "Category"
+        cat_lbl = _text_variant(language, "श्रेणी", "Category", "Category")
         elig_parts.append(f"{cat_lbl}: {', '.join(elig.categories)}")
     if elig_parts:
-        elig_label = "पात्रता" if language == "hi" else "Eligibility"
+        elig_label = _text_variant(language, "पात्रता", "Eligibility", "Eligibility")
         lines.append(f"✅ {elig_label}: {' | '.join(elig_parts)}")
-    lines.append("")
 
-    # Documents
+    # ── Documents section ──
     documents = await document_resolver.resolve_documents_for_scheme(
         pool, scheme.documents_required
     )
     if documents:
-        doc_header = "📄 आवश्यक दस्तावेज:" if language == "hi" else "📄 Required Documents:"
+        lines.append("")
+        lines.append(DIVIDER)
+        doc_header = _text_variant(
+            language,
+            "📄 आवश्यक दस्तावेज:",
+            "📄 Required Documents:",
+            "📄 Required documents:",
+        )
         lines.append(doc_header)
-        for idx, chain in enumerate(documents[:6], 1):
+        lines.append("")
+
+        for idx, chain in enumerate(documents[:5], 1):
             doc = chain.document
             doc_name = doc.name_hindi if language == "hi" else doc.name
             lines.append(f"  {idx}. {doc_name}")
 
-            where_lbl = "कहाँ से" if language == "hi" else "Where"
-            extra = ""
+            # Where to get the document (wrapped for readability)
+            where_lbl = _text_variant(language, "कहाँ से", "Where", "Kahan se")
+            authority = doc.issuing_authority
+            if len(authority) > 60:
+                authority = _truncate_at_word(authority, 60)
+            lines.append(f"     🏛️ {where_lbl}: {authority}")
+
+            # Fee and time on separate line if present
+            details = []
             if doc.fee:
-                fee_lbl = "शुल्क" if language == "hi" else "Fee"
+                fee_lbl = _text_variant(language, "शुल्क", "Fee", "Fee")
                 fee_val = f"₹{doc.fee}" if doc.fee.isdigit() else doc.fee
-                extra += f", {fee_lbl}: {fee_val}"
+                details.append(f"{fee_lbl}: {fee_val}")
             if doc.processing_time:
-                time_lbl = "समय" if language == "hi" else "Time"
-                extra += f", {time_lbl}: {doc.processing_time}"
-            lines.append(f"     🏛️ {where_lbl}: {doc.issuing_authority}{extra}")
+                time_lbl = _text_variant(language, "समय", "Time", "Time")
+                details.append(f"{time_lbl}: {doc.processing_time}")
+            if details:
+                lines.append(f"     📋 {' | '.join(details)}")
 
             if doc.online_portal:
-                online_lbl = "ऑनलाइन" if language == "hi" else "Online"
+                online_lbl = _text_variant(language, "ऑनलाइन", "Online", "Online")
                 lines.append(f"     🌐 {online_lbl}: {doc.online_portal}")
 
-            if doc.common_mistakes:
-                warn_lbl = "ध्यान" if language == "hi" else "Note"
-                lines.append(f"     ⚠️ {warn_lbl}: {doc.common_mistakes[0][:80]}")
-        lines.append("")
+            lines.append("")  # blank line between documents
 
-    # Rejection warnings
+    # ── Rejection warnings section (condensed: tips only) ──
     warnings = await rejection_engine.get_rejection_warnings(pool, scheme_id, profile)
     if warnings:
-        warn_header = "⚠️ अस्वीकृति से बचें:" if language == "hi" else "⚠️ Avoid Rejection:"
+        lines.append(DIVIDER)
+        warn_header = _text_variant(
+            language,
+            "⚠️ अस्वीकृति से बचें:",
+            "⚠️ Tips to Avoid Rejection:",
+            "⚠️ Rejection se bachne ke tips:",
+        )
         lines.append(warn_header)
-        severity_icons = {"critical": "🔴", "high": "🟠", "warning": "🟡"}
-        for rule in sorted(warnings[:5], key=lambda r: r.severity_order):
-            sev_icon = severity_icons.get(rule.severity, "⚠️")
-            rule_desc = rule.description_hindi if language == "hi" else rule.description
-            lines.append(f"  {sev_icon} {rule_desc[:80]}")
-            if rule.prevention_tip:
-                tip_lbl = "बचाव" if language == "hi" else "Tip"
-                lines.append(f"     ✅ {tip_lbl}: {rule.prevention_tip[:80]}")
         lines.append("")
 
-    # Application info
+        severity_icons = {"critical": "🔴", "high": "🟠", "warning": "🟡"}
+        for rule in sorted(warnings[:3], key=lambda r: r.severity_order):
+            sev_icon = severity_icons.get(rule.severity, "⚠️")
+            # Show only the actionable tip (concise), not the full rejection
+            # description paragraph — keeps the message scannable.
+            if rule.prevention_tip:
+                tip = rule.prevention_tip
+                if len(tip) > 160:
+                    tip = tip[:157] + "..."
+                lines.append(f"  {sev_icon} {tip}")
+            else:
+                desc = rule.description_hindi if language == "hi" else rule.description
+                if len(desc) > 160:
+                    desc = desc[:157] + "..."
+                lines.append(f"  {sev_icon} {desc}")
+            lines.append("")  # blank line between warnings
+
+    # ── Application section ──
+    if scheme.application_url or scheme.offline_process:
+        lines.append(DIVIDER)
+        apply_header = _text_variant(
+            language,
+            "📝 आवेदन कैसे करें:",
+            "📝 How to Apply:",
+            "📝 Apply kaise karein:",
+        )
+        lines.append(apply_header)
+        lines.append("")
     if scheme.application_url:
-        apply_lbl = "ऑनलाइन आवेदन" if language == "hi" else "Apply online"
+        apply_lbl = _text_variant(language, "ऑनलाइन", "Online", "Online")
         lines.append(f"🔗 {apply_lbl}: {scheme.application_url}")
     if scheme.offline_process:
-        offline_lbl = "ऑफलाइन आवेदन" if language == "hi" else "Offline"
-        lines.append(f"🏛️ {offline_lbl}: {scheme.offline_process[:120]}")
+        offline_lbl = _text_variant(language, "ऑफलाइन", "Offline", "Offline")
+        lines.append(f"🏛️ {offline_lbl}: {scheme.offline_process}")
 
     lines.append("")
-    cta = "क्या आप इस योजना के लिए आवेदन करना चाहते हैं?" if language == "hi" else "Would you like to apply for this scheme?"
+    cta = _text_variant(
+        language,
+        "क्या आप इस योजना के लिए आवेदन करना चाहते हैं?",
+        "Would you like to apply for this scheme?",
+        "Kya aap is scheme ke liye apply karna chahenge?",
+    )
     lines.append(cta)
     return "\n".join(lines)
 
@@ -269,10 +589,15 @@ async def _build_handoff_text(
             pool, profile.district, 3
         )
 
-    if language == "hi":
-        lines = ["🏛️ आपकी और सहायता के लिए नजदीकी सेवा केंद्र:", ""]
-    else:
-        lines = ["🏛️ Nearest service centers for further help:", ""]
+    lines = [
+        _text_variant(
+            language,
+            "🏛️ आपकी और सहायता के लिए नजदीकी सेवा केंद्र:",
+            "🏛️ Nearest service centers for further help:",
+            "🏛️ Aur madad ke liye nearest service centers:",
+        ),
+        "",
+    ]
 
     if offices:
         for office in offices[:3]:
@@ -282,53 +607,92 @@ async def _build_handoff_text(
             if office.phone:
                 lines.append(f"   📞 {office.phone}")
             if office.working_hours:
-                hrs_lbl = "समय" if language == "hi" else "Hours"
+                hrs_lbl = _text_variant(language, "समय", "Hours", "Hours")
                 lines.append(f"   🕐 {hrs_lbl}: {office.working_hours}")
             lines.append("")
     else:
-        no_office = "नजदीकी केंद्र की जानकारी उपलब्ध नहीं है।" if language == "hi" else "No nearby center information available."
+        no_office = _text_variant(
+            language,
+            "नजदीकी केंद्र की जानकारी उपलब्ध नहीं है।",
+            "No nearby center information available.",
+            "Nearby center ki information available nahi hai.",
+        )
         lines.append(no_office)
         lines.append("")
 
-    cta = "कृपया अपने सभी दस्तावेज लेकर जाएं।" if language == "hi" else "Please carry all your documents."
+    cta = _text_variant(
+        language,
+        "कृपया अपने सभी दस्तावेज लेकर जाएं।",
+        "Please carry all your documents.",
+        "Please apne saare documents saath lekar jaiye.",
+    )
     lines.append(cta)
     return "\n".join(lines)
 
 
 def _resolve_scheme_from_text(session: Session, text: str) -> str | None:
     """Try to match user text to a previously presented scheme by number or name."""
-    presented = session.metadata.get("presented_schemes", [])
+    presented = session.presented_schemes
     if not presented:
         return None
 
-    text_lower = text.strip().lower()
+    stripped_text = text.strip()
+    text_lower = stripped_text.lower()
 
-    # Match by number: "1", "2", "first", "पहला", etc.
-    number_map = {
-        "1": 0, "2": 1, "3": 2, "4": 3, "5": 4,
-        "first": 0, "second": 1, "third": 2, "fourth": 3, "fifth": 4,
-        "पहला": 0, "पहली": 0, "दूसरा": 1, "दूसरी": 1,
-        "तीसरा": 2, "तीसरी": 2, "चौथा": 3, "पांचवां": 4,
-    }
-    for keyword, index in number_map.items():
-        if keyword in text_lower and index < len(presented):
+    # Match by exact number / ordinal: "1", "scheme 2", "second option", "दूसरी योजना", etc.
+    exact_number = re.fullmatch(r"\s*(\d+)\s*", stripped_text)
+    if exact_number:
+        index = int(exact_number.group(1)) - 1
+        if 0 <= index < len(presented):
             return presented[index]["id"]
 
-    # Match by scheme name (partial match on keywords > 3 chars)
+    number_map = {
+        0: ("first", "1st", "पहला", "पहली"),
+        1: ("second", "2nd", "दूसरा", "दूसरी"),
+        2: ("third", "3rd", "तीसरा", "तीसरी"),
+        3: ("fourth", "4th", "चौथा", "चौथी"),
+        4: ("fifth", "5th", "पांचवां", "पांचवीं"),
+    }
+    numbered_selection = re.search(
+        r"\b(?:scheme|option|number|no\.?|select|choose|pick|details? for|about)\s*(\d+)\b",
+        text_lower,
+    )
+    if numbered_selection:
+        index = int(numbered_selection.group(1)) - 1
+        if 0 <= index < len(presented):
+            return presented[index]["id"]
+
+    if _is_selection_phrase(stripped_text):
+        for index, keywords in number_map.items():
+            if index >= len(presented):
+                continue
+            for keyword in keywords:
+                if re.search(rf"(?<!\w){re.escape(keyword)}(?!\w)", text_lower):
+                    return presented[index]["id"]
+
+    # Match by scheme name, but only when the text is specific enough to avoid
+    # selecting a scheme from generic follow-up questions like "scheme details".
+    user_tokens = _tokenize_scheme_reference(stripped_text)
+    if not user_tokens:
+        return None
+
+    matching_scheme_id = None
     for scheme_info in presented:
         name_lower = scheme_info.get("name", "").lower()
-        name_hindi = scheme_info.get("name_hindi", "")
-        # Full name in text or text in full name
-        if name_lower and (name_lower in text_lower or text_lower in name_lower):
-            return scheme_info["id"]
-        if name_hindi and (name_hindi in text or text.strip() in name_hindi):
-            return scheme_info["id"]
-        # Match significant words from English name
-        for word in name_lower.split():
-            if len(word) > 3 and word in text_lower:
-                return scheme_info["id"]
+        name_hindi = scheme_info.get("name_hindi", "").lower()
+        scheme_tokens = _tokenize_scheme_reference(f"{name_lower} {name_hindi}")
+        if not scheme_tokens:
+            continue
 
-    return None
+        if text_lower in {name_lower.strip(), name_hindi.strip()}:
+            return scheme_info["id"]
+
+        if user_tokens.issubset(scheme_tokens):
+            if matching_scheme_id and matching_scheme_id != scheme_info["id"]:
+                return None
+            matching_scheme_id = scheme_info["id"]
+
+    return matching_scheme_id
 
 
 def _store_presented_schemes(session: Session, schemes: list[SchemeMatch]) -> Session:
@@ -337,21 +701,64 @@ def _store_presented_schemes(session: Session, schemes: list[SchemeMatch]) -> Se
         {"id": m.scheme.id, "name": m.scheme.name, "name_hindi": m.scheme.name_hindi}
         for m in schemes[:5]
     ]
-    metadata = dict(session.metadata)
-    metadata["presented_schemes"] = presented
-    return Session(
-        user_id=session.user_id,
-        state=session.state,
-        user_profile=session.user_profile,
-        messages=session.messages,
-        conversation_summary=session.conversation_summary,
-        discussed_schemes=session.discussed_schemes,
-        selected_scheme_id=session.selected_scheme_id,
-        language_preference=session.language_preference,
-        created_at=session.created_at,
-        updated_at=session.updated_at,
-        metadata=metadata,
-    )
+    return session_manager.set_presented_schemes(session, presented)
+
+
+# ---------------------------------------------------------------------------
+# Affirmative / confirmation detection
+# ---------------------------------------------------------------------------
+
+_AFFIRMATIVE_RE = re.compile(
+    r"(?i)\b("
+    r"yes|yeah|yep|yup|sure|ok|okay|alright|"
+    r"absolutely|definitely|of course|please|go ahead|"
+    r"let'?s do|proceed|I want|I'?d like|"
+    r"haan|haa|ha|ji|bilkul|zaroor|chalo|thik|"
+    r"हां|हाँ|जी|ठीक|ज़रूर|बिल्कुल|चलो"
+    r")\b"
+)
+
+
+def _is_affirmative(text: str) -> bool:
+    """Check if the user's message is a short affirmative/confirmation."""
+    words = text.strip().split()
+    return len(words) <= 5 and bool(_AFFIRMATIVE_RE.search(text))
+
+
+# ---------------------------------------------------------------------------
+# "I don't know" / skip detection
+# ---------------------------------------------------------------------------
+
+_SKIP_PATTERNS = [
+    # English patterns (with word boundaries)
+    r"\bdon'?t know\b",
+    r"\bdo not know\b",
+    r"\bno idea\b",
+    r"\bnot sure\b",
+    r"\bunsure\b",
+    r"\bskip\b",
+    r"\bpass\b",
+    r"\bnext\b",
+    r"\bmove on\b",
+    # Hinglish patterns (with word boundaries)
+    r"\bnahi pata\b",
+    r"\bpata nahi\b",
+    r"\bmaloom nahi\b",
+    r"\bnahi maloom\b",
+    # Hindi patterns (without word boundaries for Devanagari)
+    r"पता नहीं",
+    r"नहीं पता",
+    r"मालूम नहीं",
+    r"छोड़ो",
+    r"अगला",
+]
+
+_SKIP_RE = re.compile("|".join(_SKIP_PATTERNS), re.IGNORECASE)
+
+
+def _wants_to_skip(text: str) -> bool:
+    """Check if the user wants to skip the current question."""
+    return bool(_SKIP_RE.search(text))
 
 
 # ---------------------------------------------------------------------------
@@ -384,7 +791,8 @@ class ConversationService:
         user_message = sanitize_input(request.message)
         if not user_message:
             return ChatResponse(
-                text="मुझे आपका संदेश समझ नहीं आया। कृपया दोबारा लिखें।"
+                text="मुझे आपका संदेश समझ नहीं आया। कृपया दोबारा लिखें।",
+                language=session.language_preference if session.language_preference != "auto" else "hi",
             )
 
         # Handle /start command — always reset and greet
@@ -398,6 +806,7 @@ class ConversationService:
             return ChatResponse(
                 text=response_text,
                 next_state=ConversationState.GREETING.value,
+                language=lang,
             )
 
         # Handle callback data (scheme selection via inline keyboard)
@@ -405,46 +814,129 @@ class ConversationService:
             return await self._handle_callback(session, request.callback_data)
 
         # 3. Analyze message via LLM (intent + entities only)
+        explicit_language = _detect_explicit_language_request(user_message)
+        inferred_turn_language = explicit_language or _infer_text_language(user_message)
+        llm_session_language = (
+            session.language_preference
+            if session.language_locked and session.language_preference != "auto"
+            else inferred_turn_language
+        )
         conversation_history = session_manager.get_conversation_history(
             session,
             include_assistant=False,
         )
+
         analysis = await self.llm.analyze_message(
             user_message=user_message,
             conversation_history=conversation_history,
             current_state=session.state.value,
-            user_profile=session.user_profile.model_dump(),
+            user_profile={
+                **session.user_profile.model_dump(),
+                "_currently_asking": session.currently_asking,
+            },
             system_prompt=get_system_prompt(),
+            session_language=llm_session_language,
         )
 
         intent = analysis.get("intent", "unknown")
         detected_life_event = analysis.get("life_event")
         extracted_fields = analysis.get("extracted_fields", {})
-        detected_language = analysis.get("language", "hi")
+        detected_language = _normalize_language(
+            analysis.get("language", llm_session_language)
+        )
         selected_scheme_id = analysis.get("selected_scheme_id")
+        llm_response_text = analysis.get("response_text")
+        llm_action = analysis.get("action")
 
         # Deterministic extraction fallback for common profile fields.
         rule_based_fields = profile_extractor.extract_by_patterns(user_message)
         extracted_fields = {**extracted_fields, **rule_based_fields}
 
+        resolved_scheme_id = selected_scheme_id or _resolve_scheme_from_text(
+            session, user_message
+        )
+        action = _detect_action_override(
+            user_message,
+            session.state,
+            session.currently_asking,
+            resolved_scheme_id,
+        ) or llm_action
+
+        # Contextual extraction: if the bot asked for a specific field and
+        # the user replies with a bare number, interpret it in context.
+        # This is the deterministic guardrail — catches cases where both the
+        # LLM and the regex missed an obvious contextual answer.
+        currently_asking = session.currently_asking
+        if currently_asking and currently_asking not in extracted_fields:
+            bare_match = re.match(r"^\s*(\d+)\s*$", user_message.strip())
+            if bare_match:
+                num = int(bare_match.group(1))
+                if currently_asking == "age" and 1 <= num <= 120:
+                    extracted_fields["age"] = num
+                elif currently_asking == "annual_income" and num > 0:
+                    extracted_fields["annual_income"] = num
+
         # Deterministic life-event fallback when LLM returns null/unknown.
         if not detected_life_event:
             detected_life_event = life_event_classifier.classify_by_keywords(user_message)
 
-        # Update language preference
-        if detected_language and detected_language != "auto":
-            if detected_language != session.language_preference:
-                session = session_manager.set_language(session, detected_language)
-
-        # Explicitly reset full session context on goodbye.
-        if intent == "goodbye":
-            session = session_manager.reset_session(session)
-            if detected_language and detected_language != "auto":
-                session = session_manager.set_language(session, detected_language)
-
-            response_text = response_generator.generate_greeting_response(
-                session.language_preference
+        # Update language preference. Explicit requests are sticky; otherwise we
+        # keep using the latest observed language without locking the session.
+        language_changed = False
+        if explicit_language:
+            language_changed = session.language_preference != explicit_language
+            session = session_manager.set_language(
+                session,
+                explicit_language,
+                locked=True,
             )
+            lang = explicit_language
+        else:
+            if session.language_locked and session.language_preference != "auto":
+                lang = session.language_preference
+            else:
+                previous_language = session.language_preference
+                if (
+                    detected_language != previous_language
+                    or session.language_preference == "auto"
+                ):
+                    session = session_manager.set_language(
+                        session,
+                        detected_language,
+                        locked=False,
+                    )
+                    language_changed = previous_language != detected_language
+                lang = (
+                    session.language_preference
+                    if session.language_preference != "auto"
+                    else detected_language
+                )
+
+        # If user switches language while still in GREETING and hasn't provided
+        # any substantive profile info, re-greet in the new language so they
+        # feel welcomed before we start collecting information.
+        if (
+            language_changed
+            and session.state == ConversationState.GREETING
+            and not detected_life_event
+            and not extracted_fields
+        ):
+            response_text = response_generator.generate_greeting_response(lang)
+            session = await session_manager.add_message(session, "user", user_message)
+            session = await session_manager.add_message(
+                session, "assistant", response_text
+            )
+            await session_manager.save_session(session)
+            return ChatResponse(
+                text=response_text,
+                next_state=ConversationState.GREETING.value,
+                language=lang,
+            )
+
+        # Explicitly reset full session context on goodbye / restart.
+        if action == "start_over":
+            session = session_manager.reset_session(session, preserve_language=True)
+            response_text = response_generator.generate_greeting_response(lang)
             session = await session_manager.add_message(session, "user", user_message)
             session = await session_manager.add_message(session, "assistant", response_text)
             await session_manager.save_session(session)
@@ -452,34 +944,105 @@ class ConversationService:
             return ChatResponse(
                 text=response_text,
                 next_state=ConversationState.GREETING.value,
+                language=lang,
+            )
+
+        if intent == "goodbye" or action == "goodbye":
+            # Send farewell, not a greeting — the user said goodbye.
+            response_text = response_generator.generate_farewell_response(lang)
+            session = session_manager.reset_session(session, preserve_language=True)
+
+            session = await session_manager.add_message(session, "user", user_message)
+            session = await session_manager.add_message(session, "assistant", response_text)
+            await session_manager.save_session(session)
+
+            return ChatResponse(
+                text=response_text,
+                next_state=ConversationState.GREETING.value,
+                language=lang,
             )
 
         # 4. Update profile with extracted fields
+        before_profile = session.user_profile
         if extracted_fields:
             new_profile = UserProfile(**{
                 k: v for k, v in extracted_fields.items() if v is not None
             })
             session = session_manager.update_profile(session, new_profile)
 
-        # Add life event to profile if detected
-        if detected_life_event and not session.user_profile.life_event:
+        # Allow topic / life-event replacement instead of trapping the user in
+        # the original topic until /start.
+        if detected_life_event and detected_life_event != session.user_profile.life_event:
             session = session_manager.update_profile(
                 session,
                 UserProfile(life_event=detected_life_event)
             )
+        profile = session.user_profile
+        changed_fields = _matching_field_changes(before_profile, profile)
+        profile_changed = bool(changed_fields)
+        matching_inputs_changed = bool(changed_fields & MATCH_RELEVANT_FIELDS)
+
+        # Clear the no-match guard when profile actually changes, so
+        # the next FSM cycle is allowed to re-trigger matching.
+        if profile_changed:
+            session = session_manager.set_awaiting_profile_change(session, False)
+            session = session_manager.set_skipped_fields(
+                session,
+                [field for field in session.skipped_fields if field not in changed_fields],
+            )
+            if "life_event" in changed_fields and before_profile.life_event is not None:
+                session = session_manager.clear_selection(session)
+                session = session_manager.set_presented_schemes(session, [])
+                session = session_manager.set_currently_asking(session, None)
+                session = session_manager.set_skipped_fields(session, [])
+            elif matching_inputs_changed and session.selected_scheme_id:
+                session = session_manager.clear_selection(session)
+                session = session_manager.set_presented_schemes(session, [])
 
         # 5. Determine next FSM state
-        profile = session.user_profile
         next_state = fsm.determine_next_state(
             current_state=session.state,
             profile=profile,
             intent=intent,
-            selected_scheme_id=selected_scheme_id,
+            selected_scheme_id=resolved_scheme_id,
             has_selected_scheme=bool(session.selected_scheme_id),
+            action=action,
         )
 
+        # Prevent re-matching loop: if the previous turn got zero results
+        # and the user hasn't provided new profile information, don't
+        # auto-trigger MATCHING again — stay in UNDERSTANDING so the LLM
+        # can respond naturally and guide the user.
+        if (
+            next_state == ConversationState.MATCHING
+            and session.awaiting_profile_change
+            and not profile_changed
+        ):
+            next_state = ConversationState.UNDERSTANDING
+
+        if (
+            matching_inputs_changed
+            and profile.is_complete_for_matching
+            and session.state in {
+                ConversationState.PRESENTING,
+                ConversationState.DETAILS,
+                ConversationState.APPLICATION,
+            }
+        ):
+            next_state = ConversationState.MATCHING
+
+        # Affirmative in DETAILS → move to APPLICATION (not re-show details).
+        # When the bot asks "Would you like to apply?" and the user says
+        # "yes"/"sure"/"yeah", the FSM can't distinguish this from
+        # a generic selection — so we override here.
+        if (
+            next_state == ConversationState.DETAILS
+            and session.state == ConversationState.DETAILS
+            and _is_affirmative(user_message)
+        ):
+            next_state = ConversationState.APPLICATION
+
         # 6. Execute state-specific logic
-        lang = session.language_preference if session.language_preference != "auto" else "hi"
         schemes: list[SchemeMatch] = []
         documents: list[DocumentChain] = []
         warnings = []
@@ -496,28 +1059,159 @@ class ConversationService:
                 response_text = response_generator.generate_greeting_response(lang)
 
             case ConversationState.UNDERSTANDING:
-                # Ask for next missing profile field
-                next_question = profile_extractor.get_next_question(profile, lang)
-                if next_question:
-                    response_text = next_question
-                else:
-                    # All fields filled but FSM didn't trigger MATCHING
-                    # (edge case safety) — run matching inline
-                    next_state, response_text, schemes, inline_keyboard, session = (
-                        await self._run_matching(profile, user_message, session, lang)
+                # LLM-first: prefer the natural LLM response so the bot
+                # sounds human.  But guard against the LLM re-asking for a
+                # field that our deterministic extraction already captured
+                # this turn (the LLM generated response_text before the
+                # rule-based layer ran, so it can be stale).
+                awaiting_profile_change_guard = (
+                    session.awaiting_profile_change
+                    and not profile_changed
+                    and profile.is_complete_for_matching
+                )
+                next_question = profile_extractor.get_next_question(
+                    profile,
+                    lang,
+                    session.skipped_fields,
+                )
+                next_field = profile_extractor.get_next_missing_field(
+                    profile,
+                    session.skipped_fields,
+                )
+                previously_asking = session.currently_asking
+
+                # ---------- SKIP HANDLING ----------
+                # If user says "I don't know" or wants to skip, move to the next field
+                # or try to match with partial profile.
+                if action == "ask_field_reason" and previously_asking:
+                    response_text = response_generator.generate_field_reason_response(
+                        previously_asking,
+                        lang,
                     )
+                    session = session_manager.set_currently_asking(
+                        session,
+                        previously_asking,
+                    )
+                elif action == "skip_field" and previously_asking:
+                    # Mark this field as skipped so we don't ask again
+                    skipped = list(session.skipped_fields)
+                    if previously_asking not in skipped:
+                        skipped.append(previously_asking)
+                    session = session_manager.set_skipped_fields(session, skipped)
+
+                    # Find the next field that hasn't been skipped
+                    next_unskipped = profile_extractor.get_next_missing_field(
+                        profile,
+                        skipped,
+                    )
+
+                    if next_unskipped:
+                        # Move to next field
+                        session = session_manager.set_currently_asking(
+                            session,
+                            next_unskipped,
+                        )
+                        response_text = profile_extractor.get_next_question(
+                            profile,
+                            lang,
+                            skipped,
+                        ) or ""
+                    else:
+                        # No more fields to ask — try matching with partial profile
+                        if awaiting_profile_change_guard:
+                            response_text = response_generator.generate_no_schemes_response(lang)
+                        else:
+                            next_state, response_text, schemes, inline_keyboard, session = (
+                                await self._run_matching(profile, user_message, session, lang)
+                            )
+                        session = session_manager.set_currently_asking(session, None)
+                else:
+                    # Normal flow: validation and LLM response handling
+
+                    # ---------- INPUT VALIDATION ----------
+                    # If we were asking for a specific field and the user's response
+                    # wasn't successfully extracted, check if it was an invalid attempt.
+                    validation_error = None
+                    if previously_asking and previously_asking not in extracted_fields:
+                        is_valid, error_type = profile_extractor.validate_field_response(
+                            previously_asking, user_message, extracted_fields
+                        )
+                        if not is_valid and error_type:
+                            validation_error = error_type
+
+                    translated_reask = (
+                        explicit_language is not None
+                        and previously_asking is not None
+                        and not extracted_fields
+                        and not detected_life_event
+                    )
+                    use_llm = bool(llm_response_text)
+                    if (
+                        use_llm
+                        and profile_changed
+                        and previously_asking
+                        and previously_asking in extracted_fields
+                        and next_question
+                    ):
+                        # The rule-based layer caught the field the LLM missed.
+                        # The LLM's response_text likely re-asks for it — discard.
+                        use_llm = False
+
+                    # If there was a validation error, provide helpful guidance
+                    # instead of just repeating the question or using LLM response.
+                    if validation_error:
+                        response_text = profile_extractor.get_validation_re_prompt(
+                            previously_asking, validation_error, lang
+                        )
+                        # Don't change currently_asking — we're still asking for the same field
+                    elif translated_reask:
+                        response_text = profile_extractor.get_next_question(
+                            profile,
+                            lang,
+                            session.skipped_fields,
+                        ) or ""
+                    elif use_llm:
+                        response_text = llm_response_text
+                    elif next_question:
+                        response_text = next_question
+                    else:
+                        # All fields filled but FSM didn't trigger MATCHING
+                        # (edge case safety) — run matching inline
+                        if awaiting_profile_change_guard:
+                            response_text = response_generator.generate_no_schemes_response(lang)
+                        else:
+                            next_state, response_text, schemes, inline_keyboard, session = (
+                                await self._run_matching(profile, user_message, session, lang)
+                            )
+
+                    # Track which field we're asking about so the next turn
+                    # can use it for contextual extraction + LLM prompting.
+                    # Keep tracking the same field if there was a validation error.
+                    if validation_error or translated_reask:
+                        # Keep currently_asking the same — we're still asking for this field
+                        session = session_manager.set_currently_asking(
+                            session,
+                            previously_asking,
+                        )
+                    elif next_field:
+                        session = session_manager.set_currently_asking(
+                            session,
+                            next_field,
+                        )
+                    else:
+                        session = session_manager.set_currently_asking(session, None)
 
             case ConversationState.MATCHING:
                 # Run scheme matching and build formatted response
                 next_state, response_text, schemes, inline_keyboard, session = (
                     await self._run_matching(profile, user_message, session, lang)
                 )
+                # Leaving UNDERSTANDING flow — stop tracking field context
+                session = session_manager.set_currently_asking(session, None)
 
             case ConversationState.PRESENTING:
                 # Try text-based scheme selection first
-                resolved_id = selected_scheme_id or _resolve_scheme_from_text(
-                    session, user_message
-                )
+                resolved_id = resolved_scheme_id
                 if resolved_id:
                     # Transition to DETAILS — build details inline (no fallthrough)
                     session = session_manager.select_scheme(session, resolved_id)
@@ -533,32 +1227,40 @@ class ConversationService:
                     if schemes:
                         session = _store_presented_schemes(session, schemes)
                         inline_keyboard = format_inline_keyboard(schemes, lang)
-                    select_prompt = (
-                        "इनमें से कौन सी योजना के बारे में जानना चाहते हैं? नंबर बताएं या बटन दबाएं।"
-                        if lang == "hi"
-                        else "Which scheme would you like to know more about? Type the number or tap a button."
-                    )
+                    select_prompt = response_generator.generate_scheme_selection_response(lang)
                     response_text = select_prompt
 
             case ConversationState.DETAILS:
-                scheme_id = session.selected_scheme_id or selected_scheme_id
+                scheme_id = resolved_scheme_id or session.selected_scheme_id
                 if not scheme_id:
                     # No scheme selected — fall back to presenting
                     next_state = ConversationState.PRESENTING
-                    select_prompt = (
-                        "कृपया पहले एक योजना चुनें।"
-                        if lang == "hi"
-                        else "Please select a scheme first."
+                    select_prompt = _text_variant(
+                        lang,
+                        "कृपया पहले एक योजना चुनें।",
+                        "Please select a scheme first.",
+                        "Please pehle ek scheme select kijiye.",
                     )
                     response_text = select_prompt
                 else:
+                    if scheme_id != session.selected_scheme_id:
+                        session = session_manager.select_scheme(session, scheme_id)
                     response_text = await _build_scheme_details_text(
                         self.pool, scheme_id, profile, lang
                     )
 
             case ConversationState.APPLICATION:
-                scheme_id = session.selected_scheme_id
-                if scheme_id:
+                if resolved_scheme_id and resolved_scheme_id != session.selected_scheme_id:
+                    session = session_manager.select_scheme(session, resolved_scheme_id)
+                    next_state = ConversationState.DETAILS
+                    response_text = await _build_scheme_details_text(
+                        self.pool,
+                        resolved_scheme_id,
+                        profile,
+                        lang,
+                    )
+                elif session.selected_scheme_id:
+                    scheme_id = session.selected_scheme_id
                     scheme = await scheme_repo.get_scheme_by_id(self.pool, scheme_id)
                     if scheme:
                         response_text = response_generator.generate_application_guidance(
@@ -574,14 +1276,20 @@ class ConversationService:
                             else "Application info not available."
                         )
                 else:
-                    response_text = (
-                        "कृपया पहले एक योजना चुनें।"
-                        if lang == "hi"
-                        else "Please select a scheme first."
+                    response_text = _text_variant(
+                        lang,
+                        "कृपया पहले एक योजना चुनें।",
+                        "Please select a scheme first.",
+                        "Please pehle ek scheme select kijiye.",
                     )
 
             case ConversationState.HANDOFF:
-                response_text = await _build_handoff_text(self.pool, profile, lang)
+                # Use LLM response if available (more natural), fall back to
+                # structured office info when user explicitly requests it.
+                if llm_response_text:
+                    response_text = llm_response_text
+                else:
+                    response_text = await _build_handoff_text(self.pool, profile, lang)
 
             case _:
                 response_text = response_generator.generate_greeting_response(lang)
@@ -600,6 +1308,7 @@ class ConversationService:
             offices=offices,
             inline_keyboard=inline_keyboard,
             next_state=next_state.value,
+            language=lang,
         )
 
     async def _run_matching(
@@ -617,13 +1326,21 @@ class ConversationService:
         )
 
         if schemes:
+            # Clear the no-match flag since we found results
+            session = session_manager.set_awaiting_profile_change(session, False)
             session = _store_presented_schemes(session, schemes)
             response_text = _build_scheme_list_text(schemes, profile, lang)
             inline_keyboard = format_inline_keyboard(schemes, lang)
             return ConversationState.PRESENTING, response_text, schemes, inline_keyboard, session
 
+        # No match — return to UNDERSTANDING so the user can explore
+        # different areas or update their profile, instead of dumping them
+        # into the HANDOFF dead-end.
         no_match_text = response_generator.generate_no_schemes_response(lang)
-        return ConversationState.HANDOFF, no_match_text, [], None, session
+        session = session_manager.set_awaiting_profile_change(session, True)
+        session = session_manager.clear_selection(session)
+        session = session_manager.set_presented_schemes(session, [])
+        return ConversationState.UNDERSTANDING, no_match_text, [], None, session
 
     async def _handle_callback(
         self,
@@ -652,6 +1369,10 @@ class ConversationService:
             return ChatResponse(
                 text=response_text,
                 next_state=ConversationState.DETAILS.value,
+                language=lang,
             )
 
-        return ChatResponse(text="अमान्य चयन।" if lang == "hi" else "Invalid selection.")
+        return ChatResponse(
+            text="अमान्य चयन।" if lang == "hi" else "Invalid selection.",
+            language=lang,
+        )
