@@ -9,14 +9,39 @@ import asyncpg
 
 
 DATA_DIR = Path(__file__).parent.parent / "data"
+DEFAULT_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/delhi_scheme_saathi"
+
+
+def resolve_database_url(env_value: str | None) -> str:
+    """Return a validated database URL for seeding."""
+    from urllib.parse import urlparse
+
+    if env_value is None:
+        return DEFAULT_DATABASE_URL
+
+    database_url = env_value.strip().strip('"').strip("'")
+    if not database_url:
+        raise RuntimeError("DATABASE_URL is empty")
+    if not database_url.startswith(("postgresql://", "postgres://")):
+        scheme = database_url.split(":", 1)[0] if ":" in database_url else ""
+        scheme_display = scheme or "<empty>"
+        raise RuntimeError(
+            "DATABASE_URL must start with postgres:// or postgresql:// "
+            f"(got {scheme_display!r})"
+        )
+    parsed = urlparse(database_url)
+    if not parsed.hostname:
+        raise RuntimeError("DATABASE_URL is missing a hostname")
+    if "://" in parsed.hostname:
+        raise RuntimeError(
+            "DATABASE_URL host is malformed. Do not include http:// or https:// inside the hostname."
+        )
+    return database_url
 
 
 async def seed_database() -> None:
     """Load all JSON data into PostgreSQL."""
-    database_url = os.getenv(
-        "DATABASE_URL",
-        "postgresql://postgres:postgres@localhost:5432/delhi_scheme_saathi"
-    )
+    database_url = resolve_database_url(os.getenv("DATABASE_URL"))
 
     conn = await asyncpg.connect(database_url)
 
@@ -50,9 +75,28 @@ async def seed_database() -> None:
                     ) ON CONFLICT (id) DO UPDATE SET
                         name = EXCLUDED.name,
                         name_hindi = EXCLUDED.name_hindi,
+                        department = EXCLUDED.department,
+                        department_hindi = EXCLUDED.department_hindi,
+                        level = EXCLUDED.level,
                         description = EXCLUDED.description,
+                        description_hindi = EXCLUDED.description_hindi,
+                        benefits_summary = EXCLUDED.benefits_summary,
+                        benefits_amount = EXCLUDED.benefits_amount,
+                        benefits_frequency = EXCLUDED.benefits_frequency,
                         eligibility = EXCLUDED.eligibility,
                         description_embedding = EXCLUDED.description_embedding,
+                        documents_required = EXCLUDED.documents_required,
+                        rejection_rules = EXCLUDED.rejection_rules,
+                        application_url = EXCLUDED.application_url,
+                        application_steps = EXCLUDED.application_steps,
+                        offline_process = EXCLUDED.offline_process,
+                        processing_time = EXCLUDED.processing_time,
+                        helpline = EXCLUDED.helpline,
+                        life_events = EXCLUDED.life_events,
+                        tags = EXCLUDED.tags,
+                        official_url = EXCLUDED.official_url,
+                        metadata = EXCLUDED.metadata,
+                        is_active = EXCLUDED.is_active,
                         updated_at = NOW()
                 """,
                     scheme["id"],

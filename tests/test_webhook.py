@@ -167,6 +167,10 @@ class TestVoiceMessageHandling:
             assert result == "मुझे पेंशन चाहिए"
             mock_telegram.download_voice.assert_called_once_with("voice_123")
             assert mock_voice_client.speech_to_text.await_count >= 1
+            mock_telegram.send_text.assert_called_once_with(
+                "12345",
+                "आपने कहा: मुझे पेंशन चाहिए",
+            )
 
     @pytest.mark.asyncio
     async def test_voice_low_confidence_asks_retry(self):
@@ -250,6 +254,10 @@ class TestVoiceMessageHandling:
         assert result == "I need housing help"
         first_call = mock_voice_client.speech_to_text.await_args_list[0]
         assert first_call.kwargs["source_lang"] == "en"
+        mock_telegram.send_text.assert_called_once_with(
+            "12345",
+            "You said: I need housing help",
+        )
 
     @pytest.mark.asyncio
     async def test_unlocked_hindi_history_does_not_bias_voice_probe_order(self):
@@ -457,7 +465,7 @@ class TestSendResponse:
         mock_response.text = "नमस्ते!"
         mock_response.inline_keyboard = None
         mock_response.language = "hi"
-        mock_response.next_state = "PRESENTING"
+        mock_response.next_state = "SCHEME_PRESENTATION"
 
         with patch(
             "src.webhook.handler._get_voice_client", return_value=mock_voice_client
@@ -494,7 +502,7 @@ class TestSendResponse:
         mock_response.text = "नमस्ते!"
         mock_response.inline_keyboard = None
         mock_response.language = "hi"
-        mock_response.next_state = "PRESENTING"
+        mock_response.next_state = "SCHEME_PRESENTATION"
 
         with patch(
             "src.webhook.handler._get_voice_client", return_value=mock_voice_client
@@ -524,7 +532,7 @@ class TestSendResponse:
         mock_response.text = "Scheme details chahiye? Batayiye."
         mock_response.inline_keyboard = None
         mock_response.language = "hinglish"
-        mock_response.next_state = "DETAILS"
+        mock_response.next_state = "SCHEME_DETAILS"
 
         with patch(
             "src.webhook.handler._get_voice_client", return_value=mock_voice_client
@@ -549,7 +557,7 @@ class TestSendResponse:
         mock_response.text = "A" * 1000
         mock_response.inline_keyboard = None
         mock_response.language = "en"
-        mock_response.next_state = "DETAILS"
+        mock_response.next_state = "SCHEME_DETAILS"
 
         with patch(
             "src.webhook.handler._get_voice_client", return_value=mock_voice_client

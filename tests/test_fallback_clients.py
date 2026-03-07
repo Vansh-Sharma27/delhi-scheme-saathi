@@ -50,7 +50,7 @@ async def test_llm_falls_back_from_bedrock_to_grok(monkeypatch: pytest.MonkeyPat
     result = await client.analyze_message(
         user_message="मुझे घर चाहिए",
         conversation_history=[],
-        current_state="UNDERSTANDING",
+        current_state="SITUATION_UNDERSTANDING",
         user_profile={},
         system_prompt="test",
     )
@@ -150,6 +150,41 @@ async def test_llm_summarize_returns_current_summary_when_all_providers_fail(
     )
 
     assert result == "existing summary"
+
+
+@pytest.mark.asyncio
+async def test_llm_relevance_judge_returns_safe_defaults_when_all_providers_fail(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Relevance judging should degrade safely when both providers fail."""
+    monkeypatch.setenv("USE_BEDROCK", "true")
+    monkeypatch.setenv("XAI_API_KEY", "xai-test")
+    get_settings.cache_clear()
+
+    class AlwaysFailBedrock:
+        async def judge_scheme_relevance(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            raise RuntimeError("bedrock unavailable")
+
+    class AlwaysFailGrok:
+        async def judge_scheme_relevance(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            raise RuntimeError("grok unavailable")
+
+    monkeypatch.setattr(bedrock_client, "BedrockLLMClient", AlwaysFailBedrock)
+    monkeypatch.setattr(grok_client, "GrokLLMClient", AlwaysFailGrok)
+
+    client = llm_client.FallbackLLMClient()
+    result = await client.judge_scheme_relevance(
+        user_message="I need housing assistance",
+        conversation_history=[],
+        current_state="SCHEME_MATCHING",
+        user_profile={"life_event": "HOUSING"},
+        candidate_schemes=[{"scheme_id": "SCH-1", "deterministic_score": 0.8}],
+        session_language="en",
+    )
+
+    assert result["should_clarify"] is False
+    assert result["candidate_scores"][0]["scheme_id"] == "SCH-1"
+    assert result["candidate_scores"][0]["relevance_score"] == 0.8
 
 
 @pytest.mark.asyncio

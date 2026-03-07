@@ -16,13 +16,33 @@ from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
 from src.config import get_settings
+from src.utils.scheme_catalog import get_required_profile_fields_for_life_event
 
 logger = logging.getLogger(__name__)
 
 NOVA_MODEL_ID = "amazon.nova-2-lite-v1:0"
 
-# Thread pool for running synchronous boto3 calls
-_executor = ThreadPoolExecutor(max_workers=4)
+_inline_executor: ThreadPoolExecutor | None = None
+_background_executor: ThreadPoolExecutor | None = None
+
+
+def _get_executor(priority: str) -> ThreadPoolExecutor:
+    """Return the configured executor for the given task priority."""
+    global _inline_executor, _background_executor
+
+    settings = get_settings()
+    if priority == "background":
+        if _background_executor is None:
+            _background_executor = ThreadPoolExecutor(
+                max_workers=max(1, settings.ai_background_concurrency)
+            )
+        return _background_executor
+
+    if _inline_executor is None:
+        _inline_executor = ThreadPoolExecutor(
+            max_workers=max(1, settings.ai_inline_concurrency)
+        )
+    return _inline_executor
 
 
 class BedrockLLMClient:
@@ -53,6 +73,8 @@ class BedrockLLMClient:
         user_profile: dict[str, Any],
         system_prompt: str,
         session_language: str = "hi",
+        working_memory: dict[str, Any] | None = None,
+        priority: str = "inline",
     ) -> dict[str, Any]:
         """Analyze user message using Bedrock Converse API.
 
@@ -83,14 +105,17 @@ class BedrockLLMClient:
 
         # Build missing-fields hint so the LLM knows what to ask next
         missing_fields = []
-        field_priority = [
-            ("life_event", "what kind of help they need (housing, health, education, employment, etc.)"),
-            ("age", "the applicant/beneficiary age"),
-            ("category", "caste category (SC/ST/OBC/General/EWS)"),
-            ("annual_income", "approximate annual family income"),
-        ]
-        for field, description in field_priority:
+        field_descriptions = {
+            "life_event": "what kind of help they need (housing, health, education, employment, etc.)",
+            "age": "the applicant/beneficiary age",
+            "gender": "gender (male/female)",
+            "category": "caste category (SC/ST/OBC/General/EWS)",
+            "annual_income": "approximate annual family income",
+        }
+        field_priority = get_required_profile_fields_for_life_event(user_profile.get("life_event"))
+        for field in field_priority:
             if user_profile.get(field) is None:
+                description = field_descriptions.get(field, field)
                 missing_fields.append(description)
 
         missing_hint = ""
@@ -115,13 +140,21 @@ class BedrockLLMClient:
         lang_name = {"hi": "Hindi (Devanagari script)", "en": "English", "hinglish": "Hinglish (Hindi-English mix)"}.get(session_language, "Hindi")
         session_lang_hint = f"\nUser's PREFERRED LANGUAGE: {lang_name} — ALL response_text MUST be in this language."
 
+        working_memory_hint = ""
+        if working_memory:
+            working_memory_hint = (
+                "\nWorking memory from earlier turns "
+                "(use for continuity only, never override the current message): "
+                f"{json.dumps(working_memory, ensure_ascii=False, default=str)}"
+            )
+
         # Add current message with analysis instruction
         analysis_prompt = f"""
 Analyze the user's message and respond with a JSON object containing:
 
 {{
   "intent": "greeting|question|clarification|selection|location|goodbye|unknown",
-  "action": "change_language|ask_field_reason|skip_field|select_scheme|switch_scheme|request_details|request_application|request_handoff|start_over|goodbye|answer_field|none",
+  "action": "change_language|ask_field_reason|skip_field|select_scheme|switch_scheme|request_details|answer_scheme_question|request_application|request_handoff|start_over|goodbye|answer_field|none",
   "life_event": "HOUSING|MARRIAGE|CHILDBIRTH|EDUCATION|HEALTH_CRISIS|DEATH_IN_FAMILY|MARITAL_DISTRESS|JOB_LOSS|BUSINESS_STARTUP|WOMEN_EMPOWERMENT|null",
   "extracted_fields": {{
     "age": number or null,
@@ -145,11 +178,13 @@ Current user profile: {json.dumps(user_profile, default=str)}
 {missing_hint}
 {currently_asking_hint}
 {session_lang_hint}
+{working_memory_hint}
 
 User message: {user_message}
 
 IMPORTANT RULES:
 1. Extract information ONLY from what the user explicitly stated. Do NOT infer or guess values. If unsure, use null.
+1b. Use working memory only for continuity. If the current user message conflicts with memory, trust the current user message.
 2. CONTEXTUAL EXTRACTION: If the bot last asked about a specific field and the user replies with a bare number or short answer, interpret it in that context. For example, if the bot asked about age and the user replies "19", extract age=19.
 3. VALIDATION: When extracting fields, validate the values:
    - age: must be between 1-120. If user gives birth year (e.g., "2005"), calculate age. If invalid (0, negative, >120), set to null.
@@ -172,7 +207,8 @@ IMPORTANT RULES:
    - skip_field when they say they do not know / want to skip
    - request_application only for explicit apply/application requests
    - request_handoff only for explicit human-help/CSC/center requests
-   - request_details for translation/document/detail/explanation follow-ups
+   - answer_scheme_question for a direct question about an already-selected or already-presented scheme
+   - request_details for generic translation/document/detail follow-ups
    - select_scheme or switch_scheme only when the user picks a specific scheme
    - otherwise use answer_field or none
 Respond with ONLY the JSON object, no other text.
@@ -185,9 +221,9 @@ Respond with ONLY the JSON object, no other text.
 
         try:
             # Run synchronous boto3 call in thread pool
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             response = await loop.run_in_executor(
-                _executor,
+                _get_executor(priority),
                 lambda: self._client.converse(
                     modelId=self._model_id,
                     system=[{"text": system_prompt}],
@@ -227,11 +263,114 @@ Respond with ONLY the JSON object, no other text.
             logger.error(f"Bedrock analysis failed: {e}")
             raise
 
+    async def judge_scheme_relevance(
+        self,
+        user_message: str,
+        conversation_history: list[dict[str, str]],
+        current_state: str,
+        user_profile: dict[str, Any],
+        candidate_schemes: list[dict[str, Any]],
+        session_language: str = "hi",
+        working_memory: dict[str, Any] | None = None,
+        priority: str = "inline",
+    ) -> dict[str, Any]:
+        """Ask Bedrock to sanity-check deterministic scheme candidates."""
+        import asyncio
+
+        language_label = {
+            "hi": "Hindi (Devanagari)",
+            "en": "English",
+            "hinglish": "Hinglish",
+        }.get(session_language, "English")
+
+        messages = []
+        for msg in conversation_history[-8:]:
+            messages.append(
+                {
+                    "role": msg["role"],
+                    "content": [{"text": msg["content"]}],
+                }
+            )
+
+        working_memory_hint = ""
+        if working_memory:
+            working_memory_hint = (
+                f"\nWorking memory: {json.dumps(working_memory, ensure_ascii=False, default=str)}"
+            )
+
+        prompt = f"""
+You are a relevance judge for a government-scheme assistant.
+
+Return ONLY a JSON object with this shape:
+{{
+  "should_clarify": boolean,
+  "clarification_question": string or null,
+  "overall_confidence": number between 0 and 1,
+  "candidate_scores": [
+    {{
+      "scheme_id": string,
+      "relevance_score": number between 0 and 1,
+      "topic_match": boolean or null,
+      "reason": string or null
+    }}
+  ]
+}}
+
+Conversation state: {current_state}
+User profile: {json.dumps(user_profile, ensure_ascii=False, default=str)}
+{working_memory_hint}
+Latest user message: {user_message}
+Preferred clarification language: {language_label}
+Deterministic candidate schemes: {json.dumps(candidate_schemes, ensure_ascii=False, default=str)}
+
+Rules:
+1. Never invent scheme facts beyond the provided candidate data.
+2. Score semantic fit for the user's actual need, not just lexical overlap.
+3. Use working memory only to understand continuity; never let it override the latest user request.
+4. If the candidate list looks cross-domain, inconsistent with the conversation, or low-confidence, set should_clarify=true.
+5. clarification_question must be short and in the preferred clarification language.
+6. If the candidates look strong and on-topic, set should_clarify=false.
+"""
+
+        messages.append({"role": "user", "content": [{"text": prompt}]})
+
+        try:
+            loop = asyncio.get_running_loop()
+            response = await loop.run_in_executor(
+                _get_executor(priority),
+                lambda: self._client.converse(
+                    modelId=self._model_id,
+                    system=[{"text": "You audit relevance between user needs and deterministic scheme candidates."}],
+                    messages=messages,
+                    inferenceConfig={"maxTokens": 768, "temperature": 0.1},
+                ),
+            )
+            output_message = response.get("output", {}).get("message", {})
+            content_blocks = output_message.get("content", [])
+            if content_blocks:
+                output_text = content_blocks[0].get("text", "")
+                if "```json" in output_text:
+                    output_text = output_text.split("```json")[1].split("```")[0]
+                elif "```" in output_text:
+                    output_text = output_text.split("```")[1].split("```")[0]
+                return json.loads(output_text.strip())
+            return {"should_clarify": False, "candidate_scores": []}
+        except (BotoCoreError, ClientError) as e:
+            logger.error("Bedrock relevance judge API error: %s", e)
+            raise
+        except json.JSONDecodeError as e:
+            logger.error("Failed to parse Bedrock relevance response as JSON: %s", e)
+            raise
+        except Exception as e:
+            logger.error("Bedrock relevance judging failed: %s", e)
+            raise
+
     async def generate_response(
         self,
         context: dict[str, Any],
         system_prompt: str,
         user_language: str = "hi",
+        priority: str = "inline",
     ) -> str:
         """Generate natural language response using database context.
 
@@ -269,9 +408,9 @@ Generate response:
         }]
 
         try:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             response = await loop.run_in_executor(
-                _executor,
+                _get_executor(priority),
                 lambda: self._client.converse(
                     modelId=self._model_id,
                     system=[{"text": system_prompt}],
@@ -299,6 +438,7 @@ Generate response:
         self,
         messages: list[dict[str, str]],
         current_summary: str | None = None,
+        priority: str = "background",
     ) -> str:
         """Summarize conversation history.
 
@@ -333,9 +473,9 @@ Provide a 2-3 sentence summary in English:
         }]
 
         try:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             response = await loop.run_in_executor(
-                _executor,
+                _get_executor(priority),
                 lambda: self._client.converse(
                     modelId=self._model_id,
                     system=[{

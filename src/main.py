@@ -57,14 +57,36 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
         db_pool = None
+    else:
+        try:
+            from src.db.scheme_repo import get_scheme_debug_rows
+
+            scheme_debug_rows = await get_scheme_debug_rows(
+                db_pool,
+                ["SCH-DELHI-001", "SCH-DELHI-006"],
+            )
+            for row in scheme_debug_rows:
+                log_method = logger.warning if not row["life_events_match"] else logger.info
+                log_method(
+                    "Verified scheme row %s db_life_events=%s canonical_life_events=%s caste_categories=%s income_segments=%s",
+                    row["id"],
+                    row["life_events"],
+                    row["canonical_life_events"],
+                    row["caste_categories"],
+                    row["income_segments"],
+                )
+        except Exception as e:
+            logger.warning(f"Scheme verification logging failed: {e}")
 
     # Configure session store based on environment
     _configure_session_store()
+    await _configure_ai_background_runtime()
 
     yield
 
     # Cleanup
     logger.info("Shutting down...")
+    await _shutdown_ai_background_runtime()
     await close_db_pool()
 
 
@@ -75,9 +97,9 @@ def _configure_session_store() -> None:
     otherwise uses in-memory store (local development).
     """
     from src.db.session_store import (
-        configure_session_store,
-        InMemorySessionStore,
         DynamoDBSessionStore,
+        InMemorySessionStore,
+        configure_session_store,
     )
 
     settings = get_settings()
@@ -99,6 +121,36 @@ def _configure_session_store() -> None:
         # Local development - use in-memory store
         configure_session_store(InMemorySessionStore())
         logger.info("Session store: In-memory (local development)")
+
+
+async def _configure_ai_background_runtime() -> None:
+    """Configure and start the background AI worker."""
+    from src.services.ai_background import (
+        InMemoryAIWorkQueue,
+        configure_ai_work_queue,
+        create_default_ai_work_queue,
+        start_ai_background_worker,
+    )
+
+    queue = create_default_ai_work_queue()
+    configure_ai_work_queue(queue)
+    if queue is None:
+        logger.info("AI background queue: disabled")
+        return
+
+    if isinstance(queue, InMemoryAIWorkQueue):
+        await start_ai_background_worker()
+        logger.info("AI background queue: %s (in-process worker started)", queue.__class__.__name__)
+        return
+
+    logger.info("AI background queue: %s (external worker expected)", queue.__class__.__name__)
+
+
+async def _shutdown_ai_background_runtime() -> None:
+    """Stop the background AI worker and release queue resources."""
+    from src.services.ai_background import stop_ai_background_worker
+
+    await stop_ai_background_worker()
 
 
 # Create FastAPI app
@@ -173,7 +225,7 @@ def get_db_pool() -> asyncpg.Pool:
 @app.get("/api/scheme/{scheme_id}")
 async def get_scheme(scheme_id: str) -> dict[str, Any]:
     """Get full scheme details by ID."""
-    from src.db import scheme_repo, document_repo, rejection_rule_repo
+    from src.db import document_repo, rejection_rule_repo, scheme_repo
 
     pool = get_db_pool()
     scheme = await scheme_repo.get_scheme_by_id(pool, scheme_id)

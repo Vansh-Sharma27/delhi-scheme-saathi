@@ -17,6 +17,7 @@ from typing import Any
 from openai import AsyncOpenAI
 
 from src.config import get_settings
+from src.utils.scheme_catalog import get_required_profile_fields_for_life_event
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,8 @@ class GrokLLMClient:
         user_profile: dict[str, Any],
         system_prompt: str,
         session_language: str = "hi",
+        working_memory: dict[str, Any] | None = None,
+        priority: str = "inline",
     ) -> dict[str, Any]:
         """Analyze user message for intent, life event, and entities.
 
@@ -61,14 +64,17 @@ class GrokLLMClient:
 
         # Build missing-fields hint so the LLM knows what to ask next
         missing_fields = []
-        field_priority = [
-            ("life_event", "what kind of help they need (housing, health, education, employment, etc.)"),
-            ("age", "the applicant/beneficiary age"),
-            ("category", "caste category (SC/ST/OBC/General/EWS)"),
-            ("annual_income", "approximate annual family income"),
-        ]
-        for field, description in field_priority:
+        field_descriptions = {
+            "life_event": "what kind of help they need (housing, health, education, employment, etc.)",
+            "age": "the applicant/beneficiary age",
+            "gender": "gender (male/female)",
+            "category": "caste category (SC/ST/OBC/General/EWS)",
+            "annual_income": "approximate annual family income",
+        }
+        field_priority = get_required_profile_fields_for_life_event(user_profile.get("life_event"))
+        for field in field_priority:
             if user_profile.get(field) is None:
+                description = field_descriptions.get(field, field)
                 missing_fields.append(description)
 
         missing_hint = ""
@@ -93,13 +99,21 @@ class GrokLLMClient:
         lang_name = {"hi": "Hindi (Devanagari script)", "en": "English", "hinglish": "Hinglish (Hindi-English mix)"}.get(session_language, "Hindi")
         session_lang_hint = f"\nUser's PREFERRED LANGUAGE: {lang_name} — ALL response_text MUST be in this language."
 
+        working_memory_hint = ""
+        if working_memory:
+            working_memory_hint = (
+                "\nWorking memory from earlier turns "
+                "(use for continuity only, never override the current message): "
+                f"{json.dumps(working_memory, ensure_ascii=False, default=str)}"
+            )
+
         # Add analysis instruction
         analysis_prompt = f"""
 Analyze the user's message and respond with a JSON object containing:
 
 {{
   "intent": "greeting|question|clarification|selection|location|goodbye|unknown",
-  "action": "change_language|ask_field_reason|skip_field|select_scheme|switch_scheme|request_details|request_application|request_handoff|start_over|goodbye|answer_field|none",
+  "action": "change_language|ask_field_reason|skip_field|select_scheme|switch_scheme|request_details|answer_scheme_question|request_application|request_handoff|start_over|goodbye|answer_field|none",
   "life_event": "HOUSING|MARRIAGE|CHILDBIRTH|EDUCATION|HEALTH_CRISIS|DEATH_IN_FAMILY|MARITAL_DISTRESS|JOB_LOSS|BUSINESS_STARTUP|WOMEN_EMPOWERMENT|null",
   "extracted_fields": {{
     "age": number or null,
@@ -123,9 +137,11 @@ Current user profile: {json.dumps(user_profile, default=str)}
 {missing_hint}
 {currently_asking_hint}
 {session_lang_hint}
+{working_memory_hint}
 
 IMPORTANT RULES:
 1. Extract information ONLY from what the user explicitly stated. Do NOT infer or guess values. If unsure, use null.
+1b. Use working memory only for continuity. If the current user message conflicts with memory, trust the current user message.
 2. CONTEXTUAL EXTRACTION: If the bot last asked about a specific field and the user replies with a bare number or short answer, interpret it in that context. For example, if the bot asked about age and the user replies "19", extract age=19.
 3. VALIDATION: When extracting fields, validate the values:
    - age: must be between 1-120. If user gives birth year (e.g., "2005"), calculate age. If invalid (0, negative, >120), set to null.
@@ -148,7 +164,8 @@ IMPORTANT RULES:
    - skip_field when they say they do not know / want to skip
    - request_application only for explicit apply/application requests
    - request_handoff only for explicit human-help/CSC/center requests
-   - request_details for translation/document/detail/explanation follow-ups
+   - answer_scheme_question for a direct question about an already-selected or already-presented scheme
+   - request_details for generic translation/document/detail follow-ups
    - select_scheme or switch_scheme only when the user picks a specific scheme
    - otherwise use answer_field or none
 Respond with ONLY the JSON object, no other text.
@@ -174,11 +191,94 @@ Respond with ONLY the JSON object, no other text.
             # Re-raise so the fallback wrapper can route to safe defaults.
             raise
 
+    async def judge_scheme_relevance(
+        self,
+        user_message: str,
+        conversation_history: list[dict[str, str]],
+        current_state: str,
+        user_profile: dict[str, Any],
+        candidate_schemes: list[dict[str, Any]],
+        session_language: str = "hi",
+        working_memory: dict[str, Any] | None = None,
+        priority: str = "inline",
+    ) -> dict[str, Any]:
+        """Ask Grok to judge semantic fit of deterministic scheme candidates."""
+        language_label = {
+            "hi": "Hindi (Devanagari)",
+            "en": "English",
+            "hinglish": "Hinglish",
+        }.get(session_language, "English")
+
+        messages = [
+            {
+                "role": "system",
+                "content": "You audit relevance between user needs and deterministic scheme candidates.",
+            }
+        ]
+        for msg in conversation_history[-8:]:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+
+        working_memory_hint = ""
+        if working_memory:
+            working_memory_hint = (
+                f"\nWorking memory: {json.dumps(working_memory, ensure_ascii=False, default=str)}"
+            )
+
+        prompt = f"""
+Return ONLY a JSON object with this shape:
+{{
+  "should_clarify": boolean,
+  "clarification_question": string or null,
+  "overall_confidence": number between 0 and 1,
+  "candidate_scores": [
+    {{
+      "scheme_id": string,
+      "relevance_score": number between 0 and 1,
+      "topic_match": boolean or null,
+      "reason": string or null
+    }}
+  ]
+}}
+
+Conversation state: {current_state}
+User profile: {json.dumps(user_profile, ensure_ascii=False, default=str)}
+{working_memory_hint}
+Latest user message: {user_message}
+Preferred clarification language: {language_label}
+Deterministic candidate schemes: {json.dumps(candidate_schemes, ensure_ascii=False, default=str)}
+
+Rules:
+1. Never invent scheme facts beyond the provided candidate data.
+2. Score semantic fit for the user's actual need, not just lexical overlap.
+3. Use working memory only to understand continuity; never let it override the latest user request.
+4. If the candidate list looks cross-domain, inconsistent with the conversation, or low-confidence, set should_clarify=true.
+5. clarification_question must be short and in the preferred clarification language.
+6. If the candidates look strong and on-topic, set should_clarify=false.
+"""
+        messages.append({"role": "user", "content": prompt})
+
+        try:
+            response = await self._client.chat.completions.create(
+                model=self._model,
+                messages=messages,
+                temperature=0.1,
+                max_tokens=500,
+                response_format={"type": "json_object"},
+            )
+            content = response.choices[0].message.content
+            if content:
+                return json.loads(content)
+            return {"should_clarify": False, "candidate_scores": []}
+        except Exception as e:
+            logger.error("LLM relevance judging failed: %s", e)
+            raise
+
     async def generate_response(
         self,
         context: dict[str, Any],
         system_prompt: str,
         user_language: str = "hi",
+        priority: str = "inline",
     ) -> str:
         """Generate natural language response using database context.
 
@@ -232,6 +332,7 @@ Generate response:
         self,
         messages: list[dict[str, str]],
         current_summary: str | None = None,
+        priority: str = "background",
     ) -> str:
         """Summarize conversation history (called every 5 turns)."""
         prompt_messages = [

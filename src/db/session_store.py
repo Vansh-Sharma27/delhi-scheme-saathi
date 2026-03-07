@@ -61,7 +61,10 @@ class DynamoDBSessionStore:
         import asyncio
 
         def _get():
-            response = self._table.get_item(Key={"user_id": user_id})
+            response = self._table.get_item(
+                Key={"user_id": user_id},
+                ConsistentRead=True,
+            )
             return response.get("Item")
 
         item = await asyncio.get_event_loop().run_in_executor(None, _get)

@@ -7,10 +7,22 @@ import asyncpg
 
 from src.db.scheme_repo import hybrid_search, get_schemes_by_life_event
 from src.integrations.embedding_client import EMBEDDING_DIM, get_embedding_client
-from src.models.scheme import SchemeMatch
+from src.models.scheme import Scheme, SchemeMatch
 from src.models.session import UserProfile
+from src.utils.scheme_catalog import get_canonical_life_events
 
 logger = logging.getLogger(__name__)
+
+
+def is_topic_consistent(scheme: Scheme, requested_life_event: str | None) -> bool:
+    """Check whether the scheme's canonical topic aligns with the requested one."""
+    if not requested_life_event:
+        return True
+
+    canonical_life_events = get_canonical_life_events(scheme.id)
+    if canonical_life_events:
+        return requested_life_event in canonical_life_events
+    return requested_life_event in scheme.life_events
 
 
 async def match_schemes(
@@ -25,6 +37,14 @@ async def match_schemes(
     Stage 2: Filter by eligibility (age, income, category)
     Stage 3: Rank by semantic similarity (if query text provided)
     """
+    logger.info(
+        "Starting deterministic scheme matching for life_event=%s age=%s category=%s income=%s",
+        profile.life_event,
+        profile.age,
+        profile.category,
+        profile.annual_income,
+    )
+
     # Get query embedding if text provided
     query_embedding = None
     if query_text:
@@ -44,38 +64,50 @@ async def match_schemes(
             logger.warning(f"Failed to get query embedding: {e}")
 
     # Run hybrid search
+    fetch_limit = max(limit * 3, 10)
     matches = await hybrid_search(
         pool=pool,
         life_event=profile.life_event,
         profile=profile,
         query_embedding=query_embedding,
-        limit=limit,
+        limit=fetch_limit,
     )
 
-    # Post-filter: remove schemes where user's category is explicitly ineligible.
-    # If a scheme lists specific categories and the user's category isn't among
-    # them, the user cannot apply — showing it would be misleading.
-    if profile.category and matches:
+    # Post-filter any scheme that still fails a hard eligibility check. This
+    # catches non-SQL restrictions such as caste categories and normalized
+    # income bands like EWS/LIG/MIG.
+    if matches:
         filtered = []
         for match in matches:
-            elig_cats = match.scheme.eligibility.categories
-            if not elig_cats:
-                # Empty list = no category restriction (all categories eligible)
-                filtered.append(match)
-            elif profile.category.upper() in [c.upper() for c in elig_cats]:
-                filtered.append(match)
-            else:
+            if not is_topic_consistent(match.scheme, profile.life_event):
                 logger.info(
-                    "Filtered out scheme %s: user category '%s' not in %s",
+                    "Filtered out scheme %s for topic mismatch: requested=%s canonical_life_events=%s runtime_life_events=%s",
                     match.scheme.id,
-                    profile.category,
-                    elig_cats,
+                    profile.life_event,
+                    get_canonical_life_events(match.scheme.id),
+                    match.scheme.life_events,
                 )
-        matches = filtered
+                continue
+            failing_fields = [
+                field
+                for field, is_match in match.eligibility_match.items()
+                if is_match is False
+            ]
+            if failing_fields:
+                logger.info(
+                    "Filtered out scheme %s after deterministic checks: failed=%s life_events=%s",
+                    match.scheme.id,
+                    ",".join(failing_fields),
+                    match.scheme.life_events,
+                )
+                continue
+            filtered.append(match)
+        matches = rank_schemes(filtered)[:limit]
 
     logger.info(
-        f"Matched {len(matches)} schemes for life_event={profile.life_event}, "
-        f"age={profile.age}, income={profile.annual_income}"
+        "Deterministic scheme matches complete: life_event=%s matched_ids=%s",
+        profile.life_event,
+        [match.scheme.id for match in matches],
     )
 
     return matches
@@ -110,6 +142,7 @@ def format_scheme_for_display(
             "age": "आयु" if language == "hi" else "Age",
             "gender": "लिंग" if language == "hi" else "Gender",
             "category": "श्रेणी" if language == "hi" else "Category",
+            "income_segment": "आय वर्ग" if language == "hi" else "Income band",
             "income": "आय" if language == "hi" else "Income",
         }.get(field, field)
         eligibility_text.append(f"{icon} {field_display}")
@@ -153,4 +186,9 @@ def rank_schemes(matches: list[SchemeMatch]) -> list[SchemeMatch]:
 
         return score
 
-    return sorted(matches, key=score, reverse=True)
+    ranked: list[SchemeMatch] = []
+    for match in matches:
+        ranked.append(
+            match.model_copy(update={"deterministic_score": score(match)})
+        )
+    return sorted(ranked, key=lambda match: match.deterministic_score, reverse=True)

@@ -93,6 +93,34 @@ Resources:
         - Key: Stage
           Value: !Ref Stage
 
+  # Dead-letter queue for failed working-memory jobs
+  WorkingMemoryRefreshDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub dss-working-memory-dlq-${Stage}
+      MessageRetentionPeriod: 1209600  # 14 days
+      Tags:
+        - Key: Application
+          Value: delhi-scheme-saathi
+        - Key: Stage
+          Value: !Ref Stage
+
+  # Shared queue for async working-memory refresh jobs
+  WorkingMemoryRefreshQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub dss-working-memory-${Stage}
+      VisibilityTimeout: 360
+      MessageRetentionPeriod: 345600  # 4 days
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt WorkingMemoryRefreshDLQ.Arn
+        maxReceiveCount: 5
+      Tags:
+        - Key: Application
+          Value: delhi-scheme-saathi
+        - Key: Stage
+          Value: !Ref Stage
+
   # S3 bucket for audio files (TTS responses)
   AudioBucket:
     Type: AWS::S3::Bucket
@@ -134,6 +162,9 @@ Resources:
           BEDROCK_MODEL: !Ref BedrockModel
           SESSION_TABLE_NAME: !Ref SessionTable
           AUDIO_BUCKET: !Ref AudioBucket
+          AI_MEMORY_QUEUE_ENABLED: "true"
+          AI_MEMORY_QUEUE_BACKEND: sqs
+          AI_MEMORY_QUEUE_URL: !Ref WorkingMemoryRefreshQueue
           STAGE: !Ref Stage
       Policies:
         - DynamoDBCrudPolicy:
@@ -148,6 +179,10 @@ Resources:
               Resource:
                 - arn:aws:bedrock:*::foundation-model/*
                 - arn:aws:bedrock:*:*:inference-profile/*
+            - Effect: Allow
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt WorkingMemoryRefreshQueue.Arn
       Events:
         TelegramWebhook:
           Type: Api
@@ -197,6 +232,50 @@ Resources:
             Path: /api/chat
             Method: POST
             RestApiId: !Ref ApiGateway
+
+  # Lambda worker for SQS-based working-memory refresh jobs
+  WorkingMemoryWorkerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub delhi-scheme-saathi-memory-worker-${Stage}
+      CodeUri: .
+      Handler: src.memory_worker_handler.handler
+      Description: Delhi Scheme Saathi working-memory refresh worker
+      Timeout: 60
+      MemorySize: 512
+      Environment:
+        Variables:
+          XAI_API_KEY: !Ref XaiApiKey
+          USE_BEDROCK: !Ref UseBedrock
+          BEDROCK_MODEL: !Ref BedrockModel
+          SESSION_TABLE_NAME: !Ref SessionTable
+          STAGE: !Ref Stage
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+              Resource:
+                - arn:aws:bedrock:*::foundation-model/*
+                - arn:aws:bedrock:*:*:inference-profile/*
+            - Effect: Allow
+              Action:
+                - sqs:ReceiveMessage
+                - sqs:DeleteMessage
+                - sqs:GetQueueAttributes
+                - sqs:ChangeMessageVisibility
+              Resource: !GetAtt WorkingMemoryRefreshQueue.Arn
+      Events:
+        WorkingMemoryRefreshQueue:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt WorkingMemoryRefreshQueue.Arn
+            BatchSize: 5
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
 
   # API Gateway account-level role for CloudWatch logging
   ApiGatewayCloudWatchRole:
@@ -254,6 +333,13 @@ Resources:
       LogGroupName: !Sub /aws/lambda/delhi-scheme-saathi-${Stage}
       RetentionInDays: 14
 
+  # CloudWatch Log Group for working-memory worker Lambda
+  WorkingMemoryWorkerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/delhi-scheme-saathi-memory-worker-${Stage}
+      RetentionInDays: 14
+
   # CloudWatch Alarm for Lambda errors
   LambdaErrorAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -296,3 +382,15 @@ Outputs:
   LambdaFunctionArn:
     Description: Lambda function ARN
     Value: !GetAtt DelhiSchemeSaathiFunction.Arn
+
+  WorkingMemoryQueueUrl:
+    Description: SQS queue URL for async working-memory refresh jobs
+    Value: !Ref WorkingMemoryRefreshQueue
+
+  WorkingMemoryQueueArn:
+    Description: SQS queue ARN for async working-memory refresh jobs
+    Value: !GetAtt WorkingMemoryRefreshQueue.Arn
+
+  WorkingMemoryWorkerArn:
+    Description: Lambda ARN for the working-memory refresh worker
+    Value: !GetAtt WorkingMemoryWorkerFunction.Arn

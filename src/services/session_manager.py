@@ -4,13 +4,9 @@ import logging
 from datetime import datetime
 
 from src.db.session_store import get_session_store
-from src.integrations.llm_client import get_llm_client
-from src.models.session import ConversationState, Message, Session, UserProfile
+from src.models.session import ConversationMemory, ConversationState, Session, UserProfile
 
 logger = logging.getLogger(__name__)
-
-# Summarize conversation every N messages
-SUMMARY_INTERVAL = 5
 
 
 async def get_or_create_session(user_id: str) -> Session:
@@ -49,43 +45,8 @@ async def add_message(
     role: str,
     content: str,
 ) -> Session:
-    """Add message to session and potentially summarize."""
-    new_session = session.add_message(role, content)
-
-    # Check if we should summarize
-    if len(new_session.messages) >= SUMMARY_INTERVAL:
-        message_count_since_summary = len(new_session.messages)
-        if message_count_since_summary % SUMMARY_INTERVAL == 0:
-            new_session = await update_summary(new_session)
-
-    return new_session
-
-
-async def update_summary(session: Session) -> Session:
-    """Update conversation summary."""
-    if not session.messages:
-        return session
-
-    try:
-        llm = get_llm_client()
-        messages_dicts = [
-            {"role": m.role, "content": m.content}
-            for m in session.messages
-        ]
-
-        new_summary = await llm.summarize_conversation(
-            messages=messages_dicts,
-            current_summary=session.conversation_summary,
-        )
-
-        return session.copy_with(
-            conversation_summary=new_summary,
-            updated_at=datetime.utcnow(),
-        )
-
-    except Exception as e:
-        logger.error(f"Failed to update summary: {e}")
-        return session
+    """Add a message to session history."""
+    return session.add_message(role, content)
 
 
 def update_profile(session: Session, new_profile: UserProfile) -> Session:
@@ -184,6 +145,41 @@ def get_conversation_history(
         messages = [m for m in messages if m.role == "user"]
 
     return [{"role": m.role, "content": m.content} for m in messages]
+
+
+def mark_turn_completed(session: Session) -> Session:
+    """Increment completed turns after a full user-assistant exchange."""
+    return session.copy_with(
+        completed_turn_count=session.completed_turn_count + 1,
+        updated_at=datetime.utcnow(),
+    )
+
+
+def set_pending_memory_job(session: Session, pending: bool) -> Session:
+    """Track whether a working-memory refresh job is already queued."""
+    return session.copy_with(
+        pending_memory_job=pending,
+        updated_at=datetime.utcnow(),
+    )
+
+
+def apply_working_memory(
+    session: Session,
+    memory: ConversationMemory,
+    *,
+    refreshed_turn: int | None = None,
+) -> Session:
+    """Persist refreshed working memory and clear queue markers."""
+    return session.copy_with(
+        working_memory=memory,
+        last_memory_refresh_turn=(
+            refreshed_turn
+            if refreshed_turn is not None
+            else session.completed_turn_count
+        ),
+        pending_memory_job=False,
+        updated_at=datetime.utcnow(),
+    )
 
 
 def reset_session(session: Session, preserve_language: bool = True) -> Session:

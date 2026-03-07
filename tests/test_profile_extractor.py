@@ -17,8 +17,18 @@ class TestCategoryExtraction:
 
     def test_extracts_bare_income_number(self):
         """Bare income replies should still be recoverable."""
-        extracted = extract_by_patterns("400000")
+        extracted = extract_by_patterns("400000", current_field="annual_income")
         assert extracted.get("annual_income") == 400000
+
+    def test_extracts_k_suffix_income(self):
+        """Common shorthand like 50k INR should map to annual income."""
+        extracted = extract_by_patterns("50k INR", current_field="annual_income")
+        assert extracted.get("annual_income") == 50000
+
+    def test_does_not_extract_scheme_amount_without_income_context(self):
+        """Benefit amounts in scheme questions must not overwrite user income."""
+        extracted = extract_by_patterns("Is the subsidy 2.5 lakh?")
+        assert extracted.get("annual_income") is None
 
     def test_does_not_extract_st_from_study_word(self):
         """Words like 'study' must not map to ST category."""
@@ -77,6 +87,12 @@ class TestFieldValidation:
     def test_income_zero_invalid(self):
         """Income = 0 should fail validation."""
         is_valid, error = validate_field_response("annual_income", "0", {})
+        assert is_valid is False
+        assert error == "invalid_income"
+
+    def test_unparsed_income_with_currency_hint_is_invalid(self):
+        """Income-like answers should trigger re-prompt instead of drifting to LLM."""
+        is_valid, error = validate_field_response("annual_income", "about ₹5x", {})
         assert is_valid is False
         assert error == "invalid_income"
 

@@ -1,58 +1,86 @@
-"""Finite State Machine for conversation flow.
-
-Simplified 7-state model for MVP:
-- GREETING: Welcome and introduction
-- UNDERSTANDING: Discover life event + collect profile (collapsed from 2 states)
-- MATCHING: Transient state for running scheme retrieval
-- PRESENTING: Show matched schemes
-- DETAILS: Deep dive into scheme + docs + rejections (collapsed from 3 states)
-- APPLICATION: Step-by-step application guidance
-- HANDOFF: Connect to human help at CSC
-"""
+"""Finite State Machine for conversation flow."""
 
 from src.models.session import ConversationState, Session, UserProfile
 
 
 class FSMTransitionError(Exception):
     """Invalid state transition attempted."""
-    pass
 
 
 def get_valid_transitions(state: ConversationState) -> list[ConversationState]:
     """Get valid next states from current state."""
     transitions = {
         ConversationState.GREETING: [
-            ConversationState.GREETING,  # Stay for greeting response
-            ConversationState.UNDERSTANDING,
+            ConversationState.GREETING,
+            ConversationState.SITUATION_UNDERSTANDING,
+            ConversationState.PROFILE_COLLECTION,
         ],
-        ConversationState.UNDERSTANDING: [
-            ConversationState.MATCHING,
-            ConversationState.UNDERSTANDING,  # Stay for more info
+        ConversationState.SITUATION_UNDERSTANDING: [
+            ConversationState.SITUATION_UNDERSTANDING,
+            ConversationState.PROFILE_COLLECTION,
+            ConversationState.SCHEME_MATCHING,
+            ConversationState.GREETING,
         ],
-        ConversationState.MATCHING: [
-            ConversationState.PRESENTING,  # Schemes found
-            ConversationState.HANDOFF,  # No schemes found
-            ConversationState.UNDERSTANDING,  # Need more info
+        ConversationState.PROFILE_COLLECTION: [
+            ConversationState.PROFILE_COLLECTION,
+            ConversationState.SITUATION_UNDERSTANDING,
+            ConversationState.SCHEME_MATCHING,
+            ConversationState.GREETING,
         ],
-        ConversationState.PRESENTING: [
-            ConversationState.DETAILS,  # User selects scheme
-            ConversationState.UNDERSTANDING,  # User refines criteria
-            ConversationState.HANDOFF,  # User needs help
+        ConversationState.SCHEME_MATCHING: [
+            ConversationState.SCHEME_PRESENTATION,
+            ConversationState.SITUATION_UNDERSTANDING,
+            ConversationState.PROFILE_COLLECTION,
         ],
-        ConversationState.DETAILS: [
-            ConversationState.APPLICATION,  # User ready to apply
-            ConversationState.PRESENTING,  # Back to list
-            ConversationState.HANDOFF,  # Need human help
+        ConversationState.SCHEME_PRESENTATION: [
+            ConversationState.SCHEME_PRESENTATION,
+            ConversationState.SCHEME_DETAILS,
+            ConversationState.SITUATION_UNDERSTANDING,
+            ConversationState.PROFILE_COLLECTION,
+            ConversationState.CSC_HANDOFF,
         ],
-        ConversationState.APPLICATION: [
-            ConversationState.HANDOFF,  # Need CSC help
-            ConversationState.DETAILS,  # Back to details
-            ConversationState.GREETING,  # Start over
+        ConversationState.SCHEME_DETAILS: [
+            ConversationState.SCHEME_DETAILS,
+            ConversationState.DOCUMENT_GUIDANCE,
+            ConversationState.REJECTION_WARNINGS,
+            ConversationState.APPLICATION_HELP,
+            ConversationState.SCHEME_PRESENTATION,
+            ConversationState.CSC_HANDOFF,
         ],
-        ConversationState.HANDOFF: [
-            ConversationState.GREETING,  # Start over
-            ConversationState.PRESENTING,  # Back to schemes
-            ConversationState.UNDERSTANDING,  # User asks a new question
+        ConversationState.DOCUMENT_GUIDANCE: [
+            ConversationState.DOCUMENT_GUIDANCE,
+            ConversationState.SCHEME_DETAILS,
+            ConversationState.REJECTION_WARNINGS,
+            ConversationState.APPLICATION_HELP,
+            ConversationState.SCHEME_PRESENTATION,
+            ConversationState.CSC_HANDOFF,
+        ],
+        ConversationState.REJECTION_WARNINGS: [
+            ConversationState.REJECTION_WARNINGS,
+            ConversationState.SCHEME_DETAILS,
+            ConversationState.DOCUMENT_GUIDANCE,
+            ConversationState.APPLICATION_HELP,
+            ConversationState.SCHEME_PRESENTATION,
+            ConversationState.CSC_HANDOFF,
+        ],
+        ConversationState.APPLICATION_HELP: [
+            ConversationState.APPLICATION_HELP,
+            ConversationState.SCHEME_DETAILS,
+            ConversationState.DOCUMENT_GUIDANCE,
+            ConversationState.REJECTION_WARNINGS,
+            ConversationState.SCHEME_PRESENTATION,
+            ConversationState.CSC_HANDOFF,
+            ConversationState.GREETING,
+        ],
+        ConversationState.CSC_HANDOFF: [
+            ConversationState.CSC_HANDOFF,
+            ConversationState.SCHEME_PRESENTATION,
+            ConversationState.SCHEME_DETAILS,
+            ConversationState.DOCUMENT_GUIDANCE,
+            ConversationState.APPLICATION_HELP,
+            ConversationState.SITUATION_UNDERSTANDING,
+            ConversationState.PROFILE_COLLECTION,
+            ConversationState.GREETING,
         ],
     }
     return transitions.get(state, [])
@@ -64,15 +92,9 @@ def can_transition(current: ConversationState, target: ConversationState) -> boo
 
 
 def transition(session: Session, target: ConversationState) -> Session:
-    """Transition session to new state.
-
-    Returns new session with updated state (immutable).
-    Raises FSMTransitionError if transition is invalid.
-    """
+    """Transition session to new state."""
     if not can_transition(session.state, target):
-        raise FSMTransitionError(
-            f"Invalid transition from {session.state} to {target}"
-        )
+        raise FSMTransitionError(f"Invalid transition from {session.state} to {target}")
     return session.with_state(target)
 
 
@@ -89,74 +111,101 @@ def determine_next_state(
     selected_scheme_id: str | None = None,
     has_selected_scheme: bool = False,
     action: str | None = None,
+    requested_state: ConversationState | None = None,
 ) -> ConversationState:
-    """Determine the next state based on current state, profile, and intent.
-
-    This encapsulates the FSM logic for automatic transitions.
-    """
+    """Determine the next state from the current flow inputs."""
     if intent == "goodbye":
         return ConversationState.GREETING
+
+    if requested_state and can_transition(current_state, requested_state):
+        return requested_state
 
     match current_state:
         case ConversationState.GREETING:
             if intent == "greeting":
                 return ConversationState.GREETING
-            return ConversationState.UNDERSTANDING
+            if profile.life_event:
+                if should_auto_match(profile):
+                    return ConversationState.SCHEME_MATCHING
+                return ConversationState.PROFILE_COLLECTION
+            return ConversationState.SITUATION_UNDERSTANDING
 
-        case ConversationState.UNDERSTANDING:
+        case ConversationState.SITUATION_UNDERSTANDING:
+            if not profile.life_event:
+                return ConversationState.SITUATION_UNDERSTANDING
             if should_auto_match(profile):
-                return ConversationState.MATCHING
-            return ConversationState.UNDERSTANDING
+                return ConversationState.SCHEME_MATCHING
+            return ConversationState.PROFILE_COLLECTION
 
-        case ConversationState.MATCHING:
-            # If matching has not run yet in this turn, stay in MATCHING.
+        case ConversationState.PROFILE_COLLECTION:
+            if not profile.life_event:
+                return ConversationState.SITUATION_UNDERSTANDING
+            if should_auto_match(profile):
+                return ConversationState.SCHEME_MATCHING
+            return ConversationState.PROFILE_COLLECTION
+
+        case ConversationState.SCHEME_MATCHING:
             if has_schemes is None:
-                return ConversationState.MATCHING
+                return ConversationState.SCHEME_MATCHING
             if has_schemes:
-                return ConversationState.PRESENTING
-            return ConversationState.HANDOFF
+                return ConversationState.SCHEME_PRESENTATION
+            if profile.life_event:
+                return ConversationState.PROFILE_COLLECTION
+            return ConversationState.SITUATION_UNDERSTANDING
 
-        case ConversationState.PRESENTING:
+        case ConversationState.SCHEME_PRESENTATION:
             if selected_scheme_id:
-                return ConversationState.DETAILS
+                return ConversationState.SCHEME_DETAILS
             if action == "request_handoff":
-                return ConversationState.HANDOFF
+                return ConversationState.CSC_HANDOFF
+            if action == "request_details" and has_selected_scheme:
+                return ConversationState.SCHEME_DETAILS
             if intent == "clarification":
-                return ConversationState.UNDERSTANDING
-            return ConversationState.PRESENTING
+                return ConversationState.PROFILE_COLLECTION
+            return ConversationState.SCHEME_PRESENTATION
 
-        case ConversationState.DETAILS:
+        case ConversationState.SCHEME_DETAILS:
             if action == "request_application":
-                return ConversationState.APPLICATION
+                return ConversationState.APPLICATION_HELP
             if action == "request_handoff":
-                return ConversationState.HANDOFF
-            if intent == "selection":
-                if selected_scheme_id is None and not has_selected_scheme:
-                    return ConversationState.PRESENTING
-                return ConversationState.DETAILS
-            if action == "request_details":
-                return ConversationState.DETAILS
-            if intent in ["question", "clarification"]:
-                return ConversationState.DETAILS
-            return ConversationState.DETAILS
+                return ConversationState.CSC_HANDOFF
+            if selected_scheme_id or action in {"request_details", "switch_scheme"}:
+                return ConversationState.SCHEME_DETAILS
+            return ConversationState.SCHEME_DETAILS
 
-        case ConversationState.APPLICATION:
+        case ConversationState.DOCUMENT_GUIDANCE:
+            if action == "request_application":
+                return ConversationState.APPLICATION_HELP
             if action == "request_handoff":
-                return ConversationState.HANDOFF
+                return ConversationState.CSC_HANDOFF
             if selected_scheme_id:
-                return ConversationState.DETAILS
-            if action == "request_details":
-                return ConversationState.DETAILS
-            return ConversationState.APPLICATION
+                return ConversationState.SCHEME_DETAILS
+            return ConversationState.DOCUMENT_GUIDANCE
 
-        case ConversationState.HANDOFF:
-            if intent == "greeting":
-                return ConversationState.GREETING
+        case ConversationState.REJECTION_WARNINGS:
+            if action == "request_application":
+                return ConversationState.APPLICATION_HELP
+            if action == "request_handoff":
+                return ConversationState.CSC_HANDOFF
             if selected_scheme_id:
-                return ConversationState.DETAILS
-            if intent in ("question", "clarification", "selection"):
-                return ConversationState.UNDERSTANDING
-            return ConversationState.HANDOFF
+                return ConversationState.SCHEME_DETAILS
+            return ConversationState.REJECTION_WARNINGS
+
+        case ConversationState.APPLICATION_HELP:
+            if action == "request_handoff":
+                return ConversationState.CSC_HANDOFF
+            if selected_scheme_id:
+                return ConversationState.SCHEME_DETAILS
+            return ConversationState.APPLICATION_HELP
+
+        case ConversationState.CSC_HANDOFF:
+            if selected_scheme_id:
+                return ConversationState.SCHEME_DETAILS
+            if profile.life_event and should_auto_match(profile):
+                return ConversationState.SCHEME_PRESENTATION
+            if profile.life_event:
+                return ConversationState.PROFILE_COLLECTION
+            return ConversationState.SITUATION_UNDERSTANDING
 
     return current_state
 
@@ -165,32 +214,44 @@ def get_state_prompt_context(state: ConversationState) -> dict[str, str]:
     """Get context-specific prompting hints for each state."""
     contexts = {
         ConversationState.GREETING: {
-            "goal": "Welcome user and identify their need",
-            "actions": ["greet warmly", "explain capabilities", "ask about situation"],
+            "goal": "Welcome the user and establish the conversation",
+            "actions": ["greet warmly", "explain capabilities", "ask about their situation"],
         },
-        ConversationState.UNDERSTANDING: {
-            "goal": "Understand life event and collect profile",
-            "actions": ["identify life event", "ask for age/income/category", "show empathy"],
+        ConversationState.SITUATION_UNDERSTANDING: {
+            "goal": "Understand the user's life event or type of help needed",
+            "actions": ["identify the main need", "clarify ambiguous topics", "confirm understanding"],
         },
-        ConversationState.MATCHING: {
-            "goal": "Run scheme matching",
-            "actions": ["search database", "filter by eligibility", "rank results"],
+        ConversationState.PROFILE_COLLECTION: {
+            "goal": "Collect the minimum profile needed for eligibility matching",
+            "actions": ["ask for missing fields", "handle corrections", "avoid re-asking known details"],
         },
-        ConversationState.PRESENTING: {
-            "goal": "Present matching schemes",
-            "actions": ["show scheme cards", "highlight benefits", "explain eligibility"],
+        ConversationState.SCHEME_MATCHING: {
+            "goal": "Run deterministic and semantic scheme matching",
+            "actions": ["filter by life event", "apply eligibility constraints", "rank candidates"],
         },
-        ConversationState.DETAILS: {
-            "goal": "Deep dive into selected scheme",
-            "actions": ["show full details", "list documents", "warn about rejections"],
+        ConversationState.SCHEME_PRESENTATION: {
+            "goal": "Present the best matched schemes",
+            "actions": ["show scheme options", "highlight why they fit", "ask which one to open"],
         },
-        ConversationState.APPLICATION: {
-            "goal": "Guide through application",
-            "actions": ["step-by-step process", "online/offline options", "timeline"],
+        ConversationState.SCHEME_DETAILS: {
+            "goal": "Explain the selected scheme and why it was suggested",
+            "actions": ["summarize benefits", "explain fit", "offer next-step navigation"],
         },
-        ConversationState.HANDOFF: {
-            "goal": "Connect to human help",
-            "actions": ["show nearest CSC", "provide contact", "explain services"],
+        ConversationState.DOCUMENT_GUIDANCE: {
+            "goal": "Guide the user through required documents",
+            "actions": ["list documents", "explain where to get them", "mention fees and timing"],
+        },
+        ConversationState.REJECTION_WARNINGS: {
+            "goal": "Warn the user about common rejection reasons",
+            "actions": ["surface major rejection risks", "give prevention tips", "keep advice actionable"],
+        },
+        ConversationState.APPLICATION_HELP: {
+            "goal": "Walk the user through the application process",
+            "actions": ["show online/offline steps", "share links", "suggest document and rejection checks"],
+        },
+        ConversationState.CSC_HANDOFF: {
+            "goal": "Hand the user off to human support when needed",
+            "actions": ["share nearby CSC details", "explain when to visit", "allow return to scheme flow"],
         },
     }
     return contexts.get(state, {"goal": "Unknown", "actions": []})

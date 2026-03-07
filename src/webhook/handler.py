@@ -105,6 +105,15 @@ def _tts_filename(content_type: str | None) -> str:
     return f"response.{extension}"
 
 
+def _transcript_echo_text(language: str, transcript: str) -> str:
+    """Render the STT transcript back to the user for testing/debugging."""
+    if language == "hi":
+        return f"आपने कहा: {transcript}"
+    if language == "hinglish":
+        return f"Aapne kaha: {transcript}"
+    return f"You said: {transcript}"
+
+
 async def _transcribe_with_fallbacks(
     voice_client,
     audio_bytes: bytes,
@@ -325,7 +334,15 @@ async def _handle_voice_message(
 
         logger.info("STT result: '%s' (confidence: %s)", result.text, result.confidence)
 
-        # Return transcribed text (no echo to user — cleaner UX)
+        transcript_language = result.language
+        if transcript_language not in {"en", "hi", "hinglish"}:
+            transcript_language = _infer_transcript_language(result.text)
+        await telegram.send_text(
+            chat_id,
+            _transcript_echo_text(transcript_language, result.text),
+        )
+
+        # Return transcribed text after sending a visible transcript echo.
         return result.text
 
     except Exception as e:

@@ -6,17 +6,30 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from src.utils.scheme_catalog import get_required_profile_fields_for_life_event
+
 
 class ConversationState(str, Enum):
-    """FSM states for conversation flow (7-state simplified model)."""
+    """FSM states for the explicit 10-state conversation flow."""
 
     GREETING = "GREETING"
-    UNDERSTANDING = "UNDERSTANDING"  # Situation + profile collection
-    MATCHING = "MATCHING"  # Transient: running scheme retrieval
-    PRESENTING = "PRESENTING"  # Showing matched schemes
-    DETAILS = "DETAILS"  # Deep dive: scheme + docs + rejections
-    APPLICATION = "APPLICATION"  # Step-by-step application guidance
-    HANDOFF = "HANDOFF"  # Connect to human/CSC
+    SITUATION_UNDERSTANDING = "SITUATION_UNDERSTANDING"
+    PROFILE_COLLECTION = "PROFILE_COLLECTION"
+    SCHEME_MATCHING = "SCHEME_MATCHING"
+    SCHEME_PRESENTATION = "SCHEME_PRESENTATION"
+    SCHEME_DETAILS = "SCHEME_DETAILS"
+    DOCUMENT_GUIDANCE = "DOCUMENT_GUIDANCE"
+    REJECTION_WARNINGS = "REJECTION_WARNINGS"
+    APPLICATION_HELP = "APPLICATION_HELP"
+    CSC_HANDOFF = "CSC_HANDOFF"
+
+    # Legacy aliases retained for compatibility with older code paths/tests.
+    UNDERSTANDING = "PROFILE_COLLECTION"
+    MATCHING = "SCHEME_MATCHING"
+    PRESENTING = "SCHEME_PRESENTATION"
+    DETAILS = "SCHEME_DETAILS"
+    APPLICATION = "APPLICATION_HELP"
+    HANDOFF = "CSC_HANDOFF"
 
 
 class UserProfile(BaseModel):
@@ -47,15 +60,15 @@ class UserProfile(BaseModel):
         }
         return UserProfile(**merged)
 
+    def required_fields_for_matching(self) -> tuple[str, ...]:
+        """Return the scheme-aware fields worth collecting before matching."""
+        return get_required_profile_fields_for_life_event(self.life_event)
+
     @property
     def is_complete_for_matching(self) -> bool:
         """Check if profile has minimum required fields for scheme matching."""
-        return (
-            self.life_event is not None
-            and self.age is not None
-            and self.category is not None
-            and self.annual_income is not None
-        )
+        required_fields = self.required_fields_for_matching()
+        return all(getattr(self, field) is not None for field in required_fields)
 
     @property
     def completeness_score(self) -> int:
@@ -84,6 +97,28 @@ class Message(BaseModel, frozen=True):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 
+class ConversationMemory(BaseModel):
+    """Compact working memory for long-running conversations."""
+
+    summary: str | None = None
+    profile_facts: list[str] = Field(default_factory=list)
+    active_scheme_ids: list[str] = Field(default_factory=list)
+    pending_action: str | None = None
+    last_user_goal: str | None = None
+
+    def is_meaningful(self) -> bool:
+        """Return True when working memory contains useful context."""
+        return any(
+            [
+                bool(self.summary),
+                bool(self.profile_facts),
+                bool(self.active_scheme_ids),
+                bool(self.pending_action),
+                bool(self.last_user_goal),
+            ]
+        )
+
+
 class Session(BaseModel):
     """Conversation session (mutable for state updates)."""
 
@@ -91,7 +126,7 @@ class Session(BaseModel):
     state: ConversationState = ConversationState.GREETING
     user_profile: UserProfile = Field(default_factory=UserProfile)
     messages: list[Message] = Field(default_factory=list)
-    conversation_summary: str | None = None
+    working_memory: ConversationMemory = Field(default_factory=ConversationMemory)
     discussed_schemes: list[str] = Field(default_factory=list)  # Scheme IDs
     selected_scheme_id: str | None = None
     language_preference: str = "auto"  # auto, hi, en
@@ -100,6 +135,9 @@ class Session(BaseModel):
     skipped_fields: list[str] = Field(default_factory=list)
     awaiting_profile_change: bool = False
     presented_schemes: list[dict[str, str]] = Field(default_factory=list)
+    completed_turn_count: int = 0
+    last_memory_refresh_turn: int = 0
+    pending_memory_job: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -112,14 +150,14 @@ class Session(BaseModel):
         return Session(**data)
 
     def add_message(self, role: str, content: str) -> "Session":
-        """Add message and return new session (keeping sliding window of 10)."""
+        """Add message and return new session (keeping sliding window of 12)."""
         new_message = Message(role=role, content=content)
         messages = list(self.messages)
         messages.append(new_message)
 
-        # Keep last 10 messages (sliding window)
-        if len(messages) > 10:
-            messages = messages[-10:]
+        # Keep the last 6 completed turns (12 messages) in raw history.
+        if len(messages) > 12:
+            messages = messages[-12:]
 
         return self.copy_with(messages=messages, updated_at=datetime.utcnow())
 
@@ -146,7 +184,7 @@ class Session(BaseModel):
                 }
                 for m in self.messages
             ],
-            "conversation_summary": self.conversation_summary,
+            "working_memory": self.working_memory.model_dump(),
             "discussed_schemes": self.discussed_schemes,
             "selected_scheme_id": self.selected_scheme_id,
             "language_preference": self.language_preference,
@@ -155,6 +193,9 @@ class Session(BaseModel):
             "skipped_fields": self.skipped_fields,
             "awaiting_profile_change": self.awaiting_profile_change,
             "presented_schemes": self.presented_schemes,
+            "completed_turn_count": self.completed_turn_count,
+            "last_memory_refresh_turn": self.last_memory_refresh_turn,
+            "pending_memory_job": self.pending_memory_job,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "metadata": self.metadata,
@@ -164,6 +205,10 @@ class Session(BaseModel):
     @classmethod
     def from_dynamodb_item(cls, item: dict[str, Any]) -> "Session":
         """Deserialize from DynamoDB item."""
+        state = _normalize_persisted_state(
+            item.get("state"),
+            item.get("user_profile", {}),
+        )
         messages = [
             Message(
                 role=m["role"],
@@ -175,10 +220,17 @@ class Session(BaseModel):
 
         return cls(
             user_id=item["user_id"],
-            state=ConversationState(item["state"]),
+            state=state,
             user_profile=UserProfile(**item.get("user_profile", {})),
             messages=messages,
-            conversation_summary=item.get("conversation_summary"),
+            working_memory=ConversationMemory(
+                **(
+                    item.get("working_memory")
+                    or {
+                        "summary": item.get("conversation_summary"),
+                    }
+                )
+            ),
             discussed_schemes=item.get("discussed_schemes", []),
             selected_scheme_id=item.get("selected_scheme_id"),
             language_preference=item.get("language_preference", "auto"),
@@ -193,7 +245,38 @@ class Session(BaseModel):
                 "presented_schemes",
                 item.get("metadata", {}).get("presented_schemes", []),
             ),
+            completed_turn_count=item.get("completed_turn_count", 0),
+            last_memory_refresh_turn=item.get("last_memory_refresh_turn", 0),
+            pending_memory_job=item.get("pending_memory_job", False),
             created_at=datetime.fromisoformat(item["created_at"]) if isinstance(item["created_at"], str) else item["created_at"],
             updated_at=datetime.fromisoformat(item["updated_at"]) if isinstance(item["updated_at"], str) else item["updated_at"],
             metadata=item.get("metadata", {}),
         )
+
+
+def _normalize_persisted_state(
+    raw_state: str | ConversationState | None,
+    user_profile: dict[str, Any],
+) -> ConversationState:
+    """Map legacy persisted state values to the current 10-state FSM."""
+    if isinstance(raw_state, ConversationState):
+        return raw_state
+
+    state_value = str(raw_state or ConversationState.GREETING.value)
+    if state_value in ConversationState._value2member_map_:
+        return ConversationState(state_value)
+
+    legacy_map = {
+        "MATCHING": ConversationState.SCHEME_MATCHING,
+        "PRESENTING": ConversationState.SCHEME_PRESENTATION,
+        "DETAILS": ConversationState.SCHEME_DETAILS,
+        "APPLICATION": ConversationState.APPLICATION_HELP,
+        "HANDOFF": ConversationState.CSC_HANDOFF,
+    }
+    if state_value == "UNDERSTANDING":
+        return (
+            ConversationState.PROFILE_COLLECTION
+            if user_profile.get("life_event")
+            else ConversationState.SITUATION_UNDERSTANDING
+        )
+    return legacy_map.get(state_value, ConversationState.GREETING)

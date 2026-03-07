@@ -1,17 +1,48 @@
 """Profile extraction service."""
 
-import logging
 import re
 from typing import Any
 
-from src.integrations.llm_client import get_llm_client
 from src.models.session import UserProfile
-from src.prompts.loader import get_system_prompt
 
-logger = logging.getLogger(__name__)
+FIELD_QUESTION_ORDER = ("life_event", "age", "gender", "category", "annual_income")
 
 
-def extract_by_patterns(text: str) -> dict[str, Any]:
+def get_required_matching_fields(profile: UserProfile) -> tuple[str, ...]:
+    """Return the scheme-aware profile fields that matter before matching."""
+    return profile.required_fields_for_matching()
+
+
+def _has_income_context(text_lower: str, current_field: str | None) -> bool:
+    """Return True when the user is likely answering the income question."""
+    if current_field == "annual_income":
+        return True
+
+    income_cues = (
+        r"\bincome\b",
+        r"\bfamily income\b",
+        r"\bhousehold income\b",
+        r"\bannual income\b",
+        r"\bmonthly income\b",
+        r"\bsalary\b",
+        r"\bearning[s]?\b",
+        r"\bearn\b",
+        r"\bper month\b",
+        r"\bmonthly\b",
+        r"\bper year\b",
+        r"\byearly\b",
+        r"\bannually\b",
+        r"\bmahina\b",
+        r"महीना",
+    )
+    return any(re.search(pattern, text_lower) for pattern in income_cues)
+
+
+def extract_by_patterns(
+    text: str,
+    *,
+    current_field: str | None = None,
+) -> dict[str, Any]:
     """Rule-based extraction using regex patterns."""
     extracted = {}
     text_lower = text.lower()
@@ -31,34 +62,43 @@ def extract_by_patterns(text: str) -> dict[str, Any]:
                 break
 
     # Income extraction (annual)
-    income_patterns = [
-        r"(\d+(?:\.\d+)?)\s*(lakh|lac|लाख)\s*(per\s*year|yearly|annual|सालाना)?",
-        r"income\s*[:=-]?\s*(\d+(?:,\d{3})*)",
-        r"(\d+(?:,\d{3})*)\s*(per\s*month|monthly|mahina|महीना)",
-    ]
-    for pattern in income_patterns:
-        match = re.search(pattern, text_lower)
-        if match:
-            amount = match.group(1).replace(",", "")
-            try:
-                income = float(amount)
-                # Check if in lakhs
-                if "lakh" in text_lower or "lac" in text_lower or "लाख" in text_lower:
-                    income *= 100000
-                # Check if monthly - convert to annual
-                if "month" in text_lower or "mahina" in text_lower or "महीना" in text_lower:
-                    income *= 12
-                extracted["annual_income"] = int(income)
-                break
-            except ValueError:
-                pass
+    if _has_income_context(text_lower, current_field):
+        income_patterns = [
+            r"(\d+(?:\.\d+)?)\s*(lakh|lac|लाख)\s*(per\s*year|yearly|annual|सालाना)?",
+            r"(\d+(?:\.\d+)?)\s*(k|thousand|हजार)\s*(?:inr|rs\.?|rupees?)?",
+            r"income\s*[:=-]?\s*(\d+(?:,\d{3})*)",
+            r"(?:₹|rs\.?|rupees?|inr)\s*(\d+(?:,\d{3})*)",
+            r"(\d+(?:,\d{3})*)\s*(per\s*month|monthly|mahina|महीना)",
+        ]
+        for pattern in income_patterns:
+            match = re.search(pattern, text_lower)
+            if match:
+                amount = match.group(1).replace(",", "")
+                try:
+                    income = float(amount)
+                    # Check if in lakhs
+                    if "lakh" in text_lower or "lac" in text_lower or "लाख" in text_lower:
+                        income *= 100000
+                    elif re.search(r"\b\d+(?:\.\d+)?\s*(k|thousand|हजार)\b", text_lower):
+                        income *= 1000
+                    # Check if monthly - convert to annual
+                    if "month" in text_lower or "mahina" in text_lower or "महीना" in text_lower:
+                        income *= 12
+                    extracted["annual_income"] = int(income)
+                    break
+                except ValueError:
+                    pass
 
     bare_number = re.fullmatch(r"\s*(\d[\d,]*)\s*", text)
     if bare_number:
         value = int(bare_number.group(1).replace(",", ""))
         if "age" not in extracted and 18 <= value <= 120:
             extracted["age"] = value
-        elif "annual_income" not in extracted and value > 1000:
+        elif (
+            "annual_income" not in extracted
+            and value > 1000
+            and current_field == "annual_income"
+        ):
             extracted["annual_income"] = value
 
     # Category extraction
@@ -119,74 +159,22 @@ def extract_by_patterns(text: str) -> dict[str, Any]:
 
     return extracted
 
-
-async def extract_profile(
-    user_message: str,
-    conversation_history: list[dict[str, str]],
-    current_profile: UserProfile,
-) -> UserProfile:
-    """Extract profile information from user message.
-
-    Combines rule-based extraction with LLM for complex cases.
-    Returns new UserProfile merged with current profile.
-    """
-    # Try rule-based extraction first
-    pattern_extracted = extract_by_patterns(user_message)
-
-    # Use LLM for additional extraction
-    llm_extracted = {}
-    try:
-        llm = get_llm_client()
-        analysis = await llm.analyze_message(
-            user_message=user_message,
-            conversation_history=conversation_history,
-            current_state="UNDERSTANDING",
-            user_profile=current_profile.model_dump(),
-            system_prompt=get_system_prompt(),
-        )
-
-        llm_extracted = analysis.get("extracted_fields", {})
-
-        # Also get life event if detected
-        if analysis.get("life_event"):
-            llm_extracted["life_event"] = analysis["life_event"]
-
-    except Exception as e:
-        logger.error(f"LLM profile extraction failed: {e}")
-
-    # Merge extractions (rule-based takes precedence for explicit matches)
-    merged = {**llm_extracted, **pattern_extracted}
-
-    # Filter out None values
-    merged = {k: v for k, v in merged.items() if v is not None}
-
-    if not merged:
-        return current_profile
-
-    # Create new profile from extracted data
-    extracted_profile = UserProfile(**merged)
-
-    # Merge with current profile
-    return current_profile.merge_with(extracted_profile)
-
-
 def get_missing_fields(profile: UserProfile) -> list[str]:
     """Get list of missing fields that should be collected."""
     missing = []
 
-    # Priority order for field collection
-    fields = [
-        ("life_event", "life situation"),
-        ("age", "age"),
-        ("category", "caste category (SC/ST/OBC/General/EWS)"),
-        ("annual_income", "annual income"),
-        ("gender", "gender"),
-        ("employment_status", "employment status"),
-    ]
+    display_names = {
+        "life_event": "life situation",
+        "age": "age",
+        "category": "caste category (SC/ST/OBC/General/EWS)",
+        "annual_income": "annual income",
+        "gender": "gender",
+        "employment_status": "employment status",
+    }
 
-    for field, display_name in fields:
+    for field in get_required_matching_fields(profile):
         if getattr(profile, field) is None:
-            missing.append(display_name)
+            missing.append(display_names.get(field, field))
 
     return missing
 
@@ -197,8 +185,10 @@ def get_next_missing_field(
 ) -> str | None:
     """Return the name of the next missing profile field, or None if all filled."""
     skipped = set(skipped_fields or [])
-    priority = ["life_event", "age", "category", "annual_income", "gender"]
-    for field in priority:
+    required_fields = set(get_required_matching_fields(profile))
+    for field in FIELD_QUESTION_ORDER:
+        if field not in required_fields:
+            continue
         if field in skipped:
             continue
         if getattr(profile, field) is None:
@@ -241,11 +231,14 @@ def get_next_question(
     }
 
     skipped = set(skipped_fields or [])
-    # Find first missing field
-    for field, field_questions in questions.items():
+    required_fields = set(get_required_matching_fields(profile))
+    for field in FIELD_QUESTION_ORDER:
+        if field not in required_fields:
+            continue
         if field in skipped:
             continue
         if getattr(profile, field) is None:
+            field_questions = questions[field]
             return field_questions.get(language, field_questions["en"])
 
     return None
@@ -301,9 +294,10 @@ def validate_field_response(
                 return False, "invalid_age"
 
         # If message contains age-related keywords but no number extracted
-        if any(kw in text for kw in ["years", "saal", "साल", "year", "age", "उम्र"]):
-            if not any(c.isdigit() for c in text):
-                return False, "unclear_response"
+        if any(kw in text for kw in ["years", "saal", "साल", "year", "age", "उम्र"]) and not any(
+            c.isdigit() for c in text
+        ):
+            return False, "unclear_response"
 
     elif field == "category":
         if "category" in extracted_fields:
@@ -329,6 +323,14 @@ def validate_field_response(
             # the extraction logic handles it. Only flag truly nonsensical values.
             if num == 0:
                 return False, "invalid_income"
+        elif re.search(
+            r"\d"
+            r".*(?:₹|rs\.?|rupees?|inr|lakh|lac|thousand|monthly|per\s*month|mahina|महीना|हजार)"
+            r"|(?:₹|rs\.?|rupees?|inr|income|salary|lakh|lac|thousand|monthly|per\s*month|mahina|महीना|हजार).*\d"
+            r"|(?:₹|rs\.?|rupees?|inr|income|salary|lakh|lac|thousand|monthly|per\s*month|mahina|महीना|हजार)",
+            text,
+        ):
+            return False, "invalid_income"
 
     # Default: assume valid (let conversation flow naturally)
     return True, None

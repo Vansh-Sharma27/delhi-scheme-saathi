@@ -142,6 +142,8 @@ curl -X POST http://localhost:8000/api/chat \
 | `XAI_API_KEY` | xAI API key for Grok LLM |
 | `VOYAGE_API_KEY` | Voyage AI key for embeddings |
 | `TELEGRAM_BOT_TOKEN` | Telegram bot token |
+| `AI_MEMORY_QUEUE_BACKEND` | `in_memory` locally, `sqs` for shared AWS queue |
+| `AI_MEMORY_QUEUE_URL` | SQS queue URL for async working-memory jobs |
 | `LOG_LEVEL` | Logging level (INFO, DEBUG) |
 
 ## License
