@@ -5,12 +5,28 @@ import re
 from typing import Any
 
 from src.db import scheme_repo
+from src.integrations.llm_client import FallbackLLMClient
 from src.models.scheme import Scheme
 from src.models.session import Session, UserProfile
 from src.prompts.loader import get_generate_response_prompt
 from src.services.ai_orchestrator import get_ai_orchestrator
 
 logger = logging.getLogger(__name__)
+
+LANGUAGE_NORMALIZATION_PROMPT = """
+You rewrite Delhi government welfare bot replies into the requested output language.
+
+Rules:
+- Rewrite only the text provided in context.source_text.
+- Preserve all facts, numbers, rupee amounts, URLs, phone numbers, office names, addresses, and IDs.
+- Keep the same order, bullets, and step structure.
+- Do not add advice, omissions, or new facts.
+- If a term is already a proper noun or official title, keep it intact and rewrite the surrounding text.
+- For Hindi, output natural Hindi in Devanagari script.
+- For Hinglish, output natural Roman-script Hinglish only. Do not use Devanagari.
+- For English, output plain English only.
+- Return only the rewritten reply text.
+""".strip()
 
 ELIGIBILITY_QUESTION_PATTERNS = (
     r"\beligib(?:le|ility)\b",
@@ -48,6 +64,140 @@ def _pick_language_text(
     if language == "hinglish":
         return hinglish or en
     return en
+
+
+def _count_latin_tokens(text: str) -> int:
+    """Count meaningful Latin-script words in a response."""
+    return len(re.findall(r"[A-Za-z]{3,}", text))
+
+
+def _count_devanagari_tokens(text: str) -> int:
+    """Count meaningful Devanagari-script words in a response."""
+    return len(re.findall(r"[\u0900-\u097F]{2,}", text))
+
+
+def _count_hinglish_markers(text: str) -> int:
+    """Count common Roman Hindi / Hinglish markers."""
+    text_lower = text.lower()
+    markers = (
+        "aap", "apni", "apna", "hai", "hain", "kya", "kaise", "kyon",
+        "kyu", "batayiye", "madad", "liye", "ke", "ki", "ka", "kar",
+        "karna", "pooch", "dekhiye", "chahein", "yojana", "scheme",
+    )
+    return sum(
+        1
+        for marker in markers
+        if re.search(rf"(?<!\w){re.escape(marker)}(?!\w)", text_lower)
+    )
+
+
+def _needs_grounded_translation(text: str, language: str) -> bool:
+    """Return True when deterministic grounded text still leaks source language."""
+    if language not in {"hi", "en", "hinglish"}:
+        return False
+
+    stripped = text.strip()
+    if not stripped:
+        return False
+
+    latin_tokens = _count_latin_tokens(stripped)
+    devanagari_tokens = _count_devanagari_tokens(stripped)
+
+    if language == "hi":
+        return latin_tokens > 0
+    if language == "en":
+        return devanagari_tokens > 0
+    if devanagari_tokens > 0:
+        return True
+    return latin_tokens >= 4 and _count_hinglish_markers(stripped) < 2
+
+
+def _needs_language_normalization(text: str, language: str) -> bool:
+    """Return True when reply text drifts away from the requested language/script."""
+    if language not in {"hi", "en", "hinglish"}:
+        return False
+
+    stripped = text.strip()
+    if not stripped:
+        return False
+
+    latin_tokens = _count_latin_tokens(stripped)
+    devanagari_tokens = _count_devanagari_tokens(stripped)
+
+    if language == "hi":
+        if latin_tokens == 0:
+            return False
+        if devanagari_tokens == 0:
+            return True
+        return latin_tokens > devanagari_tokens
+
+    if language == "en":
+        return devanagari_tokens > 0
+
+    if devanagari_tokens > 0:
+        return True
+    if latin_tokens == 0:
+        return False
+
+    hinglish_markers = _count_hinglish_markers(stripped)
+    return latin_tokens >= 6 and hinglish_markers < 2
+
+
+async def ensure_response_language(
+    session: Session,
+    text: str,
+    language: str,
+) -> str:
+    """Rewrite a reply into the requested language when it drifted off target."""
+    if not text.strip() or not _needs_language_normalization(text, language):
+        return text
+
+    return await _rewrite_response_language(session, text, language)
+
+
+async def _rewrite_response_language(
+    session: Session,
+    text: str,
+    language: str,
+) -> str:
+    """Rewrite a response using the shared Bedrock/Grok translation path."""
+    if not text.strip():
+        return text
+
+    translated = await get_ai_orchestrator().generate_response(
+        session=session,
+        context={
+            "response_mode": "language_normalization",
+            "source_text": text,
+        },
+        system_prompt=LANGUAGE_NORMALIZATION_PROMPT,
+        user_language=language,
+    )
+
+    if not translated.strip():
+        return text
+
+    safe_fallback = FallbackLLMClient._safe_generation_text(language)
+    if translated.strip() == safe_fallback.strip():
+        return text
+
+    return translated.strip()
+
+
+async def translate_grounded_text_if_needed(
+    session: Session,
+    text: str,
+    language: str,
+) -> str:
+    """Faithfully translate grounded text when the target language needs it.
+
+    This is only for already-grounded deterministic text. If the translation
+    path is unavailable, we keep the original grounded text instead of
+    returning an error stub.
+    """
+    if not text.strip() or not _needs_grounded_translation(text, language):
+        return text
+    return await _rewrite_response_language(session, text, language)
 
 
 async def generate_response(
@@ -986,31 +1136,55 @@ def generate_application_guidance(
     scheme_name: str,
     application_url: str | None,
     offline_process: str | None,
+    application_steps: list[str] | None = None,
+    processing_time: str | None = None,
+    helpline_phone: str | None = None,
     language: str = "hi",
 ) -> str:
     """Generate application guidance response."""
     if language == "hi":
         response = f"📝 {scheme_name} के लिए आवेदन:\n\n"
+        if application_steps:
+            response += "📋 आवेदन के चरण:\n"
+            response += "\n".join(application_steps) + "\n\n"
         if application_url:
             response += f"🌐 ऑनलाइन आवेदन:\n{application_url}\n\n"
         if offline_process:
             response += f"🏛️ ऑफलाइन आवेदन:\n{offline_process}\n\n"
+        if processing_time:
+            response += f"⏱️ प्रक्रिया समय:\n{processing_time}\n\n"
+        if helpline_phone:
+            response += f"📞 संपर्क:\n{helpline_phone}\n\n"
         response += "क्या आपको दस्तावेजों की जानकारी चाहिए, या कोई और सवाल है?"
         return response
 
     if language == "hinglish":
         response = f"📝 {scheme_name} ke liye apply kaise karein:\n\n"
+        if application_steps:
+            response += "📋 Step-by-step process:\n"
+            response += "\n".join(application_steps) + "\n\n"
         if application_url:
             response += f"🌐 Online apply:\n{application_url}\n\n"
         if offline_process:
             response += f"🏛️ Offline process:\n{offline_process}\n\n"
+        if processing_time:
+            response += f"⏱️ Processing time:\n{processing_time}\n\n"
+        if helpline_phone:
+            response += f"📞 Contact:\n{helpline_phone}\n\n"
         response += "Kya aapko documents mein help chahiye, ya koi aur sawaal hai?"
         return response
 
     response = f"📝 How to Apply for {scheme_name}:\n\n"
+    if application_steps:
+        response += "📋 Step-by-step process:\n"
+        response += "\n".join(application_steps) + "\n\n"
     if application_url:
         response += f"🌐 Online:\n{application_url}\n\n"
     if offline_process:
         response += f"🏛️ Offline:\n{offline_process}\n\n"
+    if processing_time:
+        response += f"⏱️ Processing time:\n{processing_time}\n\n"
+    if helpline_phone:
+        response += f"📞 Contact:\n{helpline_phone}\n\n"
     response += "Would you like help with documents, or do you have any other questions?"
     return response

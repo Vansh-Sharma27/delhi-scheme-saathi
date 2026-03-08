@@ -10,6 +10,7 @@ Handles incoming Telegram updates including:
 import logging
 import os
 import re
+from contextlib import suppress
 from typing import Any
 
 import asyncpg
@@ -17,8 +18,8 @@ import asyncpg
 from src.integrations.sarvam import get_sarvam_client
 from src.integrations.telegram import get_telegram_client
 from src.models.api import ChatRequest, TelegramUpdate
-from src.services.conversation import ConversationService
 from src.services import session_manager
+from src.services.conversation import ConversationService
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +115,20 @@ def _transcript_echo_text(language: str, transcript: str) -> str:
     return f"You said: {transcript}"
 
 
+def _echo_language(session, transcript_language: str) -> str:
+    """Choose the visible echo prefix language.
+
+    The visible prefix should honor an explicit user language lock even when
+    the best STT transcript candidate happened to be English.
+    """
+    locked_language = getattr(session, "language_preference", "auto")
+    if getattr(session, "language_locked", False) and locked_language in {"hi", "en", "hinglish"}:
+        return locked_language
+    if transcript_language in {"hi", "en", "hinglish"}:
+        return transcript_language
+    return "en"
+
+
 async def _transcribe_with_fallbacks(
     voice_client,
     audio_bytes: bytes,
@@ -152,9 +167,10 @@ async def _transcribe_with_fallbacks(
 
         score = float(result.confidence or 0.0) + _transcript_quality_score(result.text)
         transcript_language = _infer_transcript_language(result.text)
-        if language == "en" and transcript_language == "en":
-            score += 0.2
-        elif language == "hi" and transcript_language in {"hi", "hinglish"}:
+        if (
+            (language == "en" and transcript_language == "en")
+            or (language == "hi" and transcript_language in {"hi", "hinglish"})
+        ):
             score += 0.2
 
         detected_language = getattr(result, "language", None)
@@ -247,10 +263,8 @@ async def handle_telegram_update(
     except Exception as e:
         logger.error(f"Failed to send Telegram message: {e}", exc_info=True)
         # Try sending without any formatting
-        try:
+        with suppress(Exception):
             await telegram.send_text(chat_id, _clean_for_telegram(response.text)[:4000])
-        except Exception:
-            pass
 
     return {"status": "ok"}
 
@@ -337,9 +351,10 @@ async def _handle_voice_message(
         transcript_language = result.language
         if transcript_language not in {"en", "hi", "hinglish"}:
             transcript_language = _infer_transcript_language(result.text)
+        echo_language = _echo_language(session, transcript_language)
         await telegram.send_text(
             chat_id,
-            _transcript_echo_text(transcript_language, result.text),
+            _transcript_echo_text(echo_language, result.text),
         )
 
         # Return transcribed text after sending a visible transcript echo.

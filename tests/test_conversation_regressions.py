@@ -1,10 +1,14 @@
 """Regression tests for multi-turn conversation bugs seen in Telegram exports."""
+import json
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from src.db.session_store import InMemorySessionStore, configure_session_store, get_session_store
 from src.models.api import ChatRequest
+from src.models.document import Document, DocumentChain
+from src.models.rejection_rule import RejectionRule
 from src.models.scheme import EligibilityCriteria, Scheme, SchemeMatch
 from src.models.session import ConversationState, Message, Session, UserProfile
 from src.services import response_generator
@@ -15,6 +19,18 @@ from src.services.conversation import (
     _truncate_at_sentence,
 )
 from src.services.life_event_classifier import classify_by_keywords
+
+ACTIVE_SCHEME_SEEDS = [
+    {
+        "id": scheme["id"],
+        "name": scheme["name"],
+        "name_hindi": scheme.get("name_hindi", scheme["name"]),
+    }
+    for scheme in json.loads(
+        (Path(__file__).resolve().parents[1] / "data" / "all_schemes.json").read_text()
+    )
+    if scheme.get("is_active", True)
+]
 
 
 def _make_scheme(
@@ -202,6 +218,50 @@ async def test_unlocked_previous_language_does_not_bias_english_turn() -> None:
 
 
 @pytest.mark.asyncio
+async def test_locked_hinglish_rewrites_hindi_llm_reply_into_hinglish() -> None:
+    """Locked Hinglish sessions should not leak Hindi-script LLM replies."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-hinglish-rewrite",
+            state=ConversationState.SITUATION_UNDERSTANDING,
+            language_preference="hinglish",
+            language_locked=True,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "answer_field",
+            "life_event": None,
+            "extracted_fields": {},
+            "language": "hi",
+            "selected_scheme_id": None,
+            "response_text": "मैं आपकी मदद कर सकता हूं। अपनी उम्र बताइए।",
+        }
+    )
+    mock_ai = AsyncMock()
+    mock_ai.generate_response = AsyncMock(
+        return_value="Main aapki madad kar sakta hoon. Apni age batayiye."
+    )
+
+    with patch(
+        "src.services.response_generator.get_ai_orchestrator",
+        return_value=mock_ai,
+    ):
+        result = await service.handle_message(
+            ChatRequest(user_id="user-hinglish-rewrite", message="Mujhe help chahiye")
+        )
+
+    assert result.language == "hinglish"
+    assert "Main aapki madad" in result.text
+    assert "मैं" not in result.text
+    assert mock_ai.generate_response.await_count == 1
+
+
+@pytest.mark.asyncio
 async def test_why_question_explains_and_reasks_same_field() -> None:
     """Why-style objections should explain the field instead of falling into a loop."""
     service = ConversationService(db_pool=AsyncMock())
@@ -329,12 +389,25 @@ async def test_detail_language_change_stays_in_details() -> None:
     )
 
     scheme = _make_scheme("SCH-1")
+    mock_ai = AsyncMock()
+    mock_ai.generate_response = AsyncMock(
+        return_value=(
+            "📋 योजना SCH-1\n\n"
+            "सत्यापन के लिए परीक्षण योजना विवरण।\n\n"
+            "💰 लाभ राशि: ₹2.5 लाख\n"
+            "✅ पात्रता: आयु: 18-∞ | अधिकतम आय: ₹5 लाख\n\n"
+            "अगला क्या देखें: दस्तावेज, अस्वीकृति चेतावनियाँ, या आवेदन प्रक्रिया?"
+        )
+    )
     with patch("src.services.conversation.scheme_repo.get_scheme_by_id", AsyncMock(return_value=scheme)), patch(
         "src.services.conversation.document_resolver.resolve_documents_for_scheme",
         AsyncMock(return_value=[]),
     ), patch(
         "src.services.conversation.rejection_engine.get_rejection_warnings",
         AsyncMock(return_value=[]),
+    ), patch(
+        "src.services.response_generator.get_ai_orchestrator",
+        return_value=mock_ai,
     ):
         result = await service.handle_message(
             ChatRequest(
@@ -1688,6 +1761,806 @@ def test_truncate_at_sentence_handles_hindi_danda() -> None:
     """Hindi descriptions should truncate at sentence boundaries instead of mid-thought."""
     text = "यह पहला वाक्य है। यह दूसरा वाक्य है जिसे बाद में काटना चाहिए।"
     assert _truncate_at_sentence(text, 25) == "यह पहला वाक्य है।"
+
+
+@pytest.mark.asyncio
+async def test_application_request_uses_step_by_step_guidance_when_steps_exist() -> None:
+    """Application-step asks should use `scheme.application_steps`, not only the offline summary."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-application-steps",
+            state=ConversationState.SCHEME_DETAILS,
+            user_profile=UserProfile(
+                life_event="HEALTH_CRISIS",
+                age=24,
+                annual_income=250000,
+            ),
+            selected_scheme_id="SCH-DAK",
+            language_preference="en",
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "request_application",
+            "life_event": None,
+            "extracted_fields": {},
+            "language": "en",
+            "selected_scheme_id": None,
+            "response_text": None,
+        }
+    )
+
+    scheme = _make_scheme(
+        "SCH-DAK",
+        life_event="HEALTH_CRISIS",
+        name="Delhi Arogya Kosh (DAK)",
+        name_hindi="दिल्ली आरोग्य कोष (डीएके)",
+    ).model_copy(
+        update={
+            "application_url": None,
+            "application_steps": [
+                "Step 1: Collect the DAK application form.",
+                "Step 2: Submit it in person with the required documents.",
+            ],
+            "offline_process": "Visit the Patient Welfare Cell with original documents.",
+        }
+    )
+
+    with patch(
+        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        AsyncMock(return_value=scheme),
+    ):
+        result = await service.handle_message(
+            ChatRequest(user_id="user-application-steps", message="application steps")
+        )
+
+    assert result.next_state == ConversationState.APPLICATION_HELP.value
+    assert "Step 1:" in result.text
+    assert "Step 2:" in result.text
+    assert "Patient Welfare Cell" in result.text
+
+
+@pytest.mark.asyncio
+async def test_application_help_followup_question_stays_on_answer_path() -> None:
+    """Question-shaped application follow-ups should not replay the same application card."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-application-loop",
+            state=ConversationState.APPLICATION_HELP,
+            user_profile=UserProfile(
+                life_event="HEALTH_CRISIS",
+                age=24,
+                annual_income=250000,
+            ),
+            selected_scheme_id="SCH-DAK",
+            language_preference="en",
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "request_application",
+            "life_event": None,
+            "extracted_fields": {},
+            "language": "en",
+            "selected_scheme_id": None,
+            "response_text": None,
+        }
+    )
+
+    scheme = _make_scheme(
+        "SCH-DAK",
+        life_event="HEALTH_CRISIS",
+        name="Delhi Arogya Kosh (DAK)",
+        name_hindi="दिल्ली आरोग्य कोष (डीएके)",
+    ).model_copy(
+        update={
+            "application_url": None,
+            "application_steps": [
+                "Step 1: Collect the DAK application form.",
+                "Step 2: Submit it in person with the required documents.",
+            ],
+            "offline_process": "Visit the Patient Welfare Cell with original documents.",
+        }
+    )
+
+    with patch(
+        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        AsyncMock(return_value=scheme),
+    ), patch(
+        "src.services.conversation.response_generator.generate_scheme_question_response",
+        AsyncMock(return_value="The first step is to collect the DAK application form."),
+    ) as answer_mock:
+        result = await service.handle_message(
+            ChatRequest(
+                user_id="user-application-loop",
+                message="What is the first application step?",
+            )
+        )
+
+    assert result.next_state == ConversationState.APPLICATION_HELP.value
+    assert "first step" in result.text.lower()
+    assert answer_mock.await_count == 1
+
+
+@pytest.mark.asyncio
+async def test_procedure_request_routes_to_application_help() -> None:
+    """Procedure/process wording should enter application help deterministically."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-procedure-route",
+            state=ConversationState.SCHEME_DETAILS,
+            user_profile=UserProfile(
+                life_event="BUSINESS_STARTUP",
+                age=25,
+                category="General",
+                annual_income=250000,
+            ),
+            selected_scheme_id="SCH-5",
+            language_preference="en",
+            language_locked=True,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": None,
+            "life_event": None,
+            "extracted_fields": {},
+            "language": "en",
+            "selected_scheme_id": None,
+            "response_text": None,
+        }
+    )
+
+    with patch(
+        "src.services.conversation._build_application_help_text",
+        AsyncMock(return_value="📝 How to Apply for Scheme SCH-5:\n\nStep 1: Submit the form."),
+    ), patch(
+        "src.services.conversation._build_scheme_details_text",
+        AsyncMock(return_value="Scheme details"),
+    ):
+        result = await service.handle_message(
+            ChatRequest(user_id="user-procedure-route", message="procedure")
+        )
+
+    assert result.next_state == ConversationState.APPLICATION_HELP.value
+    assert "How to Apply" in result.text
+
+
+@pytest.mark.asyncio
+async def test_rgsry_application_followup_ignores_echoed_active_scheme_selection() -> None:
+    """Echoed same-scheme selections must not replay RGSRY scheme details."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-rgsry-echoed-selection",
+            state=ConversationState.SCHEME_DETAILS,
+            user_profile=UserProfile(
+                life_event="JOB_LOSS",
+                age=24,
+                category="General",
+                annual_income=100000,
+            ),
+            selected_scheme_id="SCH-DELHI-005",
+            presented_schemes=[
+                {
+                    "id": "SCH-DELHI-005",
+                    "name": "Rajiv Gandhi Swavlamban Rojgar Yojana (RGSRY)",
+                    "name_hindi": "राजीव गांधी स्वावलंबन रोज़गार योजना (आरजीएसआरवाई)",
+                }
+            ],
+            language_preference="hinglish",
+            language_locked=True,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": None,
+            "life_event": None,
+            "extracted_fields": {},
+            "language": "hinglish",
+            "selected_scheme_id": "SCH-DELHI-005",
+            "response_text": None,
+        }
+    )
+
+    with patch(
+        "src.services.conversation._build_application_help_text",
+        AsyncMock(return_value="APP HELP"),
+    ) as application_mock, patch(
+        "src.services.conversation._build_scheme_details_text",
+        AsyncMock(return_value="DETAILS"),
+    ) as details_mock:
+        result = await service.handle_message(
+            ChatRequest(
+                user_id="user-rgsry-echoed-selection",
+                message="mujhe application steps dekhne hai",
+            )
+        )
+
+    assert result.next_state == ConversationState.APPLICATION_HELP.value
+    assert result.text == "APP HELP"
+    assert application_mock.await_count == 1
+    assert details_mock.await_count == 0
+
+
+@pytest.mark.asyncio
+async def test_locked_english_scheme_followup_rewrites_hindi_application_reply() -> None:
+    """Locked English sessions should rewrite stray Hindi scheme follow-up replies."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-english-scheme-rewrite",
+            state=ConversationState.SCHEME_DETAILS,
+            user_profile=UserProfile(
+                life_event="JOB_LOSS",
+                age=25,
+                category="General",
+                annual_income=250000,
+            ),
+            selected_scheme_id="SCH-5",
+            language_preference="en",
+            language_locked=True,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "request_application",
+            "life_event": None,
+            "extracted_fields": {},
+            "language": "hi",
+            "selected_scheme_id": None,
+            "response_text": None,
+        }
+    )
+    mock_ai = AsyncMock()
+    mock_ai.generate_response = AsyncMock(
+        return_value=(
+            "📝 How to Apply for Rajiv Gandhi Swavlamban Rojgar Yojana (RGSRY):\n\n"
+            "Step 1: Submit the application form."
+        )
+    )
+
+    with patch(
+        "src.services.conversation._build_application_help_text",
+        AsyncMock(
+            return_value=(
+                "📝 योजना के लिए आवेदन:\n\n"
+                "चरण 1: आवेदन पत्र जमा करें।"
+            )
+        ),
+    ), patch(
+        "src.services.response_generator.get_ai_orchestrator",
+        return_value=mock_ai,
+    ):
+        result = await service.handle_message(
+            ChatRequest(
+                user_id="user-english-scheme-rewrite",
+                message="I would like to see the application procedure for this scheme.",
+            )
+        )
+
+    assert result.next_state == ConversationState.APPLICATION_HELP.value
+    assert "How to Apply for Rajiv Gandhi Swavlamban Rojgar Yojana" in result.text
+    assert "चरण" not in result.text
+    assert mock_ai.generate_response.await_count == 1
+
+
+@pytest.mark.asyncio
+async def test_same_scheme_question_with_echoed_selection_stays_on_answer_path() -> None:
+    """Same-scheme question follow-ups should still use the answer path."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-rgsry-question-echo",
+            state=ConversationState.APPLICATION_HELP,
+            user_profile=UserProfile(
+                life_event="JOB_LOSS",
+                age=24,
+                category="General",
+                annual_income=100000,
+            ),
+            selected_scheme_id="SCH-DELHI-005",
+            presented_schemes=[
+                {
+                    "id": "SCH-DELHI-005",
+                    "name": "Rajiv Gandhi Swavlamban Rojgar Yojana (RGSRY)",
+                    "name_hindi": "राजीव गांधी स्वावलंबन रोज़गार योजना (आरजीएसआरवाई)",
+                }
+            ],
+            language_preference="en",
+            language_locked=True,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": None,
+            "life_event": None,
+            "extracted_fields": {},
+            "language": "en",
+            "selected_scheme_id": "SCH-DELHI-005",
+            "response_text": None,
+        }
+    )
+
+    with patch(
+        "src.services.conversation.response_generator.generate_scheme_question_response",
+        AsyncMock(return_value="The first step is to complete Part A."),
+    ) as answer_mock, patch(
+        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        AsyncMock(
+            return_value=_make_scheme(
+                "SCH-DELHI-005",
+                life_event="JOB_LOSS",
+                name="Rajiv Gandhi Swavlamban Rojgar Yojana (RGSRY)",
+                name_hindi="राजीव गांधी स्वावलंबन रोज़गार योजना (आरजीएसआरवाई)",
+            )
+        ),
+    ), patch(
+        "src.services.conversation._build_application_help_text",
+        AsyncMock(return_value="APP HELP"),
+    ) as application_mock:
+        result = await service.handle_message(
+            ChatRequest(
+                user_id="user-rgsry-question-echo",
+                message="What is the first application step?",
+            )
+        )
+
+    assert result.next_state == ConversationState.APPLICATION_HELP.value
+    assert "first step" in result.text.lower()
+    assert answer_mock.await_count == 1
+    assert application_mock.await_count == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("followup_text", "expected_state", "builder_name", "sentinel"),
+    [
+        (
+            "show the required documents",
+            ConversationState.DOCUMENT_GUIDANCE,
+            "_build_document_guidance_text",
+            "DOC HELP",
+        ),
+        (
+            "show rejection warnings",
+            ConversationState.REJECTION_WARNINGS,
+            "_build_rejection_warnings_text",
+            "REJECTION HELP",
+        ),
+        (
+            "show application steps",
+            ConversationState.APPLICATION_HELP,
+            "_build_application_help_text",
+            "APP HELP",
+        ),
+    ],
+    ids=["documents", "rejections", "application"],
+)
+@pytest.mark.parametrize(
+    "scheme_seed",
+    ACTIVE_SCHEME_SEEDS,
+    ids=[seed["id"] for seed in ACTIVE_SCHEME_SEEDS],
+)
+async def test_same_scheme_followup_routing_works_for_every_active_scheme(
+    scheme_seed: dict[str, str],
+    followup_text: str,
+    expected_state: ConversationState,
+    builder_name: str,
+    sentinel: str,
+) -> None:
+    """Every active scheme should honor explicit subview asks despite echoed selection ids."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id=f"user-{scheme_seed['id']}-{expected_state.value}",
+            state=ConversationState.SCHEME_DETAILS,
+            user_profile=UserProfile(
+                life_event="JOB_LOSS",
+                age=24,
+                category="General",
+                annual_income=100000,
+            ),
+            selected_scheme_id=scheme_seed["id"],
+            presented_schemes=[scheme_seed],
+            language_preference="en",
+            language_locked=True,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": None,
+            "life_event": None,
+            "extracted_fields": {},
+            "language": "en",
+            "selected_scheme_id": scheme_seed["id"],
+            "response_text": None,
+        }
+    )
+
+    patch_targets = {
+        "_build_document_guidance_text": AsyncMock(return_value="DOC HELP"),
+        "_build_rejection_warnings_text": AsyncMock(return_value="REJECTION HELP"),
+        "_build_application_help_text": AsyncMock(return_value="APP HELP"),
+        "_build_scheme_details_text": AsyncMock(return_value="DETAILS"),
+    }
+
+    with patch(
+        "src.services.conversation._build_document_guidance_text",
+        patch_targets["_build_document_guidance_text"],
+    ), patch(
+        "src.services.conversation._build_rejection_warnings_text",
+        patch_targets["_build_rejection_warnings_text"],
+    ), patch(
+        "src.services.conversation._build_application_help_text",
+        patch_targets["_build_application_help_text"],
+    ), patch(
+        "src.services.conversation._build_scheme_details_text",
+        patch_targets["_build_scheme_details_text"],
+    ):
+        result = await service.handle_message(
+            ChatRequest(
+                user_id=f"user-{scheme_seed['id']}-{expected_state.value}",
+                message=followup_text,
+            )
+        )
+
+    assert result.next_state == expected_state.value
+    assert result.text == sentinel
+    assert patch_targets[builder_name].await_count == 1
+    assert patch_targets["_build_scheme_details_text"].await_count == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "scheme_seed",
+    ACTIVE_SCHEME_SEEDS,
+    ids=[f"{seed['id']}-rejection-question" for seed in ACTIVE_SCHEME_SEEDS],
+)
+async def test_rejection_followup_question_stays_on_answer_path_for_every_active_scheme(
+    scheme_seed: dict[str, str],
+) -> None:
+    """Every active scheme should keep rejection follow-up questions on the answer path."""
+    store = get_session_store()
+    user_id = f"user-{scheme_seed['id']}-rejection-question"
+    await store.save(
+        Session(
+            user_id=user_id,
+            state=ConversationState.REJECTION_WARNINGS,
+            user_profile=UserProfile(
+                life_event="JOB_LOSS",
+                age=24,
+                category="General",
+                annual_income=100000,
+            ),
+            selected_scheme_id=scheme_seed["id"],
+            presented_schemes=[scheme_seed],
+            language_preference="en",
+            language_locked=True,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": None,
+            "life_event": None,
+            "extracted_fields": {},
+            "language": "en",
+            "selected_scheme_id": scheme_seed["id"],
+            "response_text": None,
+        }
+    )
+
+    with patch(
+        "src.services.conversation.response_generator.generate_scheme_question_response",
+        AsyncMock(return_value="The top rejection risk is incomplete or inconsistent information."),
+    ) as answer_mock, patch(
+        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        AsyncMock(
+            return_value=_make_scheme(
+                scheme_seed["id"],
+                life_event="JOB_LOSS",
+                name=scheme_seed["name"],
+                name_hindi=scheme_seed["name_hindi"],
+            )
+        ),
+    ), patch(
+        "src.services.conversation._build_rejection_warnings_text",
+        AsyncMock(return_value="REJECTION CARD"),
+    ) as warnings_mock:
+        result = await service.handle_message(
+            ChatRequest(
+                user_id=user_id,
+                message="Which rejection risk should I be most careful about?",
+            )
+        )
+
+    assert result.next_state == ConversationState.REJECTION_WARNINGS.value
+    assert "rejection risk" in result.text.lower()
+    assert answer_mock.await_count == 1
+    assert warnings_mock.await_count == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "scheme_seed",
+    ACTIVE_SCHEME_SEEDS,
+    ids=[f"{seed['id']}-affirmative" for seed in ACTIVE_SCHEME_SEEDS],
+)
+async def test_affirmative_rejection_followup_enters_application_help_for_every_active_scheme(
+    scheme_seed: dict[str, str],
+) -> None:
+    """Every active scheme should allow a short affirmative reply to move into application help."""
+    store = get_session_store()
+    user_id = f"user-{scheme_seed['id']}-affirmative"
+    await store.save(
+        Session(
+            user_id=user_id,
+            state=ConversationState.REJECTION_WARNINGS,
+            user_profile=UserProfile(
+                life_event="JOB_LOSS",
+                age=24,
+                category="General",
+                annual_income=100000,
+            ),
+            selected_scheme_id=scheme_seed["id"],
+            presented_schemes=[scheme_seed],
+            language_preference="en",
+            language_locked=True,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": None,
+            "life_event": None,
+            "extracted_fields": {},
+            "language": "en",
+            "selected_scheme_id": scheme_seed["id"],
+            "response_text": None,
+        }
+    )
+
+    with patch(
+        "src.services.conversation._build_application_help_text",
+        AsyncMock(return_value="APP HELP"),
+    ) as application_mock, patch(
+        "src.services.conversation._build_rejection_warnings_text",
+        AsyncMock(return_value="REJECTION CARD"),
+    ) as warnings_mock:
+        result = await service.handle_message(
+            ChatRequest(user_id=user_id, message="yes")
+        )
+
+    assert result.next_state == ConversationState.APPLICATION_HELP.value
+    assert result.text == "APP HELP"
+    assert application_mock.await_count == 1
+    assert warnings_mock.await_count == 0
+
+
+@pytest.mark.asyncio
+async def test_hindi_document_guidance_translates_english_document_fields() -> None:
+    """Hindi document guidance should not leak raw English document metadata."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-doc-hindi",
+            state=ConversationState.SCHEME_DETAILS,
+            user_profile=UserProfile(
+                life_event="HEALTH_CRISIS",
+                age=24,
+                annual_income=250000,
+            ),
+            selected_scheme_id="SCH-DAK",
+            language_preference="hi",
+            language_locked=True,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "request_details",
+            "life_event": None,
+            "extracted_fields": {},
+            "language": "hi",
+            "selected_scheme_id": None,
+            "response_text": None,
+        }
+    )
+
+    scheme = _make_scheme(
+        "SCH-DAK",
+        life_event="HEALTH_CRISIS",
+        name="Delhi Arogya Kosh (DAK)",
+        name_hindi="दिल्ली आरोग्य कोष (डीएके)",
+    ).model_copy(update={"documents_required": ["DOC-INCOME"]})
+    document_chain = DocumentChain(
+        document=Document(
+            id="DOC-INCOME",
+            name="Income Certificate",
+            name_hindi="आय प्रमाण पत्र",
+            issuing_authority="District Office",
+            online_portal=None,
+            prerequisites=[],
+            fee=None,
+            fee_bpl=None,
+            processing_time="7 days",
+            validity_period=None,
+            format_requirements=[],
+            common_mistakes=[],
+            delhi_offices=[],
+        ),
+        prerequisites=[],
+        depth=0,
+    )
+    mock_ai = AsyncMock()
+    mock_ai.generate_response = AsyncMock(
+        return_value=(
+            "📄 दिल्ली आरोग्य कोष (डीएके) के दस्तावेज:\n\n"
+            "1. आय प्रमाण पत्र\n"
+            "   🏛️ कहाँ से: जिला कार्यालय\n"
+            "   📋 समय: 7 दिन\n\n"
+            "अगर चाहें तो मैं common rejection warnings भी बता सकता हूँ।"
+        )
+    )
+
+    with patch(
+        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        AsyncMock(return_value=scheme),
+    ), patch(
+        "src.services.conversation.document_resolver.resolve_documents_for_scheme",
+        AsyncMock(return_value=[document_chain]),
+    ), patch(
+        "src.services.response_generator.get_ai_orchestrator",
+        return_value=mock_ai,
+    ):
+        result = await service.handle_message(
+            ChatRequest(user_id="user-doc-hindi", message="दस्तावेज")
+        )
+
+    assert result.next_state == ConversationState.DOCUMENT_GUIDANCE.value
+    assert "जिला कार्यालय" in result.text
+    assert "District Office" not in result.text
+    assert mock_ai.generate_response.await_count == 1
+
+
+@pytest.mark.asyncio
+async def test_document_guidance_followup_question_stays_on_answer_path() -> None:
+    """Question-shaped document follow-ups should not replay the full document list."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-document-loop",
+            state=ConversationState.DOCUMENT_GUIDANCE,
+            user_profile=UserProfile(
+                life_event="HEALTH_CRISIS",
+                age=24,
+                annual_income=250000,
+            ),
+            selected_scheme_id="SCH-DAK",
+            language_preference="en",
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "request_details",
+            "life_event": None,
+            "extracted_fields": {},
+            "language": "en",
+            "selected_scheme_id": None,
+            "response_text": None,
+        }
+    )
+
+    with patch(
+        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        AsyncMock(return_value=_make_scheme("SCH-DAK", life_event="HEALTH_CRISIS")),
+    ), patch(
+        "src.services.conversation.response_generator.generate_scheme_question_response",
+        AsyncMock(return_value="The affidavit / self-declaration is the document that needs two witnesses."),
+    ) as answer_mock:
+        result = await service.handle_message(
+            ChatRequest(
+                user_id="user-document-loop",
+                message="Which document needs two witnesses?",
+            )
+        )
+
+    assert result.next_state == ConversationState.DOCUMENT_GUIDANCE.value
+    assert "two witnesses" in result.text.lower()
+    assert answer_mock.await_count == 1
+
+
+@pytest.mark.asyncio
+async def test_hindi_rejection_guidance_prefers_hindi_rule_content() -> None:
+    """Hindi rejection warnings should prefer Hindi rule content over English prevention tips."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-rejection-hi",
+            state=ConversationState.SCHEME_DETAILS,
+            user_profile=UserProfile(
+                life_event="HEALTH_CRISIS",
+                age=24,
+                annual_income=250000,
+            ),
+            selected_scheme_id="SCH-DAK",
+            language_preference="hi",
+            language_locked=True,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "request_details",
+            "life_event": None,
+            "extracted_fields": {},
+            "language": "hi",
+            "selected_scheme_id": None,
+            "response_text": None,
+        }
+    )
+
+    warning = RejectionRule(
+        id="RULE-DAK-001",
+        scheme_id="SCH-DAK",
+        rule_type="procedural",
+        description="Application will be rejected if documents are incomplete.",
+        description_hindi="यदि दस्तावेज अधूरे हैं तो आवेदन अस्वीकार हो जाएगा।",
+        severity="critical",
+        prevention_tip="Bring every document together at submission time.",
+        examples=[],
+    )
+
+    with patch(
+        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        AsyncMock(return_value=_make_scheme("SCH-DAK", life_event="HEALTH_CRISIS")),
+    ), patch(
+        "src.services.conversation.rejection_engine.get_rejection_warnings",
+        AsyncMock(return_value=[warning]),
+    ):
+        result = await service.handle_message(
+            ChatRequest(user_id="user-rejection-hi", message="rejection warnings")
+        )
+
+    assert result.next_state == ConversationState.REJECTION_WARNINGS.value
+    assert "यदि दस्तावेज अधूरे हैं" in result.text
+    assert "Bring every document together" not in result.text
 
 
 @pytest.mark.asyncio

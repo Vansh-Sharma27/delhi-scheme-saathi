@@ -162,6 +162,23 @@ REJECTION_REQUEST_PATTERNS = (
     r"रिजेक्शन",
     r"गलती",
 )
+APPLICATION_REQUEST_PATTERNS = (
+    r"\bapply\b",
+    r"\bapplication\b",
+    r"\bapplication steps?\b",
+    r"\bapplication process\b",
+    r"\bapplication procedure\b",
+    r"\bprocedure\b",
+    r"\bprocess\b",
+    r"\bhow to apply\b",
+    r"\bhow do i apply\b",
+    r"\bsteps?\b",
+    r"अवेदन",
+    r"आवेदन",
+    r"आवेदन प्रक्रिया",
+    r"प्रक्रिया",
+    r"कदम",
+)
 SCHEME_LIST_PATTERNS = (
     r"\bshow .*scheme list\b",
     r"\bshow .*options\b",
@@ -373,11 +390,44 @@ def _looks_like_scheme_question(text: str) -> bool:
     return any(re.search(pattern, text_lower) for pattern in SCHEME_QUESTION_PATTERNS)
 
 
+def _is_navigation_only_scheme_followup(text: str) -> bool:
+    """Return True for short view-switch commands, not substantive follow-up questions."""
+    stripped = text.strip()
+    if not stripped or "?" in stripped:
+        return False
+
+    token_count = len(re.findall(r"[A-Za-z0-9\u0900-\u097F]+", stripped))
+    if token_count > 4:
+        return False
+
+    return _matches_any_pattern(
+        stripped,
+        DOCUMENT_REQUEST_PATTERNS
+        + REJECTION_REQUEST_PATTERNS
+        + APPLICATION_REQUEST_PATTERNS,
+    )
+
+
+def _resolved_scheme_matches_active_scheme(
+    current_state: ConversationState,
+    resolved_scheme_id: str | None,
+    active_scheme_id: str | None,
+) -> bool:
+    """Return True when a resolved scheme only repeats the already-open scheme."""
+    return bool(
+        resolved_scheme_id
+        and active_scheme_id
+        and resolved_scheme_id == active_scheme_id
+        and current_state in SCHEME_CONTEXT_STATES
+    )
+
+
 def _should_answer_scheme_question(
     text: str,
     current_state: ConversationState,
     action: str | None,
     resolved_scheme_id: str | None,
+    active_scheme_id: str | None,
     has_scheme_context: bool,
 ) -> bool:
     """Detect scheme follow-up questions that deserve an answer, not a card replay."""
@@ -385,8 +435,22 @@ def _should_answer_scheme_question(
         return False
     if not has_scheme_context:
         return False
-    if resolved_scheme_id:
+    if resolved_scheme_id and not _resolved_scheme_matches_active_scheme(
+        current_state,
+        resolved_scheme_id,
+        active_scheme_id,
+    ):
         return False
+    if (
+        current_state in {
+            ConversationState.DOCUMENT_GUIDANCE,
+            ConversationState.REJECTION_WARNINGS,
+            ConversationState.APPLICATION_HELP,
+        }
+        and _looks_like_scheme_question(text)
+        and not _is_navigation_only_scheme_followup(text)
+    ):
+        return True
     if action in {
         "start_over",
         "goodbye",
@@ -449,6 +513,7 @@ def _detect_action_override(
     current_state: ConversationState,
     currently_asking: str | None,
     resolved_scheme_id: str | None,
+    active_scheme_id: str | None,
 ) -> str | None:
     """Infer high-signal actions deterministically."""
     text_lower = text.lower().strip()
@@ -466,19 +531,28 @@ def _detect_action_override(
         return "clarify_field"
     if _wants_to_skip(text):
         return "skip_field"
-    if resolved_scheme_id:
+    if re.search(r"\b(apply|application|apply kar|apply kare|अवेदन|आवेदन)\b", text_lower):
+        return "request_application"
+    if current_state in SCHEME_CONTEXT_STATES and _matches_any_pattern(
+        text_lower,
+        APPLICATION_REQUEST_PATTERNS,
+    ):
+        return "request_application"
+    if re.search(r"\b(csc|human help|service center|service centre|nearest center|operator|contact center)\b", text_lower):
+        return "request_handoff"
+    if re.search(r"\b(detail|details|document|documents|eligibility|benefit|explain|translate|translation)\b", text_lower):
+        return "request_details"
+    if resolved_scheme_id and not _resolved_scheme_matches_active_scheme(
+        current_state,
+        resolved_scheme_id,
+        active_scheme_id,
+    ):
         return "switch_scheme" if current_state in {
             ConversationState.SCHEME_DETAILS,
             ConversationState.DOCUMENT_GUIDANCE,
             ConversationState.REJECTION_WARNINGS,
             ConversationState.APPLICATION_HELP,
         } else "select_scheme"
-    if re.search(r"\b(apply|application|apply kar|apply kare|अवेदन|आवेदन)\b", text_lower):
-        return "request_application"
-    if re.search(r"\b(csc|human help|service center|service centre|nearest center|operator|contact center)\b", text_lower):
-        return "request_handoff"
-    if re.search(r"\b(detail|details|document|documents|eligibility|benefit|explain|translate|translation)\b", text_lower):
-        return "request_details"
     return None
 
 
@@ -498,31 +572,38 @@ def _requested_scheme_view(
     current_state: ConversationState,
     has_selected_scheme: bool,
     resolved_scheme_id: str | None,
+    active_scheme_id: str | None,
 ) -> ConversationState | None:
     """Resolve scheme-area navigation within the 10-state FSM."""
+    same_active_scheme = _resolved_scheme_matches_active_scheme(
+        current_state,
+        resolved_scheme_id,
+        active_scheme_id,
+    )
     if _wants_scheme_list_again(text):
         return ConversationState.SCHEME_PRESENTATION
     if action == "request_handoff":
         return ConversationState.CSC_HANDOFF
-    if action == "request_application":
+    if action == "request_application" or _matches_any_pattern(text, APPLICATION_REQUEST_PATTERNS):
         return ConversationState.APPLICATION_HELP
+    if _matches_any_pattern(text, DOCUMENT_REQUEST_PATTERNS):
+        return ConversationState.DOCUMENT_GUIDANCE
+    if _matches_any_pattern(text, REJECTION_REQUEST_PATTERNS):
+        return ConversationState.REJECTION_WARNINGS
     if action == "answer_scheme_question":
         return (
             current_state
             if current_state in SCHEME_CONTEXT_STATES
             else ConversationState.SCHEME_DETAILS
         )
-    if action in {"select_scheme", "switch_scheme"} or resolved_scheme_id:
+    if action == "request_details" or _matches_any_pattern(text, JUSTIFICATION_PATTERNS):
+        return ConversationState.SCHEME_DETAILS
+    if action in {"select_scheme", "switch_scheme"} or (
+        resolved_scheme_id and not same_active_scheme
+    ):
         return ConversationState.SCHEME_DETAILS
     if not has_selected_scheme and current_state not in {ConversationState.SCHEME_PRESENTATION, ConversationState.CSC_HANDOFF}:
         return None
-
-    if _matches_any_pattern(text, DOCUMENT_REQUEST_PATTERNS):
-        return ConversationState.DOCUMENT_GUIDANCE
-    if _matches_any_pattern(text, REJECTION_REQUEST_PATTERNS):
-        return ConversationState.REJECTION_WARNINGS
-    if action == "request_details" or _matches_any_pattern(text, JUSTIFICATION_PATTERNS):
-        return ConversationState.SCHEME_DETAILS
     return None
 
 
@@ -922,7 +1003,7 @@ async def _build_scheme_details_text(
     lines.append(
         _text_variant(
             language,
-            "अगला क्या देखें: दस्तावेज, rejection warnings, या आवेदन प्रक्रिया?",
+            "अगला क्या देखें: दस्तावेज, अस्वीकृति चेतावनियाँ, या आवेदन प्रक्रिया?",
             "What would you like next: documents, rejection warnings, or application steps?",
             "Aage kya dekhna hai: documents, rejection warnings, ya application steps?",
         )
@@ -932,6 +1013,7 @@ async def _build_scheme_details_text(
 
 async def _build_document_guidance_text(
     pool: asyncpg.Pool,
+    session: Session,
     scheme_id: str,
     language: str,
 ) -> str:
@@ -974,12 +1056,17 @@ async def _build_document_guidance_text(
     lines.append(
         _text_variant(
             language,
-            "अगर चाहें तो मैं common rejection warnings भी बता सकता हूँ।",
+            "अगर चाहें तो मैं सामान्य अस्वीकृति चेतावनियाँ भी बता सकता हूँ।",
             "If you want, I can also show the common rejection warnings.",
             "Agar chahein to main common rejection warnings bhi bata sakta hoon.",
         )
     )
-    return "\n".join(lines)
+    draft = "\n".join(lines)
+    return await response_generator.translate_grounded_text_if_needed(
+        session,
+        draft,
+        language,
+    )
 
 
 async def _build_rejection_warnings_text(
@@ -996,22 +1083,30 @@ async def _build_rejection_warnings_text(
     warnings = await rejection_engine.get_rejection_warnings(pool, scheme_id, profile)
     header = _text_variant(
         language,
-        f"⚠️ {scheme.name_hindi} की rejection warnings:",
+        f"⚠️ {scheme.name_hindi} की अस्वीकृति चेतावनियाँ:",
         f"⚠️ Rejection warnings for {scheme.name}:",
         f"⚠️ {scheme.name} ki rejection warnings:",
     )
     lines = [header, ""]
 
     if not warnings:
-        lines.append(_text_variant(language, "फिलहाल rejection warnings उपलब्ध नहीं हैं।", "No rejection warnings are available right now.", "Abhi rejection warnings available nahi hain."))
+        lines.append(
+            _text_variant(
+                language,
+                "फिलहाल अस्वीकृति चेतावनियाँ उपलब्ध नहीं हैं।",
+                "No rejection warnings are available right now.",
+                "Abhi rejection warnings available nahi hain.",
+            )
+        )
         return "\n".join(lines)
 
     severity_icons = {"critical": "🔴", "high": "🟠", "warning": "🟡"}
     for rule in sorted(warnings[:5], key=lambda rule: rule.severity_order):
         icon = severity_icons.get(rule.severity, "⚠️")
-        tip = rule.prevention_tip or (
-            rule.description_hindi if language == "hi" else rule.description
-        )
+        if language == "hi":
+            tip = rule.description_hindi or rule.description
+        else:
+            tip = rule.prevention_tip or rule.description
         lines.append(f"{icon} {_truncate_at_sentence(tip, 220)}")
     lines.append("")
     lines.append(
@@ -1027,6 +1122,7 @@ async def _build_rejection_warnings_text(
 
 async def _build_application_help_text(
     pool: asyncpg.Pool,
+    session: Session,
     scheme_id: str,
     language: str,
 ) -> str:
@@ -1035,10 +1131,19 @@ async def _build_application_help_text(
     if not scheme:
         return _text_variant(language, "योजना नहीं मिली।", "Scheme not found.", "Scheme nahi mili.")
 
-    return response_generator.generate_application_guidance(
+    helpline_phone = scheme.helpline.phone if scheme.helpline else None
+    draft = response_generator.generate_application_guidance(
         scheme.name_hindi if language == "hi" else scheme.name,
         scheme.application_url,
         scheme.offline_process,
+        application_steps=scheme.application_steps,
+        processing_time=scheme.processing_time,
+        helpline_phone=helpline_phone,
+        language=language,
+    )
+    return await response_generator.translate_grounded_text_if_needed(
+        session,
+        draft,
         language,
     )
 
@@ -1410,6 +1515,7 @@ class ConversationService:
         if state == ConversationState.DOCUMENT_GUIDANCE and session.selected_scheme_id:
             return await _build_document_guidance_text(
                 self.pool,
+                session,
                 session.selected_scheme_id,
                 language,
             ), None
@@ -1425,6 +1531,7 @@ class ConversationService:
         if state == ConversationState.APPLICATION_HELP and session.selected_scheme_id:
             return await _build_application_help_text(
                 self.pool,
+                session,
                 session.selected_scheme_id,
                 language,
             ), None
@@ -1552,6 +1659,7 @@ class ConversationService:
             session.state,
             session.currently_asking,
             resolved_scheme_id,
+            session.selected_scheme_id,
         ) or llm_action
         has_scheme_context = bool(
             resolved_scheme_id
@@ -1563,6 +1671,7 @@ class ConversationService:
             session.state,
             action,
             resolved_scheme_id,
+            session.selected_scheme_id,
             has_scheme_context,
         ):
             action = "answer_scheme_question"
@@ -1724,6 +1833,7 @@ class ConversationService:
             session.state,
             has_selected_scheme=bool(session.selected_scheme_id),
             resolved_scheme_id=resolved_scheme_id,
+            active_scheme_id=session.selected_scheme_id,
         )
         next_state = fsm.determine_next_state(
             current_state=session.state,
@@ -2028,6 +2138,7 @@ class ConversationService:
                     next_state = ConversationState.DOCUMENT_GUIDANCE
                     response_text = await _build_document_guidance_text(
                         self.pool,
+                        session,
                         scheme_id,
                         lang,
                     )
@@ -2045,6 +2156,7 @@ class ConversationService:
                     next_state = ConversationState.APPLICATION_HELP
                     response_text = await _build_application_help_text(
                         self.pool,
+                        session,
                         scheme_id,
                         lang,
                     )
@@ -2130,6 +2242,7 @@ class ConversationService:
                     else:
                         response_text = await _build_document_guidance_text(
                             self.pool,
+                            session,
                             scheme_id,
                             lang,
                         )
@@ -2202,6 +2315,7 @@ class ConversationService:
                     else:
                         response_text = await _build_application_help_text(
                             self.pool,
+                            session,
                             scheme_id,
                             lang,
                         )
@@ -2216,6 +2330,12 @@ class ConversationService:
 
             case _:
                 response_text = response_generator.generate_greeting_response(lang)
+
+        response_text = await response_generator.ensure_response_language(
+            session,
+            response_text,
+            lang,
+        )
 
         # 7. Update session state and save
         session = session_manager.update_state(session, next_state)
@@ -2377,6 +2497,11 @@ class ConversationService:
                 + "\n\n"
                 + state_text
             )
+            response_text = await response_generator.ensure_response_language(
+                session,
+                response_text,
+                requested_language,
+            )
 
             session = await session_manager.add_message(session, "assistant", response_text)
             await session_manager.save_session(session)
@@ -2398,6 +2523,11 @@ class ConversationService:
             # Build scheme overview response
             response_text = await _build_scheme_details_text(
                 self.pool, scheme_id, session.user_profile, lang
+            )
+            response_text = await response_generator.ensure_response_language(
+                session,
+                response_text,
+                lang,
             )
 
             # Save session

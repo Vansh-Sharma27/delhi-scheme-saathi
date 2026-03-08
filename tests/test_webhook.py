@@ -269,6 +269,92 @@ class TestVoiceMessageHandling:
         )
 
     @pytest.mark.asyncio
+    async def test_voice_echo_uses_locked_hindi_prefix_even_for_english_transcript(self):
+        """Locked Hindi sessions should keep the Hindi echo prefix."""
+        from src.webhook.handler import _handle_voice_message
+
+        update = TelegramUpdate(
+            update_id=11,
+            message={
+                "message_id": 1,
+                "chat": {"id": 12345, "type": "private"},
+                "from": {"id": 67890, "first_name": "Test"},
+                "voice": {"file_id": "voice_123", "duration": 3},
+            },
+        )
+        mock_telegram = AsyncMock()
+        mock_telegram.download_voice = AsyncMock(return_value=b"audio data")
+        mock_voice_client = MagicMock()
+        mock_voice_client.api_key = "test-key"
+        mock_voice_client.speech_to_text = AsyncMock(
+            side_effect=[
+                STTResult(text="General", confidence=0.72, language="en"),
+                STTResult(text="General", confidence=0.86, language="en"),
+            ]
+        )
+        session = type(
+            "VoiceSession",
+            (),
+            {"language_preference": "hi", "language_locked": True},
+        )()
+
+        with patch(
+            "src.webhook.handler.get_telegram_client", return_value=mock_telegram
+        ), patch(
+            "src.webhook.handler._get_voice_client", return_value=mock_voice_client
+        ):
+            result = await _handle_voice_message(update, "12345", session)
+
+        assert result == "General"
+        mock_telegram.send_text.assert_called_once_with(
+            "12345",
+            "आपने कहा: General",
+        )
+
+    @pytest.mark.asyncio
+    async def test_voice_echo_uses_locked_hinglish_prefix_even_for_english_transcript(self):
+        """Locked Hinglish sessions should keep the Hinglish echo prefix."""
+        from src.webhook.handler import _handle_voice_message
+
+        update = TelegramUpdate(
+            update_id=12,
+            message={
+                "message_id": 1,
+                "chat": {"id": 12345, "type": "private"},
+                "from": {"id": 67890, "first_name": "Test"},
+                "voice": {"file_id": "voice_123", "duration": 3},
+            },
+        )
+        mock_telegram = AsyncMock()
+        mock_telegram.download_voice = AsyncMock(return_value=b"audio data")
+        mock_voice_client = MagicMock()
+        mock_voice_client.api_key = "test-key"
+        mock_voice_client.speech_to_text = AsyncMock(
+            side_effect=[
+                STTResult(text="I need application steps", confidence=0.7, language="en"),
+                STTResult(text="I need application steps", confidence=0.84, language="en"),
+            ]
+        )
+        session = type(
+            "VoiceSession",
+            (),
+            {"language_preference": "hinglish", "language_locked": True},
+        )()
+
+        with patch(
+            "src.webhook.handler.get_telegram_client", return_value=mock_telegram
+        ), patch(
+            "src.webhook.handler._get_voice_client", return_value=mock_voice_client
+        ):
+            result = await _handle_voice_message(update, "12345", session)
+
+        assert result == "I need application steps"
+        mock_telegram.send_text.assert_called_once_with(
+            "12345",
+            "Aapne kaha: I need application steps",
+        )
+
+    @pytest.mark.asyncio
     async def test_unlocked_hindi_history_does_not_bias_voice_probe_order(self):
         """Unlocked prior language should not force Hindi-first STT."""
         from src.webhook.handler import _handle_voice_message
