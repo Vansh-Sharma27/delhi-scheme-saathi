@@ -160,13 +160,26 @@ class SarvamClient:
             logger.debug(f"Sarvam STT response: {result}")
 
             transcript = result.get("transcript", "")
-            # Use language_probability as confidence if available
-            confidence = result.get("language_probability", 0.8)
+            confidence = result.get("transcript_confidence")
+            if confidence is None:
+                confidence = result.get("confidence")
+            if confidence is None:
+                confidence = 1.0 if transcript else 0.0
+
+            detected_language = (
+                result.get("language_code")
+                or result.get("detected_language")
+                or source_lang
+            )
+            if isinstance(detected_language, str):
+                detected_language = detected_language.split("-")[0].lower()
+            else:
+                detected_language = source_lang
 
             return STTResult(
                 text=transcript,
-                confidence=confidence if isinstance(confidence, float) else 0.8,
-                language=source_lang,
+                confidence=float(confidence) if isinstance(confidence, (int, float)) else 0.8,
+                language=detected_language,
             )
 
         except httpx.HTTPError as e:

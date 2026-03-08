@@ -3,10 +3,9 @@
 import asyncio
 import os
 import sys
-from typing import AsyncGenerator, Generator
+from collections.abc import Generator
 
 import pytest
-import pytest_asyncio
 
 # Add src to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -17,6 +16,8 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     """Create event loop for async tests."""
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
+    loop.run_until_complete(loop.shutdown_asyncgens())
+    loop.run_until_complete(loop.shutdown_default_executor())
     loop.close()
 
 

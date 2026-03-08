@@ -54,6 +54,7 @@ curl -sS -X POST "$API/api/chat" -H "Content-Type: application/json" -d '{"user_
 
 - SAM deployment blockers (template path, API Gateway logging role, reserved env var, rollback workflow)
 - Lambda runtime startup (`Mangum` lifespan)
+- Automatic SQS + worker Lambda deployment for async working-memory refresh jobs
 - Bedrock model/profile configuration and IAM scope
 - DynamoDB datetime serialization crash
 - LLM fallback reliability (Bedrock -> Grok)

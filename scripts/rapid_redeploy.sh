@@ -15,6 +15,8 @@ Options:
   --region <region>    AWS region (default: ap-south-1)
   --profile <name>     AWS profile (default: AWS_PROFILE / AWS_DEFAULT_PROFILE)
   --config-env <env>   samconfig environment (default: default)
+  --sync-db            Re-sync bundled scheme/document seed data into DATABASE_URL
+  --database-url <url> Database URL to use with --sync-db (falls back to env/.env)
   --table-name <name>  DynamoDB table name (optional; auto-resolved from stack output)
   --skip-build         Skip `sam build`
   --skip-deploy        Skip `sam deploy`
@@ -76,12 +78,66 @@ stack_exists() {
     >/dev/null 2>&1
 }
 
+load_env_file() {
+  local env_file="$1"
+  if [[ -f "${env_file}" ]]; then
+    # shellcheck disable=SC1090
+    set -a && source "${env_file}" && set +a
+  fi
+}
+
+normalize_database_url() {
+  local value="${1-}"
+  value="${value#\"}"
+  value="${value%\"}"
+  value="${value#\'}"
+  value="${value%\'}"
+  printf '%s' "${value}"
+}
+
+valid_database_url() {
+  local value
+  value="$(normalize_database_url "${1-}")"
+  [[ "${value}" =~ ^postgres(ql)?:// ]] && [[ "${value}" != *"@http://"* ]] && [[ "${value}" != *"@https://"* ]]
+}
+
+is_local_database_url() {
+  local value
+  value="$(normalize_database_url "${1-}")"
+  [[ "${value}" =~ ^postgres(ql)?://[^@]+@(localhost|127\.0\.0\.1)(:[0-9]+)?/ ]]
+}
+
+resolve_lambda_function_name() {
+  aws cloudformation describe-stack-resources \
+    --stack-name "${STACK_NAME}" \
+    --region "${REGION}" \
+    --logical-resource-id "DelhiSchemeSaathiFunction" \
+    --query "StackResources[0].PhysicalResourceId" \
+    --output text
+}
+
+resolve_database_url_from_lambda() {
+  local function_name
+  function_name="$(resolve_lambda_function_name)"
+  if [[ -z "${function_name}" || "${function_name}" == "None" ]]; then
+    return 1
+  fi
+
+  aws lambda get-function-configuration \
+    --function-name "${function_name}" \
+    --region "${REGION}" \
+    --query "Environment.Variables.DATABASE_URL" \
+    --output text
+}
+
 STACK_NAME=""
 REGION=""
 PROFILE=""
 CONFIG_ENV=""
+DATABASE_URL_ARG=""
 TABLE_NAME=""
 USER_ID="${TG_USER_ID:-}"
+SYNC_DB=0
 SKIP_BUILD=0
 SKIP_DEPLOY=0
 NO_CLEAN=0
@@ -112,6 +168,15 @@ while [[ $# -gt 0 ]]; do
     --config-env)
       require_arg "$1" "${2-}"
       CONFIG_ENV="${2:-}"
+      shift 2
+      ;;
+    --sync-db)
+      SYNC_DB=1
+      shift
+      ;;
+    --database-url)
+      require_arg "$1" "${2-}"
+      DATABASE_URL_ARG="${2:-}"
       shift 2
       ;;
     --table-name)
@@ -156,6 +221,13 @@ fi
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${PROJECT_ROOT}"
 
+BOT_SCRIPT_PYTHON=""
+if [[ -x ".venv/bin/python" ]]; then
+  BOT_SCRIPT_PYTHON="./.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+  BOT_SCRIPT_PYTHON="python3"
+fi
+
 STACK_NAME="${STACK_NAME:-delhi-scheme-saathi}"
 REGION="${REGION:-${AWS_REGION:-${AWS_DEFAULT_REGION:-ap-south-1}}}"
 PROFILE="${PROFILE:-${AWS_PROFILE:-${AWS_DEFAULT_PROFILE:-}}}"
@@ -179,6 +251,14 @@ if [[ "${SKIP_BUILD}" -eq 0 || "${SKIP_DEPLOY}" -eq 0 ]]; then
   require_command "sam" "Install AWS SAM CLI and ensure it is on PATH."
 fi
 require_command "aws" "Install AWS CLI and configure credentials or AWS SSO."
+if [[ "${SYNC_DB}" -eq 1 ]]; then
+  if [[ -x ".venv/bin/python" ]]; then
+    PYTHON_BIN="./.venv/bin/python"
+  else
+    require_command "python3" "Python 3 is required to run the seed sync."
+    PYTHON_BIN="python3"
+  fi
+fi
 if [[ "${SKIP_BUILD}" -eq 0 ]]; then
   require_command "docker" "Docker is required for 'sam build --use-container'."
   check_docker_access
@@ -224,6 +304,56 @@ if [[ "${SKIP_DEPLOY}" -eq 0 ]]; then
     --no-fail-on-empty-changeset
 else
   log "Skipping deploy"
+fi
+
+if [[ -n "${TELEGRAM_BOT_TOKEN:-}" && -n "${BOT_SCRIPT_PYTHON}" ]]; then
+  log "Syncing Telegram bot commands"
+  "${BOT_SCRIPT_PYTHON}" scripts/set_telegram_webhook.py --commands
+elif [[ -z "${TELEGRAM_BOT_TOKEN:-}" ]]; then
+  log "Skipping Telegram command sync (TELEGRAM_BOT_TOKEN not set)"
+else
+  log "Skipping Telegram command sync (python3 not available)"
+fi
+
+if [[ "${SYNC_DB}" -eq 1 ]]; then
+  DATABASE_URL_SOURCE=""
+  if [[ -n "${DATABASE_URL_ARG}" ]]; then
+    export DATABASE_URL="$(normalize_database_url "${DATABASE_URL_ARG}")"
+    DATABASE_URL_SOURCE="--database-url"
+  fi
+
+  if [[ -z "${DATABASE_URL_SOURCE}" ]] && valid_database_url "${DATABASE_URL:-}" && ! is_local_database_url "${DATABASE_URL:-}"; then
+    DATABASE_URL="$(normalize_database_url "${DATABASE_URL}")"
+    DATABASE_URL_SOURCE="environment"
+  fi
+
+  if [[ -z "${DATABASE_URL_SOURCE}" ]]; then
+    log "Resolving DATABASE_URL from deployed Lambda environment"
+    DATABASE_URL="$(resolve_database_url_from_lambda || true)"
+    DATABASE_URL="$(normalize_database_url "${DATABASE_URL:-}")"
+    if valid_database_url "${DATABASE_URL}" && ! is_local_database_url "${DATABASE_URL}"; then
+      DATABASE_URL_SOURCE="lambda"
+    fi
+  fi
+
+  if [[ -z "${DATABASE_URL_SOURCE}" ]]; then
+    load_env_file ".env"
+    DATABASE_URL="$(normalize_database_url "${DATABASE_URL:-}")"
+    if valid_database_url "${DATABASE_URL}" && ! is_local_database_url "${DATABASE_URL}"; then
+      DATABASE_URL_SOURCE=".env"
+    fi
+  fi
+
+  if [[ -z "${DATABASE_URL_SOURCE}" ]]; then
+    if is_local_database_url "${DATABASE_URL:-}"; then
+      die "Refusing to use a localhost DATABASE_URL for --sync-db. Pass --database-url explicitly for local sync, or let the script resolve the deployed Lambda DATABASE_URL."
+    fi
+    die "Could not resolve a valid remote DATABASE_URL for --sync-db. Export a full Postgres URL, pass --database-url, or ensure the deployed Lambda has DATABASE_URL configured."
+  fi
+  export DATABASE_URL
+
+  log "Re-syncing bundled data into the database using ${DATABASE_URL_SOURCE}"
+  "${PYTHON_BIN}" scripts/seed_data.py
 fi
 
 if [[ -z "${TABLE_NAME}" ]]; then

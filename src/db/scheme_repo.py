@@ -1,11 +1,19 @@
 """Scheme repository with 3-stage hybrid search."""
 
+import logging
 from typing import Any
 
 import asyncpg
 
-from src.models.scheme import Scheme, SchemeMatch
+from src.models.scheme import EligibilityCriteria, Scheme, SchemeMatch
 from src.models.session import UserProfile
+from src.utils.scheme_catalog import (
+    get_canonical_life_events,
+    get_canonical_scheme_ids_for_life_event,
+)
+
+logger = logging.getLogger(__name__)
+INCOME_SEGMENT_ORDER = ("EWS", "LIG", "MIG", "HIG")
 
 
 async def get_scheme_by_id(pool: asyncpg.Pool, scheme_id: str) -> Scheme | None:
@@ -26,17 +34,30 @@ async def get_schemes_by_life_event(
     limit: int = 10
 ) -> list[Scheme]:
     """Get schemes matching a life event."""
+    canonical_ids = get_canonical_scheme_ids_for_life_event(life_event)
     async with pool.acquire() as conn:
-        rows = await conn.fetch(
-            """
-            SELECT * FROM schemes
-            WHERE is_active = true AND $1 = ANY(life_events)
-            ORDER BY benefits_amount DESC NULLS LAST
-            LIMIT $2
-            """,
-            life_event,
-            limit
-        )
+        if canonical_ids:
+            rows = await conn.fetch(
+                """
+                SELECT * FROM schemes
+                WHERE is_active = true AND id = ANY($1::text[])
+                ORDER BY benefits_amount DESC NULLS LAST
+                LIMIT $2
+                """,
+                canonical_ids,
+                limit,
+            )
+        else:
+            rows = await conn.fetch(
+                """
+                SELECT * FROM schemes
+                WHERE is_active = true AND $1 = ANY(life_events)
+                ORDER BY benefits_amount DESC NULLS LAST
+                LIMIT $2
+                """,
+                life_event,
+                limit
+            )
         return [Scheme.from_db_row(row) for row in rows]
 
 
@@ -72,8 +93,13 @@ async def hybrid_search(
 
         # Stage 1: Life event filter
         if life_event:
-            conditions.append(f"${param_idx} = ANY(life_events)")
-            params.append(life_event)
+            canonical_ids = get_canonical_scheme_ids_for_life_event(life_event)
+            if canonical_ids:
+                conditions.append(f"id = ANY(${param_idx}::text[])")
+                params.append(canonical_ids)
+            else:
+                conditions.append(f"${param_idx} = ANY(life_events)")
+                params.append(life_event)
             param_idx += 1
 
         # Stage 2: Eligibility filters
@@ -136,7 +162,51 @@ async def hybrid_search(
         return results
 
 
-def _calculate_eligibility_match(scheme: Scheme, profile: UserProfile) -> dict[str, bool]:
+def _lookup_case_insensitive(mapping: dict[str, int], key: str) -> int | None:
+    """Return the matching numeric value for a case-insensitive key."""
+    target = key.upper()
+    for candidate, value in mapping.items():
+        if candidate.upper() == target:
+            return value
+    return None
+
+
+def _infer_income_segment(
+    annual_income: int,
+    income_limits: dict[str, int],
+) -> str | None:
+    """Infer the user's income band from ordered segment thresholds."""
+    normalized_limits: list[tuple[str, int]] = []
+    for segment, raw_limit in income_limits.items():
+        try:
+            limit = int(raw_limit)
+        except (TypeError, ValueError):
+            continue
+        normalized_limits.append((segment.upper(), limit))
+
+    if not normalized_limits:
+        return None
+
+    ordered: list[tuple[str, int]] = []
+    seen: set[str] = set()
+    sorted_limits = sorted(normalized_limits, key=lambda item: item[1])
+    for segment_name in INCOME_SEGMENT_ORDER:
+        for segment, limit in sorted_limits:
+            if segment == segment_name and segment not in seen:
+                ordered.append((segment, limit))
+                seen.add(segment)
+    for segment, limit in sorted_limits:
+        if segment not in seen:
+            ordered.append((segment, limit))
+            seen.add(segment)
+
+    for segment, limit in ordered:
+        if annual_income <= limit:
+            return segment
+    return None
+
+
+def calculate_eligibility_match(scheme: Scheme, profile: UserProfile) -> dict[str, bool]:
     """Calculate which eligibility criteria the user matches."""
     match = {}
     elig = scheme.eligibility
@@ -158,22 +228,41 @@ def _calculate_eligibility_match(scheme: Scheme, profile: UserProfile) -> dict[s
         )
 
     # Category check
-    if profile.category is not None and elig.categories:
-        match["category"] = profile.category.upper() in [c.upper() for c in elig.categories]
+    if profile.category is not None and elig.caste_categories:
+        if not any(category.upper() == "ALL" for category in elig.caste_categories):
+            match["category"] = (
+                profile.category.upper() in [c.upper() for c in elig.caste_categories]
+            )
 
     # Income check
     if profile.annual_income is not None:
         income_ok = True
         if elig.max_income is not None and profile.annual_income > elig.max_income:
             income_ok = False
-        # Check category-specific income limits
-        if profile.category and elig.income_by_category:
-            cat_limit = elig.income_by_category.get(profile.category.upper())
-            if cat_limit and profile.annual_income > cat_limit:
+        if elig.has_income_segment_restrictions and elig.income_by_category:
+            inferred_segment = _infer_income_segment(
+                profile.annual_income,
+                elig.income_by_category,
+            )
+            allowed_segments = [segment.upper() for segment in elig.income_segments]
+            segment_ok = inferred_segment in allowed_segments if inferred_segment else False
+            match["income_segment"] = segment_ok
+            income_ok = income_ok and segment_ok
+        elif profile.category and elig.income_by_category:
+            cat_limit = _lookup_case_insensitive(
+                elig.income_by_category,
+                profile.category,
+            )
+            if cat_limit is not None and profile.annual_income > cat_limit:
                 income_ok = False
         match["income"] = income_ok
 
     return match
+
+
+def _calculate_eligibility_match(scheme: Scheme, profile: UserProfile) -> dict[str, bool]:
+    """Backward-compatible private alias."""
+    return calculate_eligibility_match(scheme, profile)
 
 
 async def search_schemes_by_text(
@@ -200,3 +289,46 @@ async def search_schemes_by_text(
             limit
         )
         return [Scheme.from_db_row(row) for row in rows]
+
+
+async def get_scheme_debug_rows(
+    pool: asyncpg.Pool,
+    scheme_ids: list[str],
+) -> list[dict[str, Any]]:
+    """Fetch lightweight verification data for specific scheme rows."""
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT id, name, life_events, eligibility
+            FROM schemes
+            WHERE id = ANY($1::text[])
+            ORDER BY id
+            """,
+            scheme_ids,
+        )
+
+    debug_rows: list[dict[str, Any]] = []
+    for row in rows:
+        eligibility = EligibilityCriteria.from_db(row.get("eligibility") or {})
+        db_life_events = list(row.get("life_events") or [])
+        canonical_life_events = get_canonical_life_events(row["id"])
+        debug_rows.append(
+            {
+                "id": row["id"],
+                "name": row["name"],
+                "life_events": db_life_events,
+                "canonical_life_events": canonical_life_events,
+                "life_events_match": not canonical_life_events
+                or sorted(db_life_events) == sorted(canonical_life_events),
+                "raw_categories": eligibility.categories,
+                "caste_categories": eligibility.caste_categories,
+                "income_segments": eligibility.income_segments,
+                "income_by_category": eligibility.income_by_category,
+            }
+        )
+
+    if len(debug_rows) != len(scheme_ids):
+        missing = sorted(set(scheme_ids) - {row["id"] for row in debug_rows})
+        logger.warning("Missing scheme verification rows for: %s", ", ".join(missing))
+
+    return debug_rows

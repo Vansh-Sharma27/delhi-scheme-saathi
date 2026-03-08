@@ -52,7 +52,7 @@ class TestSpeechToText:
         mock_response.json.return_value = {
             "transcript": "नमस्ते, मुझे पेंशन चाहिए",
             "language_code": "hi-IN",
-            "language_probability": 0.92,
+            "transcript_confidence": 0.92,
         }
         mock_response.raise_for_status = MagicMock()
 
@@ -70,6 +70,59 @@ class TestSpeechToText:
             assert result.text == "नमस्ते, मुझे पेंशन चाहिए"
             assert result.confidence == 0.92
             assert result.language == "hi"
+
+    @pytest.mark.asyncio
+    async def test_stt_does_not_treat_language_probability_as_asr_confidence(self):
+        """Language-ID confidence should not control transcript confidence."""
+        client = SarvamClient(api_key="test-api-key")
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "transcript": "Need education help",
+            "language_probability": 0.12,
+        }
+        mock_response.raise_for_status = MagicMock()
+
+        with patch.object(client, "_get_client") as mock_get_client:
+            mock_http_client = AsyncMock()
+            mock_http_client.post = AsyncMock(return_value=mock_response)
+            mock_get_client.return_value = mock_http_client
+
+            result = await client.speech_to_text(
+                audio_bytes=b"test audio data",
+                source_lang="en",
+            )
+
+        assert result.text == "Need education help"
+        assert result.confidence == 1.0
+
+    @pytest.mark.asyncio
+    async def test_stt_uses_provider_detected_language_when_available(self):
+        """Provider language metadata should be preserved for downstream routing."""
+        client = SarvamClient(api_key="test-api-key")
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "transcript": "I need housing help",
+            "language_code": "en-IN",
+            "transcript_confidence": 0.88,
+        }
+        mock_response.raise_for_status = MagicMock()
+
+        with patch.object(client, "_get_client") as mock_get_client:
+            mock_http_client = AsyncMock()
+            mock_http_client.post = AsyncMock(return_value=mock_response)
+            mock_get_client.return_value = mock_http_client
+
+            result = await client.speech_to_text(
+                audio_bytes=b"test audio data",
+                source_lang="hi",
+            )
+
+        assert result.language == "en"
+        assert result.confidence == 0.88
 
     @pytest.mark.asyncio
     async def test_stt_handles_http_error(self):

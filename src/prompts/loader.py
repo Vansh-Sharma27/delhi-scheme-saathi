@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-
 PROMPTS_DIR = Path(__file__).parent
 
 
@@ -24,16 +23,6 @@ def load_prompt(name: str) -> str:
 def get_system_prompt() -> str:
     """Get the main system prompt for conversation."""
     return load_prompt("system_prompt")
-
-
-def get_classify_life_event_prompt() -> str:
-    """Get prompt for life event classification."""
-    return load_prompt("classify_life_event")
-
-
-def get_extract_profile_prompt() -> str:
-    """Get prompt for profile extraction."""
-    return load_prompt("extract_profile")
 
 
 def get_generate_response_prompt() -> str:

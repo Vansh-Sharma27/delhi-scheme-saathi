@@ -4,13 +4,9 @@ import logging
 from datetime import datetime
 
 from src.db.session_store import get_session_store
-from src.integrations.llm_client import get_llm_client
-from src.models.session import ConversationState, Message, Session, UserProfile
+from src.models.session import ConversationMemory, ConversationState, Session, UserProfile
 
 logger = logging.getLogger(__name__)
-
-# Summarize conversation every N messages
-SUMMARY_INTERVAL = 5
 
 
 async def get_or_create_session(user_id: str) -> Session:
@@ -49,52 +45,8 @@ async def add_message(
     role: str,
     content: str,
 ) -> Session:
-    """Add message to session and potentially summarize."""
-    new_session = session.add_message(role, content)
-
-    # Check if we should summarize
-    if len(new_session.messages) >= SUMMARY_INTERVAL:
-        message_count_since_summary = len(new_session.messages)
-        if message_count_since_summary % SUMMARY_INTERVAL == 0:
-            new_session = await update_summary(new_session)
-
-    return new_session
-
-
-async def update_summary(session: Session) -> Session:
-    """Update conversation summary."""
-    if not session.messages:
-        return session
-
-    try:
-        llm = get_llm_client()
-        messages_dicts = [
-            {"role": m.role, "content": m.content}
-            for m in session.messages
-        ]
-
-        new_summary = await llm.summarize_conversation(
-            messages=messages_dicts,
-            current_summary=session.conversation_summary,
-        )
-
-        return Session(
-            user_id=session.user_id,
-            state=session.state,
-            user_profile=session.user_profile,
-            messages=session.messages,
-            conversation_summary=new_summary,
-            discussed_schemes=session.discussed_schemes,
-            selected_scheme_id=session.selected_scheme_id,
-            language_preference=session.language_preference,
-            created_at=session.created_at,
-            updated_at=datetime.utcnow(),
-            metadata=session.metadata,
-        )
-
-    except Exception as e:
-        logger.error(f"Failed to update summary: {e}")
-        return session
+    """Add a message to session history."""
+    return session.add_message(role, content)
 
 
 def update_profile(session: Session, new_profile: UserProfile) -> Session:
@@ -113,18 +65,9 @@ def add_discussed_scheme(session: Session, scheme_id: str) -> Session:
     if scheme_id not in session.discussed_schemes:
         discussed = list(session.discussed_schemes)
         discussed.append(scheme_id)
-        return Session(
-            user_id=session.user_id,
-            state=session.state,
-            user_profile=session.user_profile,
-            messages=session.messages,
-            conversation_summary=session.conversation_summary,
+        return session.copy_with(
             discussed_schemes=discussed,
-            selected_scheme_id=session.selected_scheme_id,
-            language_preference=session.language_preference,
-            created_at=session.created_at,
             updated_at=datetime.utcnow(),
-            metadata=session.metadata,
         )
     return session
 
@@ -132,35 +75,63 @@ def add_discussed_scheme(session: Session, scheme_id: str) -> Session:
 def select_scheme(session: Session, scheme_id: str) -> Session:
     """Set selected scheme and add to discussed."""
     session = add_discussed_scheme(session, scheme_id)
-    return Session(
-        user_id=session.user_id,
-        state=session.state,
-        user_profile=session.user_profile,
-        messages=session.messages,
-        conversation_summary=session.conversation_summary,
-        discussed_schemes=session.discussed_schemes,
+    return session.copy_with(
         selected_scheme_id=scheme_id,
-        language_preference=session.language_preference,
-        created_at=session.created_at,
         updated_at=datetime.utcnow(),
-        metadata=session.metadata,
     )
 
 
-def set_language(session: Session, language: str) -> Session:
+def set_language(session: Session, language: str, locked: bool | None = None) -> Session:
     """Set language preference."""
-    return Session(
-        user_id=session.user_id,
-        state=session.state,
-        user_profile=session.user_profile,
-        messages=session.messages,
-        conversation_summary=session.conversation_summary,
-        discussed_schemes=session.discussed_schemes,
-        selected_scheme_id=session.selected_scheme_id,
-        language_preference=language,
-        created_at=session.created_at,
+    updates = {
+        "language_preference": language,
+        "updated_at": datetime.utcnow(),
+    }
+    if locked is not None:
+        updates["language_locked"] = locked
+    return session.copy_with(**updates)
+
+
+def set_currently_asking(session: Session, field: str | None) -> Session:
+    """Update which field is being asked in the current flow."""
+    return session.copy_with(
+        currently_asking=field,
         updated_at=datetime.utcnow(),
-        metadata=session.metadata,
+    )
+
+
+def set_skipped_fields(session: Session, skipped_fields: list[str]) -> Session:
+    """Persist skipped profile fields."""
+    return session.copy_with(
+        skipped_fields=list(skipped_fields),
+        updated_at=datetime.utcnow(),
+    )
+
+
+def set_presented_schemes(
+    session: Session,
+    presented_schemes: list[dict[str, str]],
+) -> Session:
+    """Persist the last scheme list shown to the user."""
+    return session.copy_with(
+        presented_schemes=presented_schemes,
+        updated_at=datetime.utcnow(),
+    )
+
+
+def set_awaiting_profile_change(session: Session, awaiting: bool) -> Session:
+    """Track whether matching should wait for meaningful profile changes."""
+    return session.copy_with(
+        awaiting_profile_change=awaiting,
+        updated_at=datetime.utcnow(),
+    )
+
+
+def clear_selection(session: Session) -> Session:
+    """Clear the currently selected scheme."""
+    return session.copy_with(
+        selected_scheme_id=None,
+        updated_at=datetime.utcnow(),
     )
 
 
@@ -176,12 +147,51 @@ def get_conversation_history(
     return [{"role": m.role, "content": m.content} for m in messages]
 
 
-def reset_session(session: Session) -> Session:
-    """Reset session to initial state (keep user_id)."""
+def mark_turn_completed(session: Session) -> Session:
+    """Increment completed turns after a full user-assistant exchange."""
+    return session.copy_with(
+        completed_turn_count=session.completed_turn_count + 1,
+        updated_at=datetime.utcnow(),
+    )
+
+
+def set_pending_memory_job(session: Session, pending: bool) -> Session:
+    """Track whether a working-memory refresh job is already queued."""
+    return session.copy_with(
+        pending_memory_job=pending,
+        updated_at=datetime.utcnow(),
+    )
+
+
+def apply_working_memory(
+    session: Session,
+    memory: ConversationMemory,
+    *,
+    refreshed_turn: int | None = None,
+) -> Session:
+    """Persist refreshed working memory and clear queue markers."""
+    return session.copy_with(
+        working_memory=memory,
+        last_memory_refresh_turn=(
+            refreshed_turn
+            if refreshed_turn is not None
+            else session.completed_turn_count
+        ),
+        pending_memory_job=False,
+        updated_at=datetime.utcnow(),
+    )
+
+
+def reset_session(session: Session, preserve_language: bool = True) -> Session:
+    """Reset session to initial state while optionally preserving language lock."""
+    language_preference = session.language_preference if preserve_language else "auto"
+    language_locked = session.language_locked if preserve_language else False
     return Session(
         user_id=session.user_id,
         state=ConversationState.GREETING,
         user_profile=UserProfile(),
+        language_preference=language_preference,
+        language_locked=language_locked,
         created_at=session.created_at,
         updated_at=datetime.utcnow(),
     )

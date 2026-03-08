@@ -1,33 +1,11 @@
 """Life event classification service."""
 
-import logging
-from typing import Any
-
-from src.integrations.llm_client import get_llm_client
-from src.prompts.loader import get_system_prompt
-
-logger = logging.getLogger(__name__)
-
-# Valid life event categories
-LIFE_EVENTS = [
-    "HOUSING",
-    "MARRIAGE",
-    "CHILDBIRTH",
-    "EDUCATION",
-    "HEALTH_CRISIS",
-    "DEATH_IN_FAMILY",
-    "MARITAL_DISTRESS",
-    "JOB_LOSS",
-    "BUSINESS_STARTUP",
-    "WOMEN_EMPOWERMENT",
-]
-
 # Hindi keyword mappings for rule-based fallback
 HINDI_KEYWORDS = {
     "HOUSING": ["घर", "मकान", "किराया", "जमीन", "प्लॉट", "फ्लैट", "अपार्टमेंट", "आवास", "pmay", "awas"],
     "MARRIAGE": ["शादी", "विवाह", "ब्याह", "wedding", "marriage"],
     "CHILDBIRTH": ["गर्भवती", "प्रेग्नेंट", "बच्चा", "शिशु", "माँ बनना", "डिलीवरी", "pregnant", "baby", "child"],
-    "EDUCATION": ["पढ़ाई", "स्कूल", "कॉलेज", "शिक्षा", "डिग्री", "कोर्स", "education", "study", "loan"],
+    "EDUCATION": ["पढ़ाई", "स्कूल", "कॉलेज", "शिक्षा", "डिग्री", "कोर्स", "education", "study"],
     "HEALTH_CRISIS": ["बीमार", "अस्पताल", "इलाज", "ऑपरेशन", "दवाई", "चिकित्सा", "hospital", "medical", "surgery", "illness"],
     "DEATH_IN_FAMILY": ["मृत्यु", "गुजर गए", "मर गए", "निधन", "विधवा", "widow", "death", "passed away"],
     "MARITAL_DISTRESS": ["तलाक", "छोड़ दिया", "अलग हो गए", "divorce", "separated", "abandoned"],
@@ -53,46 +31,6 @@ def classify_by_keywords(text: str) -> str | None:
         return max(matches, key=matches.get)
 
     return None
-
-
-async def classify_life_event(
-    user_message: str,
-    conversation_history: list[dict[str, str]],
-    current_profile: dict[str, Any],
-) -> str | None:
-    """Classify the user's life event from their message.
-
-    Uses LLM for nuanced understanding with keyword fallback.
-    Returns life event category or None if unclear.
-    """
-    # Try rule-based first for common cases
-    keyword_match = classify_by_keywords(user_message)
-    if keyword_match:
-        logger.debug(f"Life event classified by keywords: {keyword_match}")
-        return keyword_match
-
-    # Use LLM for more complex cases
-    try:
-        llm = get_llm_client()
-        analysis = await llm.analyze_message(
-            user_message=user_message,
-            conversation_history=conversation_history,
-            current_state="UNDERSTANDING",
-            user_profile=current_profile,
-            system_prompt=get_system_prompt(),
-        )
-
-        life_event = analysis.get("life_event")
-        if life_event and life_event in LIFE_EVENTS:
-            logger.debug(f"Life event classified by LLM: {life_event}")
-            return life_event
-
-    except Exception as e:
-        logger.error(f"LLM life event classification failed: {e}")
-
-    return None
-
-
 def get_life_event_display_name(event: str, language: str = "hi") -> str:
     """Get display name for a life event."""
     names = {
