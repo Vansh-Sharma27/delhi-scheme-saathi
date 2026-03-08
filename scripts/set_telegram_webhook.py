@@ -3,6 +3,7 @@
 
 Usage:
     python scripts/set_telegram_webhook.py --url https://your-domain.com/webhook/telegram
+    python scripts/set_telegram_webhook.py --commands  # Register default bot commands
     python scripts/set_telegram_webhook.py --delete  # Remove webhook
     python scripts/set_telegram_webhook.py --info    # Get current webhook info
 """
@@ -15,8 +16,10 @@ import sys
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dotenv import load_dotenv
 import httpx
+from dotenv import load_dotenv
+
+from src.integrations.telegram import DEFAULT_BOT_COMMANDS
 
 
 async def set_webhook(token: str, url: str) -> None:
@@ -28,7 +31,7 @@ async def set_webhook(token: str, url: str) -> None:
         result = response.json()
 
     if result.get("ok"):
-        print(f"✅ Webhook set successfully!")
+        print("✅ Webhook set successfully!")
         print(f"   URL: {url}")
     else:
         print(f"❌ Failed to set webhook: {result.get('description')}")
@@ -48,6 +51,26 @@ async def delete_webhook(token: str) -> None:
         print(f"❌ Failed to delete webhook: {result.get('description')}")
 
 
+async def set_my_commands(
+    token: str,
+    commands: list[dict[str, str]] | None = None,
+) -> None:
+    """Register Telegram bot commands."""
+    api_url = f"https://api.telegram.org/bot{token}/setMyCommands"
+    payload = {"commands": commands or DEFAULT_BOT_COMMANDS}
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(api_url, json=payload)
+        result = response.json()
+
+    if result.get("ok"):
+        print("✅ Bot commands synced successfully!")
+        for command in payload["commands"]:
+            print(f"   /{command['command']} - {command['description']}")
+    else:
+        print(f"❌ Failed to sync commands: {result.get('description')}")
+
+
 async def get_webhook_info(token: str) -> None:
     """Get current webhook info."""
     api_url = f"https://api.telegram.org/bot{token}/getWebhookInfo"
@@ -65,6 +88,26 @@ async def get_webhook_info(token: str) -> None:
             print(f"   ⚠️ Last error: {info['last_error_message']}")
     else:
         print(f"❌ Failed to get webhook info: {result.get('description')}")
+
+
+async def get_my_commands(token: str) -> None:
+    """Get current Telegram bot commands."""
+    api_url = f"https://api.telegram.org/bot{token}/getMyCommands"
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(api_url)
+        result = response.json()
+
+    if result.get("ok"):
+        print("📋 Bot Commands:")
+        commands = result.get("result", [])
+        if not commands:
+            print("   (not set)")
+            return
+        for command in commands:
+            print(f"   /{command.get('command')} - {command.get('description')}")
+    else:
+        print(f"❌ Failed to get commands: {result.get('description')}")
 
 
 async def get_me(token: str) -> None:
@@ -88,6 +131,11 @@ async def get_me(token: str) -> None:
 def main():
     parser = argparse.ArgumentParser(description="Manage Telegram bot webhook")
     parser.add_argument("--url", help="Webhook URL to set")
+    parser.add_argument(
+        "--commands",
+        action="store_true",
+        help="Register default Telegram bot commands",
+    )
     parser.add_argument("--delete", action="store_true", help="Delete webhook")
     parser.add_argument("--info", action="store_true", help="Get webhook info")
     parser.add_argument("--token", help="Bot token (or set TELEGRAM_BOT_TOKEN env var)")
@@ -108,12 +156,17 @@ def main():
     elif args.info:
         asyncio.run(get_me(token))
         asyncio.run(get_webhook_info(token))
+        asyncio.run(get_my_commands(token))
+    elif args.commands:
+        asyncio.run(set_my_commands(token))
     elif args.url:
         asyncio.run(set_webhook(token, args.url))
+        asyncio.run(set_my_commands(token))
     else:
         # Default: show info
         asyncio.run(get_me(token))
         asyncio.run(get_webhook_info(token))
+        asyncio.run(get_my_commands(token))
 
 
 if __name__ == "__main__":

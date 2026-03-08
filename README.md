@@ -11,6 +11,11 @@ A voice-first Hindi chatbot that helps Delhi residents discover and apply for go
 - **Document Guidance**: Shows which documents are needed and how to obtain them
 - **Rejection Prevention**: Proactive warnings about common application mistakes
 
+## What This Bot Can Do
+
+For a short bilingual note for judges and demo reviewers, see [docs/WHAT_THIS_BOT_CAN_DO.md](docs/WHAT_THIS_BOT_CAN_DO.md).
+In Telegram, try `/help` first. The bot now also exposes `/start`, `/help`, and `/language` in the Telegram command menu when commands are synced.
+
 ## Tech Stack
 
 | Component | Technology |

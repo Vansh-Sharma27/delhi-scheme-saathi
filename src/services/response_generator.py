@@ -122,6 +122,183 @@ def generate_greeting_response(language: str = "hi") -> str:
     return greetings.get(language, greetings["en"])
 
 
+def generate_help_response(
+    language: str = "auto",
+    *,
+    has_active_scheme: bool = False,
+) -> str:
+    """Generate a deterministic help guide for users and judges."""
+    generic_responses = {
+        "hi": (
+            "दिल्ली स्कीम साथी आपकी स्थिति के हिसाब से उपयोगी दिल्ली सरकारी योजनाएं समझने में मदद करता है।\n\n"
+            "इसे कैसे उपयोग करें:\n"
+            "• अपनी जरूरत एक सरल वाक्य में बताएं\n"
+            '  उदाहरण: "मुझे विधवा पेंशन की जानकारी चाहिए"\n'
+            "• अगर पूछा जाए तो उम्र, श्रेणी, आय, लिंग या स्थिति बताएं\n"
+            "• किसी योजना पर आगे पूछें: पात्रता, लाभ, दस्तावेज, आवेदन प्रक्रिया, या यह योजना क्यों दिखाई गई\n"
+            "• विषय बदलना हो तो सीधे कहें: अब मुझे किसी और मदद की जरूरत है\n\n"
+            "उपयोगी कमांड और वाक्य:\n"
+            "• /help : यह गाइड फिर से देखें\n"
+            "• /language : भाषा बदलें\n"
+            "• /start : नई खोज शुरू करें\n"
+            '• "start over" या "restart" : चैट अपने-आप रीसेट करें\n'
+            '• "bye" : बातचीत समाप्त करें\n\n'
+            "अभी यह बॉट क्या कर सकता है:\n"
+            "• दिल्ली की संबंधित योजनाएं ढूंढना\n"
+            "• योजना को सरल भाषा में समझाना\n"
+            "• आपकी दी हुई जानकारी के आधार पर संभावित पात्रता बताना\n"
+            "• दस्तावेज, आवेदन चरण, और rejection warnings बताना\n"
+            "• हिंदी, अंग्रेज़ी, और हिंग्लिश में जवाब देना\n\n"
+            "महत्वपूर्ण:\n"
+            "यह मार्गदर्शन के लिए है। अंतिम पात्रता और मंजूरी सरकारी नियमों और दस्तावेज़ सत्यापन पर निर्भर करती है।"
+        ),
+        "en": (
+            "Delhi Scheme Saathi helps you understand which Delhi government welfare schemes may fit your situation.\n\n"
+            "How to use it:\n"
+            "• Start with one simple need\n"
+            '  Example: "I need widow pension help"\n'
+            "• Answer short questions like age, category, income, gender, or situation\n"
+            "• Ask follow-up questions about eligibility, benefits, documents, application steps, or why a scheme was suggested\n"
+            "• If your need changes, just say so and the bot can switch topics\n\n"
+            "Useful commands and phrases:\n"
+            "• /help : show this guide again\n"
+            "• /language : change language\n"
+            "• /start : begin a fresh search\n"
+            '• "start over" or "restart" : reset the chat automatically\n'
+            '• "bye" : end the conversation\n\n'
+            "Current capabilities:\n"
+            "• Find relevant Delhi welfare schemes\n"
+            "• Explain scheme details in simple language\n"
+            "• Share likely eligibility based on the details you provide\n"
+            "• List documents, application steps, and common rejection warnings\n"
+            "• Reply in English, Hindi, or Hinglish\n\n"
+            "Important:\n"
+            "This bot is a guidance tool. Final eligibility and approval depend on official government rules and document verification."
+        ),
+        "hinglish": (
+            "Delhi Scheme Saathi aapki situation ke hisaab se useful Delhi government schemes samajhne mein help karta hai.\n\n"
+            "Use kaise karein:\n"
+            "• Apni need ek simple sentence mein batayiye\n"
+            '  Example: "Mujhe widow pension help chahiye"\n'
+            "• Agar poocha jaye toh age, category, income, gender ya situation batayiye\n"
+            "• Scheme ke baare mein follow-up pooch sakte hain: eligibility, benefits, documents, application steps, ya yeh scheme kyon dikhayi gayi\n"
+            "• Topic badalna ho toh seedha bol dijiye\n\n"
+            "Useful commands aur phrases:\n"
+            "• /help : yeh guide phir se dekhiye\n"
+            "• /language : language badaliye\n"
+            "• /start : fresh search shuru kijiye\n"
+            '• "start over" ya "restart" : chat automatically reset ho jayegi\n'
+            '• "bye" : conversation khatam kijiye\n\n'
+            "Current capabilities:\n"
+            "• Relevant Delhi welfare schemes dhoondhna\n"
+            "• Scheme details simple language mein samjhana\n"
+            "• Aapki details ke basis par likely eligibility batana\n"
+            "• Documents, application steps, aur common rejection warnings batana\n"
+            "• English, Hindi, aur Hinglish mein reply karna\n\n"
+            "Important:\n"
+            "Yeh guidance tool hai. Final eligibility aur approval official rules aur document verification par depend karta hai."
+        ),
+    }
+    scheme_context_responses = {
+        "hi": (
+            "आप इस समय एक चुनी हुई योजना देख रहे हैं। इसी योजना पर आप सीधे ये सवाल पूछ सकते हैं:\n"
+            "• क्या मैं पात्र हूं?\n"
+            "• यह योजना क्यों दिखाई गई?\n"
+            "• कौन-कौन से दस्तावेज चाहिए?\n"
+            "• आवेदन कैसे करें?\n"
+            "• किन गलतियों से बचना चाहिए?\n\n"
+            "उपयोगी कमांड:\n"
+            "• /language : भाषा बदलें\n"
+            "• /start : नई खोज शुरू करें\n"
+            '• "start over" : बातचीत रीसेट करें\n'
+            '• "bye" : बातचीत समाप्त करें'
+        ),
+        "en": (
+            "You are currently viewing a selected scheme. You can directly ask:\n"
+            "• Am I eligible?\n"
+            "• Why was this scheme suggested?\n"
+            "• What documents are needed?\n"
+            "• How do I apply?\n"
+            "• What mistakes should I avoid?\n\n"
+            "Useful commands:\n"
+            "• /language : change language\n"
+            "• /start : begin a fresh search\n"
+            '• "start over" : reset the conversation\n'
+            '• "bye" : end the conversation'
+        ),
+        "hinglish": (
+            "Aap is waqt ek selected scheme dekh rahe hain. Aap seedha pooch sakte hain:\n"
+            "• Kya main eligible hoon?\n"
+            "• Yeh scheme kyon dikhayi gayi?\n"
+            "• Kaun se documents chahiye?\n"
+            "• Apply kaise karna hai?\n"
+            "• Kin mistakes se bachna chahiye?\n\n"
+            "Useful commands:\n"
+            "• /language : language badaliye\n"
+            "• /start : fresh search shuru kijiye\n"
+            '• "start over" : conversation reset kijiye\n'
+            '• "bye" : conversation khatam kijiye'
+        ),
+    }
+
+    responses = scheme_context_responses if has_active_scheme else generic_responses
+
+    if language not in responses:
+        return (
+            "Delhi Scheme Saathi Help\n\n"
+            "ENGLISH\n"
+            f"{generic_responses['en']}\n\n"
+            "हिंदी\n"
+            f"{generic_responses['hi']}"
+        )
+    return responses[language]
+
+
+def generate_language_selection_response(language: str = "auto") -> str:
+    """Prompt the user to choose a conversation language."""
+    responses = {
+        "hi": (
+            "कृपया अपनी पसंदीदा भाषा चुनें।\n"
+            "आप कभी भी /language दबाकर भाषा बदल सकते हैं।"
+        ),
+        "en": (
+            "Choose your preferred language.\n"
+            "You can switch again anytime with /language."
+        ),
+        "hinglish": (
+            "Apni preferred language choose kijiye.\n"
+            "Aap kabhi bhi /language se language badal sakte hain."
+        ),
+    }
+    if language not in responses:
+        return (
+            "Choose your preferred language / अपनी पसंदीदा भाषा चुनें.\n"
+            "You can switch again anytime with /language."
+        )
+    return responses[language]
+
+
+def generate_language_changed_response(
+    language: str,
+    *,
+    has_active_scheme: bool = False,
+) -> str:
+    """Confirm language change and suggest what to do next."""
+    if has_active_scheme:
+        return _pick_language_text(
+            language,
+            "भाषा बदल दी गई है। अब आप इसी योजना के बारे में पात्रता, दस्तावेज, लाभ, या आवेदन पूछ सकते हैं।",
+            "Language updated. You can now continue asking about this scheme's eligibility, documents, benefits, or application steps.",
+            "Language update ho gayi hai. Ab aap isi scheme ke baare mein eligibility, documents, benefits, ya application steps pooch sakte hain.",
+        )
+    return _pick_language_text(
+        language,
+        "भाषा बदल दी गई है। अब आप अपनी जरूरत बताइए या /help देखिए।",
+        "Language updated. You can now tell me your need or use /help.",
+        "Language update ho gayi hai. Ab aap apni need batayiye ya /help dekhiye.",
+    )
+
+
 def generate_clarification_response(
     missing_field: str,
     language: str = "hi",

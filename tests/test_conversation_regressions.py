@@ -109,6 +109,57 @@ async def test_explicit_language_lock_persists_across_turns_and_start() -> None:
 
 
 @pytest.mark.asyncio
+async def test_help_command_returns_bilingual_guide_for_new_user_without_llm() -> None:
+    """New users should get a deterministic bilingual help guide from /help."""
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock()
+
+    result = await service.handle_message(
+        ChatRequest(user_id="user-help-new", message="/help")
+    )
+
+    session = await get_session_store().get("user-help-new")
+    assert result.next_state == ConversationState.GREETING.value
+    assert result.language == "en"
+    assert "ENGLISH" in result.text
+    assert "हिंदी" in result.text
+    assert "/start" in result.text
+    assert "/language" in result.text
+    assert "start over" in result.text
+    assert "bye" in result.text
+    assert result.inline_keyboard is not None
+    assert session is not None
+    assert session.state == ConversationState.GREETING
+    assert session.completed_turn_count == 1
+    service.llm.analyze_message.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_language_command_returns_picker_without_llm() -> None:
+    """The /language command should show inline language choices deterministically."""
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock()
+
+    result = await service.handle_message(
+        ChatRequest(user_id="user-language-picker", message="/language")
+    )
+
+    session = await get_session_store().get("user-language-picker")
+    assert result.next_state == ConversationState.GREETING.value
+    assert result.language == "en"
+    assert "Choose your preferred language" in result.text
+    assert result.inline_keyboard is not None
+    assert [row[0]["callback_data"] for row in result.inline_keyboard] == [
+        "lang:hi",
+        "lang:en",
+        "lang:hinglish",
+    ]
+    assert session is not None
+    assert session.state == ConversationState.GREETING
+    service.llm.analyze_message.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_unlocked_previous_language_does_not_bias_english_turn() -> None:
     """Observed language should drive unlocked sessions on later turns."""
     store = get_session_store()
@@ -351,6 +402,102 @@ async def test_start_over_action_resets_state_but_keeps_locked_language() -> Non
     assert session.presented_schemes == []
     assert session.language_preference == "en"
     assert session.language_locked is True
+
+
+@pytest.mark.asyncio
+async def test_help_command_preserves_active_scheme_context_and_language() -> None:
+    """The /help guide should not clear the selected scheme or the locked language."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-help-context",
+            state=ConversationState.SCHEME_DETAILS,
+            user_profile=UserProfile(
+                life_event="EDUCATION",
+                age=19,
+                category="OBC",
+                annual_income=400000,
+            ),
+            selected_scheme_id="SCH-1",
+            presented_schemes=[
+                {"id": "SCH-1", "name": "Scheme SCH-1", "name_hindi": "योजना SCH-1"},
+            ],
+            language_preference="en",
+            language_locked=True,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock()
+
+    result = await service.handle_message(
+        ChatRequest(user_id="user-help-context", message="/help@DelhiSchemeSaathiBot")
+    )
+
+    session = await store.get("user-help-context")
+    assert result.next_state == ConversationState.SCHEME_DETAILS.value
+    assert result.language == "en"
+    assert "Am I eligible?" in result.text
+    assert "/language" in result.text
+    assert "/start" in result.text
+    assert result.inline_keyboard is not None
+    assert result.inline_keyboard[1][0]["callback_data"] == "lang:en"
+    assert session is not None
+    assert session.state == ConversationState.SCHEME_DETAILS
+    assert session.selected_scheme_id == "SCH-1"
+    assert session.language_preference == "en"
+    assert session.language_locked is True
+    service.llm.analyze_message.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_language_callback_re_renders_active_scheme_in_selected_language() -> None:
+    """Language callback should preserve the active scheme and rebuild the current view."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-language-callback",
+            state=ConversationState.SCHEME_DETAILS,
+            user_profile=UserProfile(
+                life_event="EDUCATION",
+                age=19,
+                category="OBC",
+                annual_income=400000,
+            ),
+            selected_scheme_id="SCH-1",
+            language_preference="en",
+            language_locked=True,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock()
+    scheme = _make_scheme("SCH-1", name_hindi="शिक्षा योजना")
+
+    with patch(
+        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        AsyncMock(return_value=scheme),
+    ):
+        result = await service.handle_message(
+            ChatRequest(
+                user_id="user-language-callback",
+                message="lang:hi",
+                message_type="callback",
+                callback_data="lang:hi",
+            )
+        )
+
+    session = await store.get("user-language-callback")
+    assert result.next_state == ConversationState.SCHEME_DETAILS.value
+    assert result.language == "hi"
+    assert "भाषा बदल दी गई है" in result.text
+    assert "शिक्षा योजना" in result.text
+    assert session is not None
+    assert session.state == ConversationState.SCHEME_DETAILS
+    assert session.selected_scheme_id == "SCH-1"
+    assert session.language_preference == "hi"
+    assert session.language_locked is True
+    service.llm.analyze_message.assert_not_awaited()
 
 
 def test_scheme_resolution_avoids_numeric_false_positives() -> None:

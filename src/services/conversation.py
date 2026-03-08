@@ -37,7 +37,11 @@ from src.services import (
 from src.services.ai_background import enqueue_memory_refresh
 from src.services.ai_orchestrator import get_ai_orchestrator
 from src.services.conversation_memory import should_refresh_working_memory
-from src.utils.formatters import format_inline_keyboard
+from src.utils.formatters import (
+    format_inline_keyboard,
+    format_language_keyboard,
+    format_presented_scheme_keyboard,
+)
 from src.utils.validators import sanitize_input
 
 logger = logging.getLogger(__name__)
@@ -191,6 +195,15 @@ SCHEME_QUESTION_PATTERNS = (
     r"क्यों",
     r"कैसे",
 )
+COMMAND_ALIASES = {
+    "/start": "start",
+    "/shuru": "start",
+    "/help": "help",
+    "/madad": "help",
+    "/language": "language",
+    "/lang": "language",
+    "/bhasha": "language",
+}
 
 
 def _text_variant(language: str, hi: str, en: str, hinglish: str | None = None) -> str:
@@ -272,6 +285,51 @@ def _detect_reason_request(text: str) -> bool:
         r"क्यों",
     ]
     return any(re.search(pattern, text_lower) for pattern in patterns)
+
+
+def _extract_supported_command(text: str) -> str | None:
+    """Return the normalized Telegram command when the turn starts with one."""
+    stripped = text.strip()
+    if not stripped.startswith("/"):
+        return None
+
+    command_token = stripped.split(maxsplit=1)[0].lower()
+    base_command = command_token.split("@", maxsplit=1)[0]
+    return COMMAND_ALIASES.get(base_command)
+
+
+def _command_response_language(session: Session) -> str:
+    """Choose the safest deterministic command response language."""
+    return session.language_preference if session.language_preference != "auto" else "en"
+
+
+def _build_presented_scheme_selection_text(
+    presented_schemes: list[dict[str, str]],
+    language: str,
+) -> str | None:
+    """Render stored presented schemes without needing full match payloads."""
+    if not presented_schemes:
+        return None
+
+    header = _text_variant(
+        language,
+        "🎯 आपने ये योजना विकल्प देखे थे:",
+        "🎯 You were viewing these scheme options:",
+        "🎯 Aap ye scheme options dekh rahe the:",
+    )
+    footer = _text_variant(
+        language,
+        "नीचे बटन दबाकर योजना चुनें।",
+        "Tap a button below to open a scheme.",
+        "Neeche button dabakar scheme kholiye.",
+    )
+    lines = [header, ""]
+    for index, scheme in enumerate(presented_schemes[:5], 1):
+        name = scheme.get("name_hindi") if language == "hi" else scheme.get("name")
+        display_name = name or scheme.get("name") or scheme.get("name_hindi") or "Scheme"
+        lines.append(f"{index}. {display_name}")
+    lines.extend(["", footer])
+    return "\n".join(lines)
 
 
 def _detect_field_help_request(text: str, field: str | None) -> bool:
@@ -1277,6 +1335,105 @@ class ConversationService:
         await session_manager.save_session(session)
         return session
 
+    async def _build_command_response(
+        self,
+        session: Session,
+        *,
+        user_message: str,
+        response_text: str,
+        language: str,
+        inline_keyboard: list[list[dict[str, str]]] | None = None,
+    ) -> ChatResponse:
+        """Persist a deterministic command turn and return a response."""
+        await self._save_completed_turn(
+            session,
+            user_message=user_message,
+            response_text=response_text,
+        )
+        return ChatResponse(
+            text=response_text,
+            next_state=session.state.value,
+            language=language,
+            inline_keyboard=inline_keyboard,
+        )
+
+    async def _render_state_snapshot(
+        self,
+        session: Session,
+        language: str,
+    ) -> tuple[str, list[list[dict[str, str]]] | None]:
+        """Render the user's current context in a chosen language."""
+        profile = session.user_profile
+        state = session.state
+
+        if state == ConversationState.GREETING:
+            return response_generator.generate_greeting_response(language), None
+
+        if state in {
+            ConversationState.SITUATION_UNDERSTANDING,
+            ConversationState.PROFILE_COLLECTION,
+        }:
+            next_question = profile_extractor.get_next_question(
+                profile,
+                language,
+                session.skipped_fields,
+            )
+            if next_question:
+                return next_question, None
+            if state == ConversationState.SITUATION_UNDERSTANDING or not profile.life_event:
+                return response_generator.generate_clarification_response(
+                    "life_event",
+                    language,
+                ), None
+            return response_generator.generate_help_response(language), None
+
+        if state == ConversationState.SCHEME_PRESENTATION:
+            selection_text = _build_presented_scheme_selection_text(
+                session.presented_schemes,
+                language,
+            )
+            if selection_text:
+                return selection_text, format_presented_scheme_keyboard(
+                    session.presented_schemes,
+                    language,
+                )
+            return response_generator.generate_scheme_selection_response(language), None
+
+        if state == ConversationState.SCHEME_DETAILS and session.selected_scheme_id:
+            return await _build_scheme_details_text(
+                self.pool,
+                session.selected_scheme_id,
+                profile,
+                language,
+            ), None
+
+        if state == ConversationState.DOCUMENT_GUIDANCE and session.selected_scheme_id:
+            return await _build_document_guidance_text(
+                self.pool,
+                session.selected_scheme_id,
+                language,
+            ), None
+
+        if state == ConversationState.REJECTION_WARNINGS and session.selected_scheme_id:
+            return await _build_rejection_warnings_text(
+                self.pool,
+                session.selected_scheme_id,
+                profile,
+                language,
+            ), None
+
+        if state == ConversationState.APPLICATION_HELP and session.selected_scheme_id:
+            return await _build_application_help_text(
+                self.pool,
+                session.selected_scheme_id,
+                language,
+            ), None
+
+        if state == ConversationState.CSC_HANDOFF:
+            return await _build_handoff_text(self.pool, profile, language), None
+
+        return response_generator.generate_help_response(language), None
+
     async def handle_message(self, request: ChatRequest) -> ChatResponse:
         """Handle incoming user message and return response.
 
@@ -1300,20 +1457,49 @@ class ConversationService:
                 language=session.language_preference if session.language_preference != "auto" else "hi",
             )
 
+        command = _extract_supported_command(user_message)
+
         # Handle /start command — always reset and greet
-        if user_message.strip().lower() in ("/start", "/shuru"):
+        if command == "start":
             session = session_manager.reset_session(session)
             lang = session.language_preference if session.language_preference != "auto" else "hi"
             response_text = response_generator.generate_greeting_response(lang)
-            await self._save_completed_turn(
+            return await self._build_command_response(
                 session,
                 user_message=user_message,
                 response_text=response_text,
-            )
-            return ChatResponse(
-                text=response_text,
-                next_state=ConversationState.GREETING.value,
                 language=lang,
+            )
+
+        # Handle /help command without invoking the LLM.
+        if command == "help":
+            response_language = _command_response_language(session)
+            response_text = response_generator.generate_help_response(
+                session.language_preference,
+                has_active_scheme=bool(
+                    session.selected_scheme_id and session.state in SCHEME_CONTEXT_STATES
+                ),
+            )
+            return await self._build_command_response(
+                session,
+                user_message=user_message,
+                response_text=response_text,
+                language=response_language,
+                inline_keyboard=format_language_keyboard(session.language_preference),
+            )
+
+        # Handle callback data (scheme selection via inline keyboard)
+        if command == "language":
+            response_language = _command_response_language(session)
+            response_text = response_generator.generate_language_selection_response(
+                session.language_preference
+            )
+            return await self._build_command_response(
+                session,
+                user_message=user_message,
+                response_text=response_text,
+                language=response_language,
+                inline_keyboard=format_language_keyboard(session.language_preference),
             )
 
         # Handle callback data (scheme selection via inline keyboard)
@@ -2167,6 +2353,40 @@ class ConversationService:
     ) -> ChatResponse:
         """Handle callback query (scheme selection from inline keyboard)."""
         lang = session.language_preference if session.language_preference != "auto" else "hi"
+
+        if callback_data.startswith("lang:"):
+            requested_language = callback_data.replace("lang:", "", 1)
+            if requested_language not in {"hi", "en", "hinglish"}:
+                return ChatResponse(
+                    text="अमान्य भाषा चयन।" if lang == "hi" else "Invalid language selection.",
+                    language=lang,
+                )
+
+            session = session_manager.set_language(session, requested_language, locked=True)
+            state_text, inline_keyboard = await self._render_state_snapshot(
+                session,
+                requested_language,
+            )
+            response_text = (
+                response_generator.generate_language_changed_response(
+                    requested_language,
+                    has_active_scheme=bool(
+                        session.selected_scheme_id and session.state in SCHEME_CONTEXT_STATES
+                    ),
+                )
+                + "\n\n"
+                + state_text
+            )
+
+            session = await session_manager.add_message(session, "assistant", response_text)
+            await session_manager.save_session(session)
+
+            return ChatResponse(
+                text=response_text,
+                next_state=session.state.value,
+                language=requested_language,
+                inline_keyboard=inline_keyboard,
+            )
 
         if callback_data.startswith("scheme:"):
             scheme_id = callback_data.replace("scheme:", "")

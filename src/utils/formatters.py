@@ -7,7 +7,6 @@ Implements demo-quality message cards for:
 - Office/CSC location cards
 """
 
-import re
 from typing import Any
 
 from src.models.document import Document, DocumentChain
@@ -223,6 +222,55 @@ def format_inline_keyboard(
             }
         ])
 
+    return keyboard
+
+
+def format_presented_scheme_keyboard(
+    presented_schemes: list[dict[str, str]],
+    language: str = "hi",
+) -> list[list[dict[str, str]]] | None:
+    """Format stored presented schemes as inline keyboard buttons."""
+    if not presented_schemes:
+        return None
+
+    keyboard = []
+    for i, scheme in enumerate(presented_schemes[:5], 1):
+        name = scheme.get("name_hindi") if language == "hi" else scheme.get("name")
+        button_name = name or scheme.get("name") or scheme.get("name_hindi") or "Scheme"
+        if len(button_name) > 28:
+            button_name = button_name[:25] + "..."
+        keyboard.append(
+            [
+                {
+                    "text": f"{i}. {button_name}",
+                    "callback_data": f"scheme:{scheme['id']}",
+                }
+            ]
+        )
+
+    return keyboard
+
+
+def format_language_keyboard(
+    active_language: str = "auto",
+) -> list[list[dict[str, str]]]:
+    """Format inline keyboard buttons for language selection."""
+    labels = [
+        ("hi", "हिंदी"),
+        ("en", "English"),
+        ("hinglish", "Hinglish"),
+    ]
+    keyboard = []
+    for code, label in labels:
+        prefix = "✓ " if code == active_language else ""
+        keyboard.append(
+            [
+                {
+                    "text": f"{prefix}{label}",
+                    "callback_data": f"lang:{code}",
+                }
+            ]
+        )
     return keyboard
 
 

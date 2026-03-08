@@ -1,10 +1,19 @@
 """Tests for Telegram webhook handler."""
 
-import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from src.models.api import TelegramUpdate
+import pytest
+
+from src.db.session_store import InMemorySessionStore, configure_session_store, get_session_store
 from src.integrations.sarvam import STTResult, TTSResult
+from src.models.api import TelegramUpdate
+from src.models.session import ConversationState, Session, UserProfile
+
+
+@pytest.fixture(autouse=True)
+def reset_session_store() -> None:
+    """Use a fresh in-memory session store for each webhook test."""
+    configure_session_store(InMemorySessionStore())
 
 
 class TestTelegramUpdate:
@@ -394,6 +403,149 @@ class TestVoiceMessageHandling:
         assert result.language == "en"
         second_call = mock_voice_client.speech_to_text.await_args_list[1]
         assert second_call.kwargs["source_lang"] == "en"
+
+
+class TestTextMessageHandling:
+    """Tests for plain text Telegram message processing."""
+
+    @pytest.mark.asyncio
+    async def test_help_command_flows_through_webhook_without_llm(self):
+        """A Telegram /help text should return the deterministic help guide."""
+        from src.webhook.handler import handle_telegram_update
+
+        update_data = {
+            "update_id": 123500,
+            "message": {
+                "message_id": 7,
+                "chat": {"id": 12345, "type": "private"},
+                "from": {"id": 67890, "first_name": "Judge"},
+                "text": "/help",
+            },
+        }
+
+        mock_telegram = AsyncMock()
+        mock_voice_client = MagicMock()
+        mock_voice_client.api_key = ""
+
+        with patch(
+            "src.webhook.handler.get_telegram_client", return_value=mock_telegram
+        ), patch(
+            "src.webhook.handler._get_voice_client", return_value=mock_voice_client
+        ):
+            result = await handle_telegram_update(update_data, AsyncMock())
+
+        assert result["status"] == "ok"
+        mock_telegram.send_chat_action.assert_called_once_with(12345, "typing")
+        mock_telegram.send_inline_keyboard.assert_called_once()
+        sent_text = mock_telegram.send_inline_keyboard.await_args.kwargs["text"]
+        buttons = mock_telegram.send_inline_keyboard.await_args.kwargs["buttons"]
+        assert "Delhi Scheme Saathi Help" in sent_text
+        assert "/start" in sent_text
+        assert "/language" in sent_text
+        assert "start over" in sent_text
+        assert "हिंदी" in sent_text
+        assert [row[0]["callback_data"] for row in buttons] == [
+            "lang:hi",
+            "lang:en",
+            "lang:hinglish",
+        ]
+
+    @pytest.mark.asyncio
+    async def test_language_command_flows_through_webhook_with_picker(self):
+        """A Telegram /language text should return inline language buttons."""
+        from src.webhook.handler import handle_telegram_update
+
+        update_data = {
+            "update_id": 123501,
+            "message": {
+                "message_id": 8,
+                "chat": {"id": 12345, "type": "private"},
+                "from": {"id": 67890, "first_name": "Judge"},
+                "text": "/language",
+            },
+        }
+
+        mock_telegram = AsyncMock()
+        mock_voice_client = MagicMock()
+        mock_voice_client.api_key = ""
+
+        with patch(
+            "src.webhook.handler.get_telegram_client", return_value=mock_telegram
+        ), patch(
+            "src.webhook.handler._get_voice_client", return_value=mock_voice_client
+        ):
+            result = await handle_telegram_update(update_data, AsyncMock())
+
+        assert result["status"] == "ok"
+        mock_telegram.send_inline_keyboard.assert_called_once()
+        sent_text = mock_telegram.send_inline_keyboard.await_args.kwargs["text"]
+        buttons = mock_telegram.send_inline_keyboard.await_args.kwargs["buttons"]
+        assert "Choose your preferred language" in sent_text
+        assert [row[0]["callback_data"] for row in buttons] == [
+            "lang:hi",
+            "lang:en",
+            "lang:hinglish",
+        ]
+
+    @pytest.mark.asyncio
+    async def test_language_callback_flows_through_webhook(self):
+        """Language callback should preserve scheme context through the webhook path."""
+        from src.webhook.handler import handle_telegram_update
+
+        store = get_session_store()
+        await store.save(
+            Session(
+                user_id="67890",
+                state=ConversationState.SCHEME_DETAILS,
+                user_profile=UserProfile(
+                    life_event="EDUCATION",
+                    age=19,
+                    category="OBC",
+                    annual_income=400000,
+                ),
+                selected_scheme_id="SCH-1",
+                language_preference="en",
+                language_locked=True,
+            )
+        )
+
+        update_data = {
+            "update_id": 123502,
+            "callback_query": {
+                "id": "callback_123",
+                "from": {"id": 67890, "first_name": "Judge"},
+                "message": {
+                    "message_id": 9,
+                    "chat": {"id": 12345, "type": "private"},
+                },
+                "data": "lang:hi",
+            },
+        }
+
+        mock_telegram = AsyncMock()
+        mock_voice_client = MagicMock()
+        mock_voice_client.api_key = ""
+
+        with patch(
+            "src.webhook.handler.get_telegram_client", return_value=mock_telegram
+        ), patch(
+            "src.webhook.handler._get_voice_client", return_value=mock_voice_client
+        ), patch(
+            "src.services.conversation._build_scheme_details_text",
+            AsyncMock(return_value="शिक्षा योजना विवरण"),
+        ):
+            result = await handle_telegram_update(update_data, AsyncMock())
+
+        session = await store.get("67890")
+        assert result["status"] == "ok"
+        mock_telegram.answer_callback_query.assert_called_once_with("callback_123")
+        mock_telegram.send_text.assert_called_once()
+        sent_text = mock_telegram.send_text.await_args.args[1]
+        assert "भाषा बदल दी गई है" in sent_text
+        assert "शिक्षा योजना विवरण" in sent_text
+        assert session is not None
+        assert session.language_preference == "hi"
+        assert session.language_locked is True
 
 
 class TestSendResponse:

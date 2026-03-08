@@ -221,6 +221,13 @@ fi
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${PROJECT_ROOT}"
 
+BOT_SCRIPT_PYTHON=""
+if [[ -x ".venv/bin/python" ]]; then
+  BOT_SCRIPT_PYTHON="./.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+  BOT_SCRIPT_PYTHON="python3"
+fi
+
 STACK_NAME="${STACK_NAME:-delhi-scheme-saathi}"
 REGION="${REGION:-${AWS_REGION:-${AWS_DEFAULT_REGION:-ap-south-1}}}"
 PROFILE="${PROFILE:-${AWS_PROFILE:-${AWS_DEFAULT_PROFILE:-}}}"
@@ -297,6 +304,15 @@ if [[ "${SKIP_DEPLOY}" -eq 0 ]]; then
     --no-fail-on-empty-changeset
 else
   log "Skipping deploy"
+fi
+
+if [[ -n "${TELEGRAM_BOT_TOKEN:-}" && -n "${BOT_SCRIPT_PYTHON}" ]]; then
+  log "Syncing Telegram bot commands"
+  "${BOT_SCRIPT_PYTHON}" scripts/set_telegram_webhook.py --commands
+elif [[ -z "${TELEGRAM_BOT_TOKEN:-}" ]]; then
+  log "Skipping Telegram command sync (TELEGRAM_BOT_TOKEN not set)"
+else
+  log "Skipping Telegram command sync (python3 not available)"
 fi
 
 if [[ "${SYNC_DB}" -eq 1 ]]; then

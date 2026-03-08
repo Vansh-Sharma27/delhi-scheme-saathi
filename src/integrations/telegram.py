@@ -9,6 +9,12 @@ from src.config import get_settings
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_BOT_COMMANDS = [
+    {"command": "start", "description": "Start a new scheme search"},
+    {"command": "help", "description": "Learn what this bot can do"},
+    {"command": "language", "description": "Change the bot language"},
+]
+
 
 class TelegramClient:
     """Async client for Telegram Bot API."""
@@ -207,6 +213,22 @@ class TelegramClient:
             f"{self._base_url}/setWebhook",
             json={"url": url},
         )
+        return self._parse_response(response)
+
+    async def set_my_commands(
+        self,
+        commands: list[dict[str, str]] | None = None,
+    ) -> dict[str, Any]:
+        """Register Telegram bot commands shown in the client UI."""
+        response = await self._client.post(
+            f"{self._base_url}/setMyCommands",
+            json={"commands": commands or DEFAULT_BOT_COMMANDS},
+        )
+        return self._parse_response(response)
+
+    async def get_my_commands(self) -> dict[str, Any]:
+        """Fetch the currently registered Telegram bot commands."""
+        response = await self._client.get(f"{self._base_url}/getMyCommands")
         return self._parse_response(response)
 
     async def delete_webhook(self) -> dict[str, Any]:
