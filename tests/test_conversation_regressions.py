@@ -1237,6 +1237,82 @@ async def test_language_switch_translation_request_uses_scheme_answer_path() -> 
 
 
 @pytest.mark.asyncio
+async def test_scheme_eligibility_question_with_profile_update_stays_on_answer_path() -> None:
+    """Scheme-context eligibility questions should not get overridden by rematching."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-scheme-eligibility-followup",
+            state=ConversationState.SCHEME_DETAILS,
+            user_profile=UserProfile(
+                life_event="DEATH_IN_FAMILY",
+                age=45,
+                gender="female",
+                annual_income=50000,
+            ),
+            selected_scheme_id="SCH-DELHI-003",
+            language_preference="en",
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "request_details",
+            "life_event": None,
+            "extracted_fields": {"category": "General"},
+            "language": "en",
+            "selected_scheme_id": None,
+            "response_text": None,
+        }
+    )
+    match_schemes = AsyncMock()
+
+    with patch(
+        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        AsyncMock(
+            return_value=_make_scheme(
+                "SCH-DELHI-003",
+                life_event="DEATH_IN_FAMILY",
+                name="Delhi Pension Scheme to Women in Distress (Widow Pension)",
+                genders=["female"],
+                categories=["all"],
+            )
+        ),
+    ), patch(
+        "src.services.conversation.scheme_matcher.match_schemes",
+        match_schemes,
+    ), patch(
+        "src.services.conversation.response_generator.generate_scheme_question_response",
+        AsyncMock(
+            return_value=(
+                "General category does not disqualify her for this scheme. "
+                "Based on the details shared so far, she appears eligible on the age, gender, and income checks."
+            )
+        ),
+    ) as answer_mock:
+        result = await service.handle_message(
+            ChatRequest(
+                user_id="user-scheme-eligibility-followup",
+                message=(
+                    "What's the eligibility criteria for this scheme? "
+                    "My mother belongs to general category does she qualify?"
+                ),
+            )
+        )
+
+    session = await store.get("user-scheme-eligibility-followup")
+    assert result.next_state == ConversationState.SCHEME_DETAILS.value
+    assert "general category" in result.text.lower()
+    assert answer_mock.await_count == 1
+    assert match_schemes.await_count == 0
+    assert session is not None
+    assert session.state == ConversationState.SCHEME_DETAILS
+    assert session.user_profile.category == "General"
+
+
+@pytest.mark.asyncio
 async def test_low_context_field_answer_skips_relevance_clarification_loop() -> None:
     """A parsed field reply should present deterministic matches instead of re-confirming the topic."""
     store = get_session_store()
@@ -1350,8 +1426,8 @@ async def test_scheme_question_response_includes_last_assistant_answer_for_trans
 
 
 @pytest.mark.asyncio
-async def test_scheme_question_response_uses_only_grounded_matching_reasons() -> None:
-    """Justification context should avoid generic profile facts that are not actual rule hits."""
+async def test_scheme_question_response_answers_justification_deterministically() -> None:
+    """Why-this-scheme answers should use grounded deterministic reasons instead of the LLM."""
     session = Session(
         user_id="user-grounded-reasons",
         state=ConversationState.SCHEME_DETAILS,
@@ -1388,9 +1464,9 @@ async def test_scheme_question_response_uses_only_grounded_matching_reasons() ->
 
     with patch(
         "src.services.response_generator.generate_response",
-        AsyncMock(return_value="Grounded answer"),
+        AsyncMock(return_value="LLM fallback should not be used"),
     ) as generate_mock:
-        await response_generator.generate_scheme_question_response(
+        result = await response_generator.generate_scheme_question_response(
             session,
             scheme,
             session.user_profile,
@@ -1398,10 +1474,67 @@ async def test_scheme_question_response_uses_only_grounded_matching_reasons() ->
             "en",
         )
 
-    context = generate_mock.await_args.args[1]
-    matching_reasons = context["matching_reasons"]
-    assert any("max income" in reason.lower() for reason in matching_reasons)
-    assert not any("user age" in reason.lower() for reason in matching_reasons)
+    assert "grounded reasons" in result.lower()
+    assert "max income" in result.lower()
+    assert "user age" not in result.lower()
+    assert generate_mock.await_count == 0
+
+
+@pytest.mark.asyncio
+async def test_scheme_question_response_answers_eligibility_deterministically() -> None:
+    """Eligibility questions should use grounded deterministic text instead of the LLM."""
+    session = Session(
+        user_id="user-deterministic-eligibility-answer",
+        state=ConversationState.SCHEME_DETAILS,
+        user_profile=UserProfile(
+            life_event="DEATH_IN_FAMILY",
+            age=45,
+            gender="female",
+            category="General",
+            annual_income=50000,
+        ),
+        selected_scheme_id="SCH-DELHI-003",
+        language_preference="en",
+    )
+    scheme = Scheme(
+        id="SCH-DELHI-003",
+        name="Delhi Pension Scheme to Women in Distress (Widow Pension)",
+        name_hindi="दिल्ली महिला विपत्ति पेंशन योजना (विधवा पेंशन)",
+        department="Department of Women and Child Development",
+        department_hindi="महिला एवं बाल विकास विभाग",
+        level="state",
+        description="Monthly assistance for women in distress.",
+        description_hindi="विपत्ति में महिलाओं के लिए मासिक सहायता।",
+        benefits_amount=2500,
+        benefits_frequency="monthly",
+        eligibility=EligibilityCriteria(
+            min_age=18,
+            max_income=100000,
+            genders=["female"],
+            categories=["all"],
+        ),
+        life_events=["DEATH_IN_FAMILY"],
+        documents_required=[],
+        application_url="https://example.com/apply",
+        offline_process="Apply online",
+    )
+
+    with patch(
+        "src.services.response_generator.generate_response",
+        AsyncMock(return_value="LLM fallback should not be used"),
+    ) as generate_mock:
+        result = await response_generator.generate_scheme_question_response(
+            session,
+            scheme,
+            session.user_profile,
+            "What's the eligibility criteria for this scheme? My mother belongs to general category, does she qualify?",
+            "en",
+        )
+
+    assert "general category" in result.lower()
+    assert "does not have a caste-category restriction" in result.lower()
+    assert "appears eligible" in result.lower()
+    assert generate_mock.await_count == 0
 
 
 def test_truncate_at_sentence_handles_hindi_danda() -> None:

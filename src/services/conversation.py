@@ -480,6 +480,36 @@ def _matching_field_changes(
     return changed_fields
 
 
+def _should_refresh_matches_after_profile_change(
+    *,
+    session: Session,
+    profile: UserProfile,
+    matching_inputs_changed: bool,
+    action: str | None,
+    requested_state: ConversationState | None,
+) -> bool:
+    """Decide when updated profile facts should trigger a fresh scheme match."""
+    if not matching_inputs_changed or not profile.is_complete_for_matching:
+        return False
+    if session.state not in SCHEME_CONTEXT_STATES:
+        return False
+    if requested_state in SCHEME_CONTEXT_STATES | {ConversationState.CSC_HANDOFF}:
+        return False
+    return not _should_preserve_scheme_context_action(action)
+
+
+def _should_preserve_scheme_context_action(action: str | None) -> bool:
+    """Return True when an explicit scheme-flow action should keep the active scheme."""
+    return action in {
+        "answer_scheme_question",
+        "request_details",
+        "request_application",
+        "request_handoff",
+        "select_scheme",
+        "switch_scheme",
+    }
+
+
 def _collection_state_for_profile(profile: UserProfile) -> ConversationState:
     """Return the active collection state based on whether the topic is known."""
     if profile.life_event:
@@ -1493,7 +1523,11 @@ class ConversationService:
                 session = session_manager.set_presented_schemes(session, [])
                 session = session_manager.set_currently_asking(session, None)
                 session = session_manager.set_skipped_fields(session, [])
-            elif matching_inputs_changed and session.selected_scheme_id:
+            elif (
+                matching_inputs_changed
+                and session.selected_scheme_id
+                and not _should_preserve_scheme_context_action(action)
+            ):
                 session = session_manager.clear_selection(session)
                 session = session_manager.set_presented_schemes(session, [])
 
@@ -1530,16 +1564,12 @@ class ConversationService:
                 else ConversationState.SITUATION_UNDERSTANDING
             )
 
-        if (
-            matching_inputs_changed
-            and profile.is_complete_for_matching
-            and session.state in {
-                ConversationState.SCHEME_PRESENTATION,
-                ConversationState.SCHEME_DETAILS,
-                ConversationState.DOCUMENT_GUIDANCE,
-                ConversationState.REJECTION_WARNINGS,
-                ConversationState.APPLICATION_HELP,
-            }
+        if _should_refresh_matches_after_profile_change(
+            session=session,
+            profile=profile,
+            matching_inputs_changed=matching_inputs_changed,
+            action=action,
+            requested_state=requested_state,
         ):
             next_state = ConversationState.SCHEME_MATCHING
 

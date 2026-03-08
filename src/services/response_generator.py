@@ -1,6 +1,7 @@
 """Response generation service."""
 
 import logging
+import re
 from typing import Any
 
 from src.db import scheme_repo
@@ -10,6 +11,29 @@ from src.prompts.loader import get_generate_response_prompt
 from src.services.ai_orchestrator import get_ai_orchestrator
 
 logger = logging.getLogger(__name__)
+
+ELIGIBILITY_QUESTION_PATTERNS = (
+    r"\beligib(?:le|ility)\b",
+    r"\bqualif(?:y|ies|ied)\b",
+    r"\bcriteria\b",
+    r"\bcan (?:i|we|she|he|they) apply\b",
+    r"\bwho can apply\b",
+    r"\bam i eligible\b",
+    r"\bdo(?:es)? .* qualify\b",
+    r"\bpatar(?:ta|ता)\b",
+    r"\bयोग्य\b",
+    r"\bपात्र\b",
+    r"qualify",
+)
+JUSTIFICATION_QUESTION_PATTERNS = (
+    r"\bjustify\b",
+    r"\bwhy (?:this|that) scheme\b",
+    r"\bwhy did you suggest\b",
+    r"\bwhy did you recommend\b",
+    r"\bwhy was this shown\b",
+    r"क्यों सुझा",
+    r"क्यों recommend",
+)
 
 
 def _pick_language_text(
@@ -363,6 +387,302 @@ def _maybe_generate_scheme_term_response(
     return variants.get(language, variants["en"])
 
 
+def _is_eligibility_question(user_question: str) -> bool:
+    """Return True when the user is asking about eligibility or qualification."""
+    return any(
+        re.search(pattern, user_question, re.IGNORECASE)
+        for pattern in ELIGIBILITY_QUESTION_PATTERNS
+    )
+
+
+def _is_justification_question(user_question: str) -> bool:
+    """Return True when the user asks why the scheme was suggested."""
+    return any(
+        re.search(pattern, user_question, re.IGNORECASE)
+        for pattern in JUSTIFICATION_QUESTION_PATTERNS
+    )
+
+
+def _eligibility_field_label(field: str, language: str) -> str:
+    """Render a field label in the response language."""
+    labels = {
+        "age": {"hi": "उम्र", "en": "age", "hinglish": "age"},
+        "gender": {"hi": "लिंग", "en": "gender", "hinglish": "gender"},
+        "income": {"hi": "आय", "en": "income", "hinglish": "income"},
+        "category": {"hi": "श्रेणी", "en": "category", "hinglish": "category"},
+    }
+    field_labels = labels.get(field, labels["age"])
+    return field_labels.get(language, field_labels["en"])
+
+
+def _build_eligibility_rule_text(scheme: Scheme, language: str) -> list[str]:
+    """Build concise human-readable rule bullets from structured eligibility data."""
+    elig = scheme.eligibility
+    rules: list[str] = []
+
+    if elig.min_age is not None and elig.max_age is not None:
+        rules.append(
+            _pick_language_text(
+                language,
+                f"उम्र {elig.min_age} से {elig.max_age} वर्ष के बीच",
+                f"age between {elig.min_age} and {elig.max_age}",
+                f"age {elig.min_age} se {elig.max_age} ke beech",
+            )
+        )
+    elif elig.min_age is not None:
+        rules.append(
+            _pick_language_text(
+                language,
+                f"उम्र कम से कम {elig.min_age} वर्ष",
+                f"age {elig.min_age} or above",
+                f"age kam se kam {elig.min_age} years",
+            )
+        )
+    elif elig.max_age is not None:
+        rules.append(
+            _pick_language_text(
+                language,
+                f"उम्र {elig.max_age} वर्ष तक",
+                f"age up to {elig.max_age}",
+                f"age {elig.max_age} tak",
+            )
+        )
+
+    restricted_genders = [gender for gender in elig.genders if gender.lower() != "all"]
+    if restricted_genders:
+        if len(restricted_genders) == 1 and restricted_genders[0].lower() == "female":
+            rules.append(
+                _pick_language_text(
+                    language,
+                    "महिला आवेदक",
+                    "women applicants",
+                    "female applicants",
+                )
+            )
+        elif len(restricted_genders) == 1 and restricted_genders[0].lower() == "male":
+            rules.append(
+                _pick_language_text(
+                    language,
+                    "पुरुष आवेदक",
+                    "male applicants",
+                    "male applicants",
+                )
+            )
+        else:
+            gender_text = ", ".join(restricted_genders)
+            rules.append(
+                _pick_language_text(
+                    language,
+                    f"लिंग शर्त: {gender_text}",
+                    f"gender condition: {gender_text}",
+                    f"gender condition: {gender_text}",
+                )
+            )
+
+    if elig.max_income is not None:
+        income_text = _format_currency(elig.max_income)
+        rules.append(
+            _pick_language_text(
+                language,
+                f"वार्षिक पारिवारिक आय {income_text} तक",
+                f"annual family income up to {income_text}",
+                f"annual family income {income_text} tak",
+            )
+        )
+    elif elig.income_by_category:
+        limits = ", ".join(
+            f"{segment.upper()} {_format_currency(limit)}"
+            for segment, limit in sorted(
+                (
+                    (str(segment), int(limit))
+                    for segment, limit in elig.income_by_category.items()
+                ),
+                key=lambda item: item[1],
+            )
+        )
+        rules.append(
+            _pick_language_text(
+                language,
+                f"आय सीमा band के अनुसार: {limits}",
+                f"income limits depend on the band: {limits}",
+                f"income limit band ke hisaab se hai: {limits}",
+            )
+        )
+
+    if elig.caste_categories and not any(category.upper() == "ALL" for category in elig.caste_categories):
+        category_text = ", ".join(elig.caste_categories)
+        rules.append(
+            _pick_language_text(
+                language,
+                f"श्रेणी शर्त: {category_text}",
+                f"category condition: {category_text}",
+                f"category condition: {category_text}",
+            )
+        )
+
+    return rules
+
+
+def _maybe_generate_eligibility_response(
+    scheme: Scheme,
+    profile: UserProfile,
+    user_question: str,
+    language: str,
+) -> str | None:
+    """Answer eligibility questions from structured scheme data without using the LLM."""
+    if not _is_eligibility_question(user_question):
+        return None
+
+    rule_text = _build_eligibility_rule_text(scheme, language)
+    if not rule_text:
+        return None
+
+    elig = scheme.eligibility
+    match = scheme_repo.calculate_eligibility_match(scheme, profile)
+
+    failed_fields: list[str] = []
+    missing_fields: list[str] = []
+    checked_fields: list[str] = []
+
+    if elig.min_age is not None or elig.max_age is not None:
+        if profile.age is None:
+            missing_fields.append("age")
+        else:
+            checked_fields.append("age")
+            if not match.get("age", True):
+                failed_fields.append("age")
+
+    restricted_genders = [gender for gender in elig.genders if gender.lower() != "all"]
+    if restricted_genders:
+        if profile.gender is None:
+            missing_fields.append("gender")
+        else:
+            checked_fields.append("gender")
+            if not match.get("gender", True):
+                failed_fields.append("gender")
+
+    if elig.max_income is not None or elig.income_by_category:
+        if profile.annual_income is None:
+            missing_fields.append("income")
+        else:
+            checked_fields.append("income")
+            if not match.get("income", True):
+                failed_fields.append("income")
+
+    has_category_restriction = (
+        bool(elig.caste_categories)
+        and not any(category.upper() == "ALL" for category in elig.caste_categories)
+    )
+    if has_category_restriction:
+        if profile.category is None:
+            missing_fields.append("category")
+        else:
+            checked_fields.append("category")
+            if not match.get("category", True):
+                failed_fields.append("category")
+
+    checked_fields_text = ", ".join(
+        _eligibility_field_label(field, language)
+        for field in checked_fields
+    )
+    missing_fields_text = ", ".join(
+        _eligibility_field_label(field, language)
+        for field in missing_fields
+    )
+    failed_fields_text = ", ".join(
+        _eligibility_field_label(field, language)
+        for field in failed_fields
+    )
+
+    category_note = None
+    if profile.category and not has_category_restriction:
+        category_note = _pick_language_text(
+            language,
+            f"{profile.category} श्रेणी अपने-आप में समस्या नहीं है, क्योंकि मेरे पास जो scheme data है उसमें caste-category restriction नहीं दिख रही।",
+            f"{profile.category} category does not disqualify the applicant because this scheme does not have a caste-category restriction in the data I have.",
+            f"{profile.category} category se problem nahi hai, kyunki mere paas jo scheme data hai usmein caste-category restriction nahi dikh rahi.",
+        )
+    elif profile.category and has_category_restriction and "category" in failed_fields:
+        allowed_categories = ", ".join(elig.caste_categories)
+        category_note = _pick_language_text(
+            language,
+            f"मेरे पास जो data है उसके अनुसार यह scheme केवल {allowed_categories} श्रेणी के लिए है, इसलिए {profile.category} match नहीं करती।",
+            f"In the scheme data I have, this scheme is limited to {allowed_categories}, so {profile.category} does not match the category rule.",
+            f"Mere paas jo scheme data hai uske hisaab se yeh scheme sirf {allowed_categories} ke liye hai, isliye {profile.category} category match nahi karti.",
+        )
+
+    if failed_fields:
+        status_text = _pick_language_text(
+            language,
+            f"अभी साझा की गई जानकारी के आधार पर applicant {failed_fields_text} check पर fit नहीं लगते।",
+            f"Based on the details shared so far, the applicant does not appear eligible on the {failed_fields_text} check.",
+            f"Ab tak ki details ke hisaab se applicant {failed_fields_text} check par fit nahi lagte.",
+        )
+    elif missing_fields:
+        status_text = _pick_language_text(
+            language,
+            f"अभी तक की जानकारी के आधार पर applicant eligible हो सकते हैं, लेकिन {missing_fields_text} confirm करना बाकी है।",
+            f"Based on the details shared so far, the applicant may qualify, but {missing_fields_text} still needs to be confirmed.",
+            f"Ab tak ki details ke hisaab se applicant qualify kar sakte hain, lekin {missing_fields_text} abhi confirm karna baaki hai.",
+        )
+    else:
+        status_text = _pick_language_text(
+            language,
+            f"अभी साझा की गई जानकारी के आधार पर applicant {checked_fields_text} checks पर eligible लगते हैं।",
+            f"Based on the details shared so far, the applicant appears eligible on the available {checked_fields_text} checks.",
+            f"Ab tak ki details ke hisaab se applicant available {checked_fields_text} checks par eligible lagte hain.",
+        )
+
+    final_note = _pick_language_text(
+        language,
+        "अंतिम मंजूरी दस्तावेज़ जाँच और विभाग की बाकी शर्तों पर भी निर्भर करेगी।",
+        "Final approval will still depend on document verification and any other departmental checks.",
+        "Final approval documents verification aur department ke baaki checks par bhi depend karega.",
+    )
+
+    lines = [
+        _pick_language_text(
+            language,
+            f"मेरे पास जो scheme data है उसके अनुसार मुख्य eligibility checks हैं: {'; '.join(rule_text)}.",
+            f"From the scheme data I have, the main eligibility checks are: {'; '.join(rule_text)}.",
+            f"Mere paas jo scheme data hai uske hisaab se main eligibility checks hain: {'; '.join(rule_text)}.",
+        ),
+    ]
+    if category_note:
+        lines.append(category_note)
+    lines.append(status_text)
+    lines.append(final_note)
+    return " ".join(lines)
+
+
+def _maybe_generate_scheme_justification_response(
+    scheme: Scheme,
+    profile: UserProfile,
+    user_question: str,
+    language: str,
+) -> str | None:
+    """Answer grounded why-this-scheme questions without free-form generation."""
+    if not _is_justification_question(user_question):
+        return None
+
+    reasons = _build_matching_reason_context(scheme, profile)
+    if not reasons:
+        return _pick_language_text(
+            language,
+            "मैं इस scheme के बारे में सिर्फ वही कारण बताना चाहता हूँ जो data में साफ़ दिखते हैं। अभी मेरे पास इतना grounded match data नहीं है कि मैं भरोसे से reason बता सकूँ। अगर आप चाहें तो मैं उम्र, आय, श्रेणी या दूसरी eligibility details दोबारा check कर सकता हूँ।",
+            "I only want to explain this scheme using grounded facts from the data. Right now I do not have enough matched rule evidence to justify it confidently. If you want, I can re-check the age, income, category, or other eligibility details.",
+            "Main is scheme ko sirf grounded data ke basis par explain karna chahta hoon. Abhi mere paas itna matched rule evidence nahi hai ki main confidently reason bata sakoon. Agar chahein to main age, income, category ya doosri eligibility details dobara check kar sakta hoon.",
+        )
+
+    reasons_text = "; ".join(reasons[:3])
+    return _pick_language_text(
+        language,
+        f"मैंने यह scheme इन grounded कारणों से दिखाई: {reasons_text} अगर चाहें तो मैं इसमें documents या application steps भी समझा सकता हूँ।",
+        f"I suggested this scheme for grounded reasons from the current data: {reasons_text} If you want, I can also explain the documents or application steps.",
+        f"Maine yeh scheme current data ke grounded reasons ki wajah se dikhayi: {reasons_text} Agar chahein to main documents ya application steps bhi samjha sakta hoon.",
+    )
+
+
 def _last_assistant_response(session: Session) -> str | None:
     """Return the most recent assistant reply for translation/rephrase follow-ups."""
     for message in reversed(session.messages):
@@ -446,6 +766,22 @@ async def generate_scheme_question_response(
     term_response = _maybe_generate_scheme_term_response(scheme, profile, user_question, language)
     if term_response:
         return term_response
+    justification_response = _maybe_generate_scheme_justification_response(
+        scheme,
+        profile,
+        user_question,
+        language,
+    )
+    if justification_response:
+        return justification_response
+    eligibility_response = _maybe_generate_eligibility_response(
+        scheme,
+        profile,
+        user_question,
+        language,
+    )
+    if eligibility_response:
+        return eligibility_response
 
     current_scheme = scheme.model_dump(mode="json")
     current_scheme["description"] = scheme.description[:1200]
