@@ -5,13 +5,14 @@
 This section highlights key architectural decisions and their rationales, addressing requirements from the Requirements Document.
 
 ### 1. Voice-First Architecture (Requirements FR1)
-**Decision:** Use Bhashini (AI4Bharat) as primary voice processing service with Google Cloud as fallback.
+**Decision:** Use Sarvam AI as primary voice processing service with Bhashini (AI4Bharat) as fallback.
 
 **Rationale:**
-- Bhashini provides government-approved, India-hosted AI services
-- IndicWhisper optimized for Indian languages and accents
-- Data sovereignty compliance (Requirements NFR5)
-- Fallback ensures 99.5% availability (Requirements NFR3)
+- Sarvam AI (Saaras v3 STT / Bulbul v3 TTS) provides production-grade Hindi voice processing with high accuracy
+- Bhashini (AI4Bharat, IIT Madras) provides government-approved, India-hosted fallback
+- Multi-language STT probing: system tries multiple language candidates (English, Hindi) and selects the highest-quality transcript via a composite scoring function (confidence + transcript quality + language alignment)
+- Data sovereignty compliance (Requirements NFR5) — both providers are India-hosted
+- Dual-provider fallback ensures 99.5% availability (Requirements NFR3)
 
 ### 2. Hybrid Scheme Retrieval (Requirements FR4)
 **Decision:** Three-stage retrieval combining life event mapping, structured filtering, and semantic search.
@@ -31,15 +32,16 @@ This section highlights key architectural decisions and their rationales, addres
 - Lambda cold start <1s acceptable for 5s latency budget
 - DynamoDB TTL enables automatic data expiry (Requirements NFR2)
 
-### 4. No Permanent Personal Data Storage (Requirements NFR2)
-**Decision:** 24-hour TTL on all session data, no long-term user profiles.
+### 4. Ephemeral Personal Data Storage (Requirements NFR2)
+**Decision:** 7-day TTL on all session data via DynamoDB, no long-term user profiles.
 
 **Rationale:**
 - Privacy by design - minimize data breach risk
 - Compliance with data minimization principles
-- 24-hour window balances privacy with realistic user journeys (target users may take a day to gather documents before returning)
+- 7-day window balances privacy with realistic user journeys (target users may take days to gather documents and visit government offices before returning)
 - Users can restart conversation anytime without privacy concerns
 - Scheme data is public, personal data is ephemeral
+- DynamoDB TTL handles automatic cleanup with zero operational overhead
 
 ### 5. Document Dependency Resolution (Requirements FR5)
 **Decision:** Recursive depth-first traversal to resolve complete document chains.
@@ -68,13 +70,14 @@ This section highlights key architectural decisions and their rationales, addres
 - Clear separation of concerns for each conversation phase
 
 ### 8. Multi-LLM Fallback (Requirements NFR3)
-**Decision:** Claude → GPT-4 → Gemini → Rule-based fallback chain.
+**Decision:** AWS Bedrock Nova 2 Lite (primary) → xAI Grok (fallback) → safe error message.
 
 **Rationale:**
-- No single LLM provider guarantees 99.5% uptime
-- Automatic failover maintains service availability
-- Rule-based fallback for basic queries when all LLMs unavailable
-- Cost optimization by using cheaper models as fallbacks
+- AWS Bedrock Nova 2 Lite runs in-region (ap-south-1) for lowest latency and data sovereignty
+- xAI Grok (`grok-4-1-fast-reasoning`) via OpenAI-compatible API provides reliable fallback with reasoning capabilities
+- Both providers are lazy-initialized singletons to minimize cold start overhead
+- AI Orchestrator layer applies per-task timeouts (8s for analysis/response, 3s for relevance judging, 20s for background memory refresh)
+- Fallback is automatic and transparent to the user — no degraded experience
 
 ### 9. Anti-Hallucination Architecture (Requirements FR4, FR5, FR6)
 **Decision:** Strict separation between LLM responsibilities (conversation) and rules engine responsibilities (scheme facts).
@@ -96,15 +99,47 @@ This section highlights key architectural decisions and their rationales, addres
 - Voice transcription confidence scoring: low-confidence transcriptions trigger text fallback rather than acting on potentially misheard input
 - Scheme data staleness tracking: data older than 90 days is flagged with a warning and official source link
 
-### 11. Low-Bandwidth and Degraded Network Design (Requirements NFR3, NFR6)
-**Decision:** WhatsApp-first delivery with progressive degradation across network conditions.
+### 11. Telegram-First Delivery with Progressive Degradation (Requirements NFR3, NFR6)
+**Decision:** Telegram Bot API as primary channel with progressive degradation across network conditions.
 
 **Rationale:**
-- WhatsApp works on 2G connections and compresses media automatically
+- Telegram Bot API is free, requires no business verification, and supports voice messages natively
+- WhatsApp Business API requires lengthy verification — Telegram chosen for MVP speed
 - Voice messages use OGG Opus (8-16 kbps), allowing 30-second messages in ~60KB
-- Text responses prioritized over audio when network quality is poor
-- Cached scheme data in ElastiCache ensures core functionality during partial outages
+- Text responses prioritized over audio when network quality is poor or TTS length exceeds 900 characters
+- Inline keyboards provide structured navigation without requiring users to type scheme names
+- Long messages split at `───` section dividers to stay under Telegram's 4096 char limit
 - Rule-based fallback when external APIs are unreachable
+
+### 12. AI Orchestration and Working Memory (New — not in original design)
+**Decision:** Centralized AI orchestrator with async working memory refresh via SQS.
+
+**Rationale:**
+- `AIOrchestrator` applies per-task execution policies (timeouts, priority levels, telemetry) to all LLM calls
+- Working memory system replaces simple conversation summary: deterministic profile facts + LLM-generated summary + active scheme IDs + pending actions
+- Background memory refresh triggered every 8 turns or when context exceeds ~6000 tokens
+- SQS queue decouples memory refresh from the synchronous user response path — user never waits for memory refresh
+- Dedicated Lambda worker (`WorkingMemoryWorkerFunction`) processes SQS messages asynchronously
+- In-memory queue available for local development without SQS dependency
+
+### 13. Dual Profile Extraction Pipeline (New — not in original design)
+**Decision:** Parallel LLM + regex extraction with rule-based taking precedence.
+
+**Rationale:**
+- LLM analysis (`analyze_message`) extracts intent, life event, entities, language detection, and natural response draft
+- Regex patterns (`extract_by_patterns`) provide deterministic extraction for age, income, category, gender, marital status, employment, BPL
+- Contextual layer interprets bare numbers based on `currently_asking` metadata (e.g., bare "19" → age if bot just asked for age)
+- Rule-based extraction overrides LLM when both detect the same field — prevents hallucinated profile values
+- `awaiting_profile_change` guard prevents re-matching loops when no schemes are found
+
+### 14. Scheme-Aware Profile Collection (New — not in original design)
+**Decision:** Required profile fields vary by life event, not fixed for all users.
+
+**Rationale:**
+- Different scheme categories require different eligibility fields (e.g., housing schemes need income bands, health schemes need BPL status)
+- `scheme_catalog.py` maps each life event to the minimum required fields
+- Reduces friction by asking only relevant questions instead of a fixed 4-field checklist
+- Users reach scheme matching faster for categories with fewer requirements
 
 ## System Architecture Overview
 
@@ -113,48 +148,56 @@ Delhi Scheme Saathi is designed as a serverless, modular monolith system that pr
 **Architectural Pattern:** Modular monolith deployed as AWS Lambda functions with clear service boundaries. This approach provides the simplicity of a monolith with the modularity of microservices, avoiding distributed system complexity while maintaining code organization.
 
 ### Architecture Principles
-- **Voice-First Design:** Optimized for Hindi voice interactions
-- **Serverless Scalability:** Auto-scaling based on demand
-- **100% Sovereign AI Stack:** All language processing through Bhashini (AI4Bharat, IIT Madras), all infrastructure in AWS Mumbai region
-- **Privacy by Design:** No permanent personal data storage
+- **Voice-First Design:** Optimized for Hindi voice interactions via Sarvam AI / Bhashini
+- **Serverless Scalability:** Auto-scaling based on demand via AWS Lambda
+- **Sovereign-Preferred AI:** Voice processing through India-hosted providers (Sarvam AI, Bhashini), LLM via AWS Bedrock (in-region), all infrastructure in AWS Mumbai region
+- **Privacy by Design:** Ephemeral personal data with DynamoDB TTL
 - **Anti-Hallucination:** LLM handles conversation, rules engine handles scheme facts
-- **Graceful Degradation:** Fallback mechanisms for all dependencies, down to text-only rule-based mode
+- **Graceful Degradation:** Every external service has a fallback — voice, LLM, embeddings all have dual-provider chains
 
 ## System Components
 
 ### 1. Client Layer
-- **Primary:** WhatsApp Business API
-- **Secondary:** Telegram Bot API (future expansion)
+- **Primary:** Telegram Bot API (voice + text + inline keyboards)
+- **Future:** WhatsApp Business API (post-verification)
 - **Protocol:** HTTPS with webhook-based message delivery
 
 ### 2. API Gateway Layer
-- **AWS API Gateway:** REST endpoints and WebSocket connections
-- **AWS Cognito:** Phone-based authentication and rate limiting (50 messages/hour/user)
-- **CloudFront CDN:** Static asset delivery and audio caching
+- **AWS API Gateway:** REST endpoints (Telegram webhook, health check, CRUD APIs, chat)
+- **CloudWatch:** Access logging with structured request/response format
+- **X-Ray Tracing:** Enabled for latency analysis
 
 ### 3. Compute Layer
-- **AWS Lambda Functions:** Python 3.11 runtime
-- **Architecture Pattern:** Modular monolith with clear service boundaries
-- **Concurrency:** Auto-scaling up to 1000 concurrent executions
+- **AWS Lambda — Main Function:** Python 3.11, 1024MB, 60s timeout — handles all API routes including Telegram webhook
+- **AWS Lambda — Memory Worker:** Python 3.11, 512MB, 60s timeout — processes SQS messages for async working memory refresh
+- **Architecture Pattern:** Modular monolith with clear service boundaries (services/, integrations/, db/, models/)
+- **Local Development:** FastAPI via uvicorn + Docker Compose (PostgreSQL + pgvector)
 
-### 4. External Language Services (Sovereign AI Stack)
-- **Bhashini APIs (AI4Bharat, IIT Madras):**
-  - IndicWhisper: Speech-to-text for Hindi
-  - IndicTrans2: Hindi-English translation
-  - IndicTTS: Text-to-speech for Hindi
-- **Fallback:** Google Cloud Speech/Translate APIs
-- **All Bhashini services are government-operated and hosted on Indian servers.**
+### 4. External Voice Services
+- **Primary — Sarvam AI:**
+  - Saaras v3: Speech-to-text with multi-language probing
+  - Bulbul v3: Text-to-speech for Hindi/English responses
+- **Fallback — Bhashini (AI4Bharat, IIT Madras):**
+  - ai4bharat/conformer: Speech-to-text for Hindi
+  - ai4bharat/indic-tts: Text-to-speech for Hindi
+- **All voice services are India-hosted.**
 
 ### 5. External Reasoning Services
-- **Primary LLM:** Claude 3.5 Sonnet (Anthropic)
-- **Fallback:** GPT-4 (OpenAI) or Gemini Pro (Google)
-- **Usage:** Intent classification, entity extraction, conversational response generation. LLM is never used to generate scheme facts, eligibility criteria, or document requirements — these are served from the curated database.
+- **Primary LLM:** AWS Bedrock Nova 2 Lite (`amazon.nova-2-lite-v1:0`) — when USE_BEDROCK=True and AWS credentials available
+- **Fallback LLM:** xAI Grok (`grok-4-1-fast-reasoning`) via OpenAI-compatible API
+- **AI Orchestrator:** Centralized task policy, timeouts, and telemetry for all LLM calls
+- **Usage:** Intent classification, entity extraction, life event classification, conversational response generation, working memory summarization, scheme relevance judging. LLM is never used to generate scheme facts, eligibility criteria, or document requirements — these are served from the curated database.
 
-### 6. Data Layer
-- **DynamoDB:** Session management, user profiles (24-hour TTL)
-- **PostgreSQL + pgvector:** Schemes, documents, CSCs, embeddings
-- **S3:** Audio files, static assets, document templates
-- **ElastiCache:** Frequently accessed scheme data
+### 6. External Embedding Services
+- **Primary:** Jina AI (`jina-embeddings-v3`) — 1024 dimensions, multilingual
+- **Fallback:** Voyage AI (`voyage-multilingual-2`) — 1024 dimensions
+- **Usage:** Semantic ranking in Stage 3 of hybrid scheme retrieval
+
+### 7. Data Layer
+- **DynamoDB:** Session management with 7-day TTL (production), in-memory dict (local development)
+- **PostgreSQL 16 + pgvector:** Schemes, documents, offices, rejection rules, life events taxonomy, vector embeddings (HNSW index, cosine similarity)
+- **S3:** Audio files from TTS responses (24-hour lifecycle auto-delete)
+- **SQS:** Async working memory refresh queue with dead-letter queue (DLQ)
 
 ## Data Models
 
@@ -334,9 +377,9 @@ class Session:
     approximate_location: Optional[dict] # District/area for CSC recommendations
 ```
 
-**Session TTL Rationale:** 1-hour TTL (original design) was misaligned with actual user behavior. Target users — semi-literate residents navigating bureaucracy — may learn about a required document on Day 1, visit an SDM office on Day 2, and return to the chatbot on Day 2 to continue. A 24-hour TTL preserves context across these multi-day journeys while still ensuring automatic cleanup. All session data is still ephemeral and auto-deleted.
+**Session TTL Rationale:** 1-hour TTL (original design) was misaligned with actual user behavior. Target users — semi-literate residents navigating bureaucracy — may learn about a required document on Day 1, visit an SDM office on Day 2, and return to the chatbot on Day 3 to continue. A 7-day TTL preserves context across these multi-day journeys while still ensuring automatic cleanup. All session data is still ephemeral and auto-deleted.
 
-**Conversation Summary Rationale:** A 20+ turn conversation with a 10-message sliding window loses the user's initial situation description by the time they reach document guidance (turn 12-15). Every 5 turns, the LLM generates a compressed summary (~200 tokens) of the full conversation so far, which is prepended to the LLM context alongside the last 10 raw messages. This preserves early context without unbounded storage growth.
+**Working Memory Rationale:** A 20+ turn conversation with a 12-message sliding window loses the user's initial situation description by the time they reach document guidance (turn 12-15). Working memory replaces simple conversation summaries with a structured system: deterministic profile facts (always accurate, never stale) + LLM-generated conversation summary (~200 tokens) + active scheme IDs + pending action. Refreshed every 8 turns or when recent context exceeds ~6000 tokens, processed asynchronously via SQS to avoid blocking the user response path.
 
 #### UserProfile Entity
 ```python
@@ -699,9 +742,15 @@ async def maybe_refresh_conversation_summary(session: Session) -> Session:
 
 ### 4. Voice Processing Pipeline
 
-Integrates with Bhashini for Hindi voice processing with fallback mechanisms.
+Integrates with Sarvam AI (primary) and Bhashini (fallback) for Hindi voice processing.
 
-**Design Rationale:** Bhashini (AI4Bharat) provides government-approved, India-hosted AI services for Hindi. Fallbacks ensure graceful degradation if Bhashini is unavailable (Requirements NFR3).
+**Design Rationale:** Sarvam AI provides production-grade Hindi STT/TTS. Bhashini (AI4Bharat) provides India-hosted government-approved fallback. Multi-language probing selects the best transcript across language candidates.
+
+**Actual Implementation:**
+- STT: Sarvam Saaras v3 (primary), Bhashini ai4bharat/conformer (fallback)
+- TTS: Sarvam Bulbul v3 (primary), Bhashini ai4bharat/indic-tts (fallback)
+- Confidence threshold: 0.5 (below triggers text-mode fallback)
+- Multi-language probing: tries [English, Hindi] candidates, scores each by confidence + transcript quality + language alignment, selects highest
 
 ```python
 class VoiceProcessor:
@@ -1039,7 +1088,24 @@ Find nearest Common Service Centres.
 
 ## Integration Architecture
 
-### Bhashini Integration
+### Sarvam AI Integration (Primary Voice)
+
+```python
+class SarvamClient:
+    """Client for Sarvam AI voice APIs (Saaras v3 STT, Bulbul v3 TTS)."""
+
+    async def speech_to_text(self, audio_bytes, source_lang, audio_format):
+        """Convert speech to text using Saaras v3."""
+        # POST to https://api.sarvam.ai/speech-to-text-translate
+        # Returns STTResult with text, confidence, language
+
+    async def text_to_speech(self, text, target_lang):
+        """Convert text to speech using Bulbul v3."""
+        # POST to https://api.sarvam.ai/text-to-speech
+        # Returns TTSResult with audio_bytes, content_type
+```
+
+### Bhashini Integration (Fallback Voice)
 
 ```python
 class BhashiniClient:
@@ -1098,71 +1164,39 @@ class BhashiniClient:
         return response
 ```
 
-### WhatsApp Integration
+### Telegram Integration
 
 ```python
-class WhatsAppClient:
-    """
-    Client for WhatsApp Business API.
-    """
-    
+class TelegramClient:
+    """Client for Telegram Bot API."""
+
     def __init__(self):
-        self.base_url = "https://graph.facebook.com/v18.0"
-        self.access_token = os.getenv("WHATSAPP_ACCESS_TOKEN")
-        self.phone_number_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
-    
-    async def send_text_message(self, to: str, text: str) -> dict:
-        """
-        Send text message via WhatsApp.
-        """
-        payload = {
-            "messaging_product": "whatsapp",
-            "to": to,
-            "type": "text",
-            "text": {"body": text}
-        }
-        
-        return await self.make_request(f"/{self.phone_number_id}/messages", payload)
-    
-    async def send_audio_message(self, to: str, audio_url: str) -> dict:
-        """
-        Send audio message via WhatsApp.
-        """
-        payload = {
-            "messaging_product": "whatsapp",
-            "to": to,
-            "type": "audio",
-            "audio": {"link": audio_url}
-        }
-        
-        return await self.make_request(f"/{self.phone_number_id}/messages", payload)
-    
-    async def send_interactive_message(self, to: str, schemes: List[dict]) -> dict:
-        """
-        Send interactive message with scheme options.
-        """
-        buttons = []
-        for i, scheme in enumerate(schemes[:3]):  # Max 3 buttons
-            buttons.append({
-                "type": "reply",
-                "reply": {
-                    "id": f"scheme_{scheme['id']}",
-                    "title": scheme['name'][:20]  # WhatsApp limit
-                }
-            })
-        
-        payload = {
-            "messaging_product": "whatsapp",
-            "to": to,
-            "type": "interactive",
-            "interactive": {
-                "type": "button",
-                "body": {"text": "यहाँ आपके लिए योजनाएं हैं:"},
-                "action": {"buttons": buttons}
-            }
-        }
-        
-        return await self.make_request(f"/{self.phone_number_id}/messages", payload)
+        self.base_url = "https://api.telegram.org/bot{token}"
+        self.token = os.getenv("TELEGRAM_BOT_TOKEN")
+
+    async def send_text(self, chat_id: str, text: str) -> dict:
+        """Send text message via Telegram."""
+        # POST to /sendMessage
+
+    async def send_voice(self, chat_id: str, audio_bytes: bytes, filename: str) -> dict:
+        """Send voice message via Telegram."""
+        # POST to /sendVoice
+
+    async def send_inline_keyboard(self, chat_id: str, text: str, buttons: list) -> dict:
+        """Send message with inline keyboard for scheme selection."""
+        # POST to /sendMessage with reply_markup
+
+    async def download_voice(self, file_id: str) -> bytes:
+        """Download voice file from Telegram servers."""
+        # GET /getFile then download from file_path
+
+    async def send_chat_action(self, chat_id: str, action: str) -> dict:
+        """Send typing indicator."""
+        # POST to /sendChatAction
+
+    async def answer_callback_query(self, callback_id: str) -> dict:
+        """Acknowledge callback query from inline keyboard."""
+        # POST to /answerCallbackQuery
 ```
 
 ## Database Schema
@@ -1300,14 +1334,14 @@ CREATE INDEX idx_rejection_rules_severity ON rejection_rules (severity);
 
 ### Embedding Model Selection
 
-**Decision:** Voyage AI voyage-multilingual-2 for scheme descriptions.
+**Decision:** Jina AI `jina-embeddings-v3` (primary) with Voyage AI `voyage-multilingual-2` (fallback) for scheme descriptions.
 
 **Rationale:**
-- Optimized for multilingual retrieval and RAG
-- 1024 dimensions - efficient for scheme descriptions
-- Excellent Hindi-English code-mixed text support
-- 32,000 token context length for long scheme descriptions
-- Meets <500ms retrieval latency requirement (Requirements FR4.5)
+- Jina AI provides 10M free tokens with 89 language support including Hindi/Bengali/Urdu
+- 1024 dimensions — efficient for scheme descriptions, matches pgvector HNSW index
+- Voyage AI voyage-multilingual-2 as reliable fallback (also 1024-dim)
+- Both providers are lazy-initialized singletons via `FallbackEmbeddingClient`
+- If both fail, vector ranking is skipped and only deterministic filtering is used
 
 **Alternative Considered:** OpenAI text-embedding-3-small
 - 1536 dimensions, good multilingual support
@@ -1439,71 +1473,63 @@ class EmbeddingService:
 
 **Design Rationale:** System must maintain functionality even when external dependencies fail (Requirements NFR3 - 99.5% uptime target).
 
-### Bhashini API Fallback
+### Voice API Fallback
 ```python
-class ResilientVoiceProcessor:
-    """
-    Voice processing with automatic fallback chain.
-    """
-    
-    async def process_with_fallback(self, audio_data: bytes) -> str:
-        """
-        Fallback chain: Bhashini → Google Speech → Text-only mode
-        """
-        # Try Bhashini (primary)
-        try:
-            return await bhashini_client.speech_to_text(audio_data)
-        except BhashiniAPIError:
-            logger.warning("Bhashini unavailable, using Google Speech")
-        
-        # Try Google Speech (fallback)
-        try:
-            return await google_speech_client.transcribe(audio_data)
-        except GoogleAPIError:
-            logger.error("All voice services unavailable")
-        
-        # Ultimate fallback: Request text input
-        raise VoiceUnavailableError("Voice processing unavailable. Please send text.")
+class WebhookHandler:
+    """Voice processing with automatic fallback chain."""
+
+    def _get_voice_client(self):
+        """Sarvam AI → Bhashini → graceful text-only degradation."""
+        if os.environ.get("SARVAM_API_KEY"):
+            return get_sarvam_client()
+        if os.environ.get("BHASHINI_API_KEY"):
+            return get_bhashini_client()
+        return get_sarvam_client()  # handles no-key case gracefully
 ```
 
 ### LLM API Fallback
 ```python
-class ResilientLLMClient:
-    """
-    LLM with automatic provider fallback.
-    """
-    
-    async def generate_with_fallback(self, prompt: str) -> str:
-        """
-        Fallback chain: Claude → GPT-4 → Gemini → Rule-based
-        """
-        providers = [
-            ('claude', anthropic_client),
-            ('gpt4', openai_client),
-            ('gemini', google_ai_client)
-        ]
-        
-        for provider_name, client in providers:
+class FallbackLLMClient:
+    """LLM with automatic provider fallback."""
+
+    async def _execute_with_fallback(self, task, **kwargs):
+        """Bedrock Nova 2 Lite → xAI Grok → safe error message."""
+        if self._use_bedrock:
             try:
-                return await client.generate(prompt)
-            except Exception as e:
-                logger.warning(f"{provider_name} failed: {e}")
-        
-        # Ultimate fallback: Rule-based responses
-        return generate_rule_based_response(prompt)
+                return await self._get_bedrock_client().task(**kwargs)
+            except Exception:
+                pass  # fall through to Grok
+        if self._use_grok:
+            return await self._get_grok_client().task(**kwargs)
+        return safe_fallback_response()
+```
+
+### Embedding API Fallback
+```python
+class FallbackEmbeddingClient:
+    """Embedding with automatic provider fallback."""
+
+    async def get_embedding(self, text):
+        """Jina AI → Voyage AI → None (skip vector ranking)."""
+        for client in [self._jina_client, self._voyage_client]:
+            try:
+                return await client.get_embedding(text)
+            except Exception:
+                continue
+        return None  # gracefully skip semantic ranking
 ```
 
 ### Database Fallback
-- **Read Replicas:** Automatic failover to read replicas if primary unavailable
-- **Cache-First Mode:** Serve from ElastiCache if database unreachable
-- **Degraded Mode:** Basic scheme search without vector similarity
+- **Connection Pooling:** asyncpg pool with automatic reconnection
+- **Degraded Mode:** Basic scheme search without vector similarity if embedding unavailable
+- **Bundled Catalog:** `data/all_schemes.json` provides static fallback for scheme metadata
 
 ### Graceful Degradation Levels
-1. **Full Functionality:** All services operational
-2. **Voice Degraded:** Text-only mode if Bhashini unavailable
-3. **Search Degraded:** Rule-based filtering if vector search fails
-4. **Cache-Only Mode:** Serve popular schemes from cache
-5. **Maintenance Mode:** Display status message and retry guidance
+1. **Full Functionality:** All services operational (Bedrock + Sarvam + Jina + PostgreSQL)
+2. **LLM Degraded:** Grok fallback transparent to user
+3. **Voice Degraded:** Bhashini fallback, or text-only mode if both voice services fail
+4. **Embedding Degraded:** Jina → Voyage fallback, or skip vector ranking entirely
+5. **Maintenance Mode:** Display bilingual error message and suggest retry
 
 ## Error Handling and Edge Cases
 
@@ -1691,12 +1717,11 @@ class InputValidator:
 ```
 
 ### Privacy Compliance
-- **No Permanent Storage:** All personal data expires after 24 hours (Requirements NFR2)
-- **Data Minimization:** Only collect necessary user attributes (Requirements FR3)
-- **Automatic Expiry:** 24-hour TTL on all personal data in DynamoDB
+- **Ephemeral Storage:** All personal data expires after 7 days via DynamoDB TTL (Requirements NFR2)
+- **Data Minimization:** Only collect necessary user attributes — scheme-aware required fields vary by life event (Requirements FR3)
+- **Automatic Expiry:** DynamoDB TTL handles cleanup with zero operational overhead
 - **Data Localization:** All processing within AWS Mumbai region (Requirements NFR5)
-- **Consent Management:** Clear consent for voice processing at session start
-- **Right to Deletion:** Immediate session deletion on user request
+- **Right to Deletion:** Users can reset session via `/start` command at any time
 - **DPDP Act Alignment:** Design is consistent with India's Digital Personal Data Protection Act, 2023 — purpose limitation, data minimization, and storage limitation are enforced by architecture
 
 ## Performance Optimization
@@ -1748,9 +1773,9 @@ class DataFreshnessManager:
 ```
 
 ### Caching Strategy
-- **ElastiCache:** Scheme data (24-hour TTL), session data (24-hour TTL)
-- **CloudFront CDN:** Static assets and audio files (edge caching)
-- **Application Cache:** In-memory caching of embeddings
+- **Lambda Memory:** Embedding cache, LLM client singletons (process lifetime)
+- **S3:** TTS audio files (24-hour lifecycle auto-delete)
+- **Bundled Data:** `data/all_schemes.json` bundled with deployment for zero-latency static metadata lookups
 
 **Cache Hierarchy:**
 1. **L1 - Lambda Memory:** Embedding cache, frequent queries (process lifetime)
@@ -1824,9 +1849,9 @@ class DataFreshnessManager:
 ## Deployment Architecture
 
 ### Infrastructure as Code
-- **AWS CDK:** Infrastructure definition and deployment (Python)
-- **Environment Separation:** Dev, staging, and production environments
-- **Blue-Green Deployment:** Zero-downtime deployments
+- **AWS SAM:** Infrastructure definition and deployment (`sam-template.yaml`)
+- **Local Development:** Docker Compose with PostgreSQL + pgvector + FastAPI
+- **Environment Separation:** Dev and production stages via SAM parameter
 - **Region:** AWS Mumbai (ap-south-1) — all compute, storage, and data processing within India for full data sovereignty compliance (Requirements NFR5)
 
 ### CI/CD Pipeline
