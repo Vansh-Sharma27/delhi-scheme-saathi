@@ -61,7 +61,7 @@ class Settings(BaseSettings):
     audio_bucket: str = Field(default="dss-audio", description="S3 bucket for audio")
     # AWS Bedrock (primary LLM)
     bedrock_model: str = Field(
-        default="amazon.nova-2-lite-v1:0",
+        default="global.amazon.nova-2-lite-v1:0",
         description="Bedrock model ID for LLM"
     )
     use_bedrock: bool = Field(

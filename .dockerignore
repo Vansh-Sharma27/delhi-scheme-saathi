@@ -10,3 +10,9 @@ docs/
 tests/
 design.md
 requirements.md
+benchmark_results/
+diagrams/
+scripts/benchmark.py
+scripts/benchmark_text_live.py
+scripts/benchmark_voice.py
+scripts/generate_pptx.py
