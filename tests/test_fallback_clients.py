@@ -1,10 +1,13 @@
 """Tests for LLM and embedding fallback behavior."""
 
+import json
+
 import pytest
 
 from src.config import get_settings
 from src.integrations import bedrock_client, embedding_client, grok_client, llm_client
 from src.models.session import UserProfile
+from src.prompts.loader import get_analysis_system_prompt, get_system_prompt
 from src.services import scheme_matcher
 
 
@@ -307,8 +310,8 @@ async def test_bedrock_generate_response_handles_datetime_context(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Bedrock prompt building should serialize datetime values in context safely."""
-    import datetime as dt
     import asyncio
+    import datetime as dt
 
     monkeypatch.setenv("USE_BEDROCK", "true")
     get_settings.cache_clear()
@@ -337,3 +340,155 @@ async def test_bedrock_generate_response_handles_datetime_context(
         user_language="en",
     )
     assert text == "ok"
+
+
+@pytest.mark.asyncio
+async def test_grok_analysis_prompt_allows_direct_entailed_inference(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Grok analysis prompt should allow direct semantic entailment without stereotypes."""
+    monkeypatch.setenv("XAI_API_KEY", "xai-test")
+    get_settings.cache_clear()
+
+    captured: dict[str, object] = {}
+
+    class FakeCompletions:
+        async def create(self, **kwargs):  # type: ignore[no-untyped-def]
+            captured["messages"] = kwargs["messages"]
+            captured["temperature"] = kwargs["temperature"]
+
+            class Msg:
+                content = json.dumps(
+                    {
+                        "intent": "question",
+                        "action": "answer_field",
+                        "life_event": "DEATH_IN_FAMILY",
+                        "extracted_fields": {"gender": "female", "marital_status": "widowed"},
+                        "language": "en",
+                        "selected_scheme_id": None,
+                        "needs_clarification": False,
+                        "clarification_question": None,
+                        "response_text": "What is the applicant/beneficiary age?",
+                    }
+                )
+
+            class Choice:
+                message = Msg()
+
+            class Resp:
+                choices = [Choice()]
+
+            return Resp()
+
+    class FakeChat:
+        completions = FakeCompletions()
+
+    class FakeOpenAIClient:
+        chat = FakeChat()
+
+    client = grok_client.GrokLLMClient()
+    monkeypatch.setattr(client, "_client", FakeOpenAIClient())
+
+    await client.analyze_message(
+        user_message="My husband died in an accident.",
+        conversation_history=[],
+        current_state="GREETING",
+        user_profile={},
+        system_prompt="test",
+        session_language="en",
+    )
+
+    prompt = captured["messages"][-1]["content"]
+    assert captured["temperature"] == 0
+    assert "directly entailed by the user's own first-person wording" in prompt
+    assert "Do NOT use weak stereotypes" in prompt
+    assert "first-person spousal relationship terms" in prompt
+    assert "gendered and therefore logically determines the user's schema gender" in prompt
+    assert "gendered spouse terminology" in prompt
+    assert "spouse-loss wording" in prompt
+    assert "do not ask for that same field again" in prompt
+
+
+@pytest.mark.asyncio
+async def test_bedrock_analysis_prompt_allows_direct_entailed_inference(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Bedrock analysis prompt should allow direct semantic entailment without stereotypes."""
+    import asyncio
+
+    monkeypatch.setenv("USE_BEDROCK", "true")
+    get_settings.cache_clear()
+
+    captured: dict[str, object] = {}
+    client = bedrock_client.BedrockLLMClient()
+
+    class FakeBedrockRuntime:
+        def converse(self, **kwargs):  # type: ignore[no-untyped-def]
+            captured["messages"] = kwargs["messages"]
+            captured["inference_config"] = kwargs["inferenceConfig"]
+            return {
+                "output": {
+                    "message": {
+                        "content": [
+                            {
+                                "text": json.dumps(
+                                    {
+                                        "intent": "question",
+                                        "action": "answer_field",
+                                        "life_event": "DEATH_IN_FAMILY",
+                                        "extracted_fields": {
+                                            "gender": "female",
+                                            "marital_status": "widowed",
+                                        },
+                                        "language": "en",
+                                        "selected_scheme_id": None,
+                                        "needs_clarification": False,
+                                        "clarification_question": None,
+                                        "response_text": "What is the applicant/beneficiary age?",
+                                    }
+                                )
+                            }
+                        ]
+                    }
+                }
+            }
+
+    monkeypatch.setattr(client, "_client", FakeBedrockRuntime())
+
+    loop = asyncio.get_event_loop()
+    monkeypatch.setattr(
+        loop,
+        "run_in_executor",
+        lambda *args, **kwargs: asyncio.sleep(0, result=args[1]()),
+    )
+
+    await client.analyze_message(
+        user_message="Mere pati ki maut ho gayi hai.",
+        conversation_history=[],
+        current_state="GREETING",
+        user_profile={},
+        system_prompt="test",
+        session_language="en",
+    )
+
+    prompt = captured["messages"][-1]["content"][0]["text"]
+    assert captured["inference_config"]["temperature"] == 0
+    assert "directly entailed by the user's own first-person wording" in prompt
+    assert "Do NOT use weak stereotypes" in prompt
+    assert "first-person spousal relationship terms" in prompt
+    assert "gendered and therefore logically determines the user's schema gender" in prompt
+    assert "gendered spouse terminology" in prompt
+    assert "spouse-loss wording" in prompt
+    assert "do not ask for that same field again" in prompt
+
+
+def test_system_prompt_alias_uses_analysis_prompt() -> None:
+    """Legacy loader name should resolve to the analysis-only prompt."""
+    prompt = get_analysis_system_prompt()
+
+    assert get_system_prompt() == prompt
+    assert "You are a structured analysis engine." in prompt
+    assert "Prioritize accurate JSON extraction over" in prompt
+    assert "Do not suppress direct entailments as guesses." in prompt
+    assert "spouse" in prompt
+    assert "marital_status and gender" in prompt

@@ -7,6 +7,16 @@ from src.models.session import UserProfile
 
 FIELD_QUESTION_ORDER = ("life_event", "age", "gender", "category", "annual_income")
 
+_SPOUSE_LOSS_PATTERNS: tuple[tuple[str, str], ...] = (
+    (r"\bmy husband\b|\bmere\s+pati\b|मेरे\s+पति", "female"),
+    (r"\bmy wife\b|\bmeri\s+patni\b|मेरी\s+पत्नी", "male"),
+)
+_SPOUSE_LOSS_EVENT_PATTERN = re.compile(
+    r"\bdied\b|\bdeath\b|\bpassed away\b|\bmaut\b|\bdehant\b|"
+    r"मौत|निधन|गुजर\s+ग[एई]",
+    re.IGNORECASE,
+)
+
 
 def get_required_matching_fields(profile: UserProfile) -> tuple[str, ...]:
     """Return the scheme-aware profile fields that matter before matching."""
@@ -36,6 +46,20 @@ def _has_income_context(text_lower: str, current_field: str | None) -> bool:
         r"महीना",
     )
     return any(re.search(pattern, text_lower) for pattern in income_cues)
+
+
+def _extract_spouse_loss_context(text_lower: str) -> dict[str, Any]:
+    """Infer widow or widower context from first-person spouse-loss wording."""
+    if not _SPOUSE_LOSS_EVENT_PATTERN.search(text_lower):
+        return {}
+
+    for pattern, gender in _SPOUSE_LOSS_PATTERNS:
+        if re.search(pattern, text_lower):
+            return {
+                "gender": gender,
+                "marital_status": "widowed",
+            }
+    return {}
 
 
 def extract_by_patterns(
@@ -138,6 +162,10 @@ def extract_by_patterns(
         if keyword in text_lower:
             extracted["marital_status"] = status
             break
+
+    spouse_loss_context = _extract_spouse_loss_context(text_lower)
+    for field, value in spouse_loss_context.items():
+        extracted.setdefault(field, value)
 
     # Employment status
     employment_map = {
@@ -325,9 +353,9 @@ def validate_field_response(
                 return False, "invalid_income"
         elif re.search(
             r"\d"
-            r".*(?:₹|rs\.?|rupees?|inr|lakh|lac|thousand|monthly|per\s*month|mahina|महीना|हजार)"
-            r"|(?:₹|rs\.?|rupees?|inr|income|salary|lakh|lac|thousand|monthly|per\s*month|mahina|महीना|हजार).*\d"
-            r"|(?:₹|rs\.?|rupees?|inr|income|salary|lakh|lac|thousand|monthly|per\s*month|mahina|महीना|हजार)",
+            r".*(?:₹|\brs\.?\b|\brupees?\b|\binr\b|\blakh\b|\blac\b|\bthousand\b|\bmonthly\b|\bper\s*month\b|\bmahina\b|महीना|हजार)"
+            r"|(?:₹|\brs\.?\b|\brupees?\b|\binr\b|\bincome\b|\bsalary\b|\blakh\b|\blac\b|\bthousand\b|\bmonthly\b|\bper\s*month\b|\bmahina\b|महीना|हजार).*\d"
+            r"|(?:₹|\brs\.?\b|\brupees?\b|\binr\b|\bincome\b|\bsalary\b|\blakh\b|\blac\b|\bthousand\b|\bmonthly\b|\bper\s*month\b|\bmahina\b|महीना|हजार)",
             text,
         ):
             return False, "invalid_income"

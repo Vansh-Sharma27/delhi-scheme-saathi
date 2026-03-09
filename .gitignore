@@ -68,3 +68,14 @@ Thumbs.db
 *.mp3
 *.wav
 audio_temp/
+
+# Local benchmarking / review artifacts
+benchmark_results/
+diagrams/
+scripts/benchmark.py
+scripts/benchmark_text_live.py
+scripts/benchmark_voice.py
+scripts/generate_pptx.py
+docs/live_text_benchmark_issues_*.md
+docs/live_text_production_issue_audit_*.md
+docs/llm_vs_hardcoded_audit_*.md

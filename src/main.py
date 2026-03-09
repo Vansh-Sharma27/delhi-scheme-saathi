@@ -13,13 +13,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import get_settings
+from src.utils.logging_config import configure_logging
 
 # Configure logging
 settings = get_settings()
-logging.basicConfig(
-    level=getattr(logging, settings.log_level.upper()),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+configure_logging(settings.log_level)
 logger = logging.getLogger(__name__)
 
 # Database connection pool (initialized on startup)

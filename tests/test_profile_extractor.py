@@ -2,8 +2,8 @@
 
 from src.services.profile_extractor import (
     extract_by_patterns,
-    validate_field_response,
     get_validation_re_prompt,
+    validate_field_response,
 )
 
 
@@ -51,6 +51,12 @@ class TestCategoryExtraction:
         """Explicit ST mention should be extracted."""
         extracted = extract_by_patterns("My caste is ST.")
         assert extracted.get("category") == "ST"
+
+    def test_extracts_widow_context_from_mixed_script_spouse_loss(self):
+        """Mixed-script spouse-loss wording should recover widowed female context."""
+        extracted = extract_by_patterns("Mere pati ki death ho gayi hai aur mujhe pension chahiye.")
+        assert extracted.get("gender") == "female"
+        assert extracted.get("marital_status") == "widowed"
 
 
 class TestFieldValidation:

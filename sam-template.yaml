@@ -57,7 +57,7 @@ Parameters:
 
   BedrockModel:
     Type: String
-    Default: "amazon.nova-2-lite-v1:0"
+    Default: "global.amazon.nova-2-lite-v1:0"
     Description: Bedrock model ID or inference profile ID/ARN
 
 Globals:

@@ -1,7 +1,7 @@
 """AWS Bedrock Nova 2 Lite client for LLM operations.
 
 Uses the Bedrock Converse API for chat-style interactions.
-Model: amazon.nova-2-lite-v1:0
+Model: global.amazon.nova-2-lite-v1:0
 
 This is the primary LLM provider, with Grok as fallback.
 """
@@ -20,7 +20,7 @@ from src.utils.scheme_catalog import get_required_profile_fields_for_life_event
 
 logger = logging.getLogger(__name__)
 
-NOVA_MODEL_ID = "amazon.nova-2-lite-v1:0"
+NOVA_MODEL_ID = "global.amazon.nova-2-lite-v1:0"
 
 _inline_executor: ThreadPoolExecutor | None = None
 _background_executor: ThreadPoolExecutor | None = None
@@ -158,11 +158,11 @@ Analyze the user's message and respond with a JSON object containing:
   "life_event": "HOUSING|MARRIAGE|CHILDBIRTH|EDUCATION|HEALTH_CRISIS|DEATH_IN_FAMILY|MARITAL_DISTRESS|JOB_LOSS|BUSINESS_STARTUP|WOMEN_EMPOWERMENT|null",
   "extracted_fields": {{
     "age": number or null,
-    "gender": "male|female|other" or null,
+    "gender": "male|female|other" or null (include when directly entailed by first-person self-description or gendered spouse terminology),
     "category": "SC|ST|OBC|General|EWS" or null,
     "annual_income": number or null,
     "employment_status": "employed|unemployed|self-employed|student" or null,
-    "marital_status": "single|married|widowed|divorced|separated" or null,
+    "marital_status": "single|married|widowed|divorced|separated" or null (include widowed when directly entailed by first-person spouse-loss wording),
     "district": string or null,
     "has_bpl_card": boolean or null
   }},
@@ -183,8 +183,10 @@ Current user profile: {json.dumps(user_profile, default=str)}
 User message: {user_message}
 
 IMPORTANT RULES:
-1. Extract information ONLY from what the user explicitly stated. Do NOT infer or guess values. If unsure, use null.
+1. Extract information from what the user explicitly states and from facts that are directly entailed by the user's own first-person wording.
 1b. Use working memory only for continuity. If the current user message conflicts with memory, trust the current user message.
+1c. Direct semantic entailment is allowed only when the wording itself determines the field through self-description, role labels, or relationship terms. Do NOT use weak stereotypes, demographic assumptions, or indirect guesses. If more than one interpretation is plausible, use null.
+1d. Treat first-person spousal relationship terms as directly entailed evidence, not a guess. If the user refers to their own spouse in a way that logically determines widow/widower context, extract the corresponding marital_status. If the spouse term itself is gendered and therefore logically determines the user's schema gender, extract that gender too.
 2. CONTEXTUAL EXTRACTION: If the bot last asked about a specific field and the user replies with a bare number or short answer, interpret it in that context. For example, if the bot asked about age and the user replies "19", extract age=19.
 3. VALIDATION: When extracting fields, validate the values:
    - age: must be between 1-120. If user gives birth year (e.g., "2005"), calculate age. If invalid (0, negative, >120), set to null.
@@ -201,6 +203,7 @@ IMPORTANT RULES:
    h) CRITICAL: response_text MUST be in the user's PREFERRED LANGUAGE ({lang_name}). Do NOT switch languages.
    i) Keep it 1-3 sentences max, conversational tone
    j) NEVER mention any scheme names, benefits, eligibility, or document details — that comes from the database later
+   k) If a field is already explicit or directly entailed by the user's wording, do not ask for that same field again. Ask only for the next missing field.
 5. Set action conservatively:
    - change_language only when the user explicitly asks for another language
    - ask_field_reason when the user asks why a requested field matters
@@ -230,7 +233,7 @@ Respond with ONLY the JSON object, no other text.
                     messages=messages,
                     inferenceConfig={
                         "maxTokens": 1024,
-                        "temperature": 0.3,
+                        "temperature": 0,
                     },
                 )
             )

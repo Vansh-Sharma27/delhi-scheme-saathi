@@ -127,7 +127,35 @@ resolve_database_url_from_lambda() {
     --function-name "${function_name}" \
     --region "${REGION}" \
     --query "Environment.Variables.DATABASE_URL" \
-    --output text
+  --output text
+}
+
+verify_bedrock_model() {
+  local function_name
+  local deployed_model
+
+  function_name="$(resolve_lambda_function_name)"
+  if [[ -z "${function_name}" || "${function_name}" == "None" ]]; then
+    log "Skipping BEDROCK_MODEL verification (Lambda function not found)"
+    return 0
+  fi
+
+  deployed_model="$(aws lambda get-function-configuration \
+    --function-name "${function_name}" \
+    --region "${REGION}" \
+    --query "Environment.Variables.BEDROCK_MODEL" \
+    --output text 2>/dev/null || true)"
+
+  if [[ -z "${deployed_model}" || "${deployed_model}" == "None" ]]; then
+    log "Skipping BEDROCK_MODEL verification (environment variable not set)"
+    return 0
+  fi
+
+  if [[ "${deployed_model}" == "amazon.nova-2-lite-v1:0" ]]; then
+    die "Deployed Lambda still uses unsupported BEDROCK_MODEL='amazon.nova-2-lite-v1:0'. Set BedrockModel to an inference profile such as 'global.amazon.nova-2-lite-v1:0' and redeploy."
+  fi
+
+  log "Verified BEDROCK_MODEL=${deployed_model}"
 }
 
 STACK_NAME=""
@@ -243,8 +271,12 @@ fi
 if [[ ! -f "${TEMPLATE_FILE}" ]]; then
   die "Template file '${TEMPLATE_FILE}' not found in ${PROJECT_ROOT}."
 fi
-if [[ ! -f "samconfig.toml" ]]; then
-  die "samconfig.toml not found. rapid_redeploy expects the repo's SAM config to exist."
+
+HAS_SAMCONFIG=0
+if [[ -f "samconfig.toml" ]]; then
+  HAS_SAMCONFIG=1
+else
+  log "samconfig.toml not found; proceeding without config env and relying on the existing stack parameter values."
 fi
 
 if [[ "${SKIP_BUILD}" -eq 0 || "${SKIP_DEPLOY}" -eq 0 ]]; then
@@ -293,18 +325,24 @@ fi
 
 if [[ "${SKIP_DEPLOY}" -eq 0 ]]; then
   log "Deploying stack ${STACK_NAME} (${REGION})"
-  sam deploy \
-    -t "${BUILD_TEMPLATE}" \
-    --stack-name "${STACK_NAME}" \
-    --region "${REGION}" \
-    --config-env "${CONFIG_ENV}" \
-    --resolve-s3 \
-    --capabilities CAPABILITY_IAM \
-    --no-confirm-changeset \
+  DEPLOY_ARGS=(
+    -t "${BUILD_TEMPLATE}"
+    --stack-name "${STACK_NAME}"
+    --region "${REGION}"
+    --resolve-s3
+    --capabilities CAPABILITY_IAM
+    --no-confirm-changeset
     --no-fail-on-empty-changeset
+  )
+  if [[ "${HAS_SAMCONFIG}" -eq 1 ]]; then
+    DEPLOY_ARGS+=(--config-env "${CONFIG_ENV}")
+  fi
+  sam deploy "${DEPLOY_ARGS[@]}"
 else
   log "Skipping deploy"
 fi
+
+verify_bedrock_model
 
 if [[ -n "${TELEGRAM_BOT_TOKEN:-}" && -n "${BOT_SCRIPT_PYTHON}" ]]; then
   log "Syncing Telegram bot commands"
