@@ -16,7 +16,7 @@ The real challenge is not awareness but execution:
 
 ### Solution Vision
 
-A voice-first WhatsApp chatbot that goes beyond awareness to provide complete execution assistance for Delhi government schemes. Built on a 100% sovereign AI stack using Bhashini (AI4Bharat) for language processing and AWS Mumbai region for all infrastructure.
+A voice-first Telegram chatbot that goes beyond awareness to provide complete execution assistance for Delhi government schemes. Built on AWS Mumbai region infrastructure with Sarvam AI (primary) and Bhashini/AI4Bharat (fallback) for Hindi voice processing, AWS Bedrock Nova (primary) and xAI Grok (fallback) for conversational intelligence, and Jina AI + Voyage AI for multilingual embeddings.
 
 **Core Principle:** LLM handles HOW we talk (natural conversation, intent understanding, response generation). Rules engine handles WHAT we say about eligibility (structured filtering, document requirements, rejection rules). This separation ensures conversational fluency without hallucinating scheme-specific facts.
 
@@ -39,15 +39,16 @@ A voice-first WhatsApp chatbot that goes beyond awareness to provide complete ex
 **User Story:** As a Hindi-speaking Delhi resident, I want to interact with the system using voice messages so that I can get help without typing.
 
 **Acceptance Criteria:**
-- AC1.1: System accepts voice messages via WhatsApp
+- AC1.1: System accepts voice messages via Telegram Bot API
 - AC1.2: Voice transcription accuracy > 85% for conversational Hindi
-- AC1.3: End-to-end voice response latency < 5 seconds
-- AC1.4: Supports Hindi, English, and Hinglish naturally
-- AC1.5: Fallback to text mode if voice processing fails
-- AC1.6: Uses Bhashini (AI4Bharat) pipeline: IndicWhisper → IndicTrans2 → IndicTTS
+- AC1.3: End-to-end voice response latency < 8 seconds
+- AC1.4: Supports Hindi, English, and Hinglish with automatic language detection
+- AC1.5: Fallback to text mode if voice processing fails (low-confidence threshold at 0.5)
+- AC1.6: Primary voice pipeline: Sarvam AI (Saaras v3 STT / Bulbul v3 TTS), Fallback: Bhashini (AI4Bharat IndicWhisper / IndicTTS)
+- AC1.7: Multi-language STT probing — tries multiple language candidates and picks the highest-quality transcript
 
-**Priority:** High  
-**Dependencies:** Bhashini API integration
+**Priority:** High
+**Dependencies:** Sarvam AI API integration (primary), Bhashini API integration (fallback)
 
 ### FR2: Life-Event Based Discovery
 
@@ -58,16 +59,16 @@ A voice-first WhatsApp chatbot that goes beyond awareness to provide complete ex
 - AC2.2: Map each life event to 5-15 relevant schemes
 - AC2.3: Handle ambiguous queries with clarifying questions
 - AC2.4: Support life event categories:
-  - JOB_LOSS, PREGNANCY, CHILDBIRTH, MARRIAGE
-  - DISABILITY, ACCIDENT, DEATH_IN_FAMILY  
-  - EDUCATION, BUSINESS_STARTUP, RETIREMENT
-  - HOUSING, AGRICULTURE (limited for Delhi)
+  - HOUSING, MARRIAGE, CHILDBIRTH, EDUCATION
+  - HEALTH_CRISIS, DEATH_IN_FAMILY, MARITAL_DISTRESS
+  - JOB_LOSS, BUSINESS_STARTUP, WOMEN_EMPOWERMENT
 
 **Example Mappings:**
-- "Mera accident ho gaya" → Disability schemes
-- "Ghar mein baccha aaya" → Maternity schemes
+- "Mera accident ho gaya" → Health Crisis schemes
+- "Ghar mein baccha aaya" → Childbirth schemes
 - "Beti ki shaadi hai" → Marriage assistance
-- "Papa retire ho gaye" → Pension schemes
+- "Mujhe ghar chahiye" → Housing schemes
+- "Meri naukri chali gayi" → Job Loss schemes
 
 **Priority:** High  
 **Dependencies:** NLP model training, scheme database
@@ -80,9 +81,11 @@ A voice-first WhatsApp chatbot that goes beyond awareness to provide complete ex
 - AC3.1: Collect minimum required attributes in 3-4 conversational turns
 - AC3.2: Don't re-ask attributes already provided in session
 - AC3.3: Handle corrections gracefully ("Actually, my age is 35, not 30")
-- AC3.4: Required attributes: age, gender, annual_income, caste_category, domicile_status
-- AC3.5: Conditional attributes: employment_status, education_level, marital_status
-- AC3.6: Optional attributes: disability_status, bpl_status, minority_status
+- AC3.4: Required attributes (scheme-aware, varies by life event): age, gender, annual_income, caste_category
+- AC3.5: Conditional attributes: employment_status, marital_status, has_bpl_card
+- AC3.6: Optional attributes: disability_percentage, district, latitude/longitude
+- AC3.7: Dual extraction pipeline: LLM-based entity extraction merged with regex pattern extraction (rule-based takes precedence)
+- AC3.8: Contextual extraction: bare numeric responses interpreted based on `currently_asking` field (e.g., bare "19" → age if bot just asked for age)
 
 **Priority:** High  
 **Dependencies:** Conversation state management
@@ -92,10 +95,12 @@ A voice-first WhatsApp chatbot that goes beyond awareness to provide complete ex
 **User Story:** As a user, I want to get the most relevant schemes for my situation so that I don't waste time on irrelevant options.
 
 **Acceptance Criteria:**
-- AC4.1: Two-stage matching: structured filtering + semantic search
-- AC4.2: Stage 1 SQL filtering by age, income, category, life event
-- AC4.3: Stage 2 semantic ranking using embeddings and cosine similarity
-- AC4.4: Return top 5 schemes ranked by relevance
+- AC4.1: Three-stage matching: life event filtering + structured eligibility filtering + semantic ranking
+- AC4.2: Stage 1 SQL filtering by life event category
+- AC4.3: Stage 2 SQL filtering by age, income, category with post-filter for non-SQL restrictions (EWS/LIG/MIG income bands)
+- AC4.4: Stage 3 semantic ranking using Jina AI (primary) / Voyage AI (fallback) embeddings (1024-dim, pgvector HNSW index)
+- AC4.5: Optional LLM-based relevance judging when deterministic scores are ambiguous (score < 0.85 or top-two gap < 0.15)
+- AC4.6: Return top 5 schemes ranked by composite relevance score
 - AC4.5: Retrieval latency < 500ms
 - AC4.6: Precision > 80% (returned schemes are relevant)
 - AC4.7: Recall > 70% (relevant schemes are returned)
@@ -115,10 +120,10 @@ A voice-first WhatsApp chatbot that goes beyond awareness to provide complete ex
   - Fee structure (regular and BPL rates)
   - Processing time and validity period
   - Format requirements and common mistakes
-- AC5.3: Delhi office database with 100+ government offices
-- AC5.4: Distance calculation from user's approximate location
+- AC5.3: Delhi office database with 16+ government offices (MVP)
+- AC5.4: Haversine distance calculation from user's approximate location
 - AC5.5: Online portal links verified and working
-- AC5.6: Document info available for 30+ common government documents covering all 25 Phase 1 schemes
+- AC5.6: Document info available for 29 common government documents covering all 5 MVP schemes
 
 **Example Document Info:**
 ```
@@ -159,7 +164,7 @@ Income Certificate (आय प्रमाण पत्र)
 **User Story:** As a user, I want step-by-step guidance for submitting my application so that I can complete the process successfully.
 
 **Acceptance Criteria:**
-- AC7.1: Walkthrough available for 25 schemes (Phase 1), expanding to 100
+- AC7.1: Walkthrough available for 5 schemes (MVP), expanding to 25+
 - AC7.2: Instructions verified against actual portal
 - AC7.3: Both online and offline options provided
 - AC7.4: Content includes:
@@ -196,29 +201,35 @@ Income Certificate (आय प्रमाण पत्र)
 **User Story:** As a user, I want the system to remember our conversation context so that I don't have to repeat information.
 
 **Acceptance Criteria:**
-- AC9.1: Session persists for 24 hours from last message (target users may take days to gather documents between interactions)
-- AC9.2: Context maintained across 20+ conversational turns via message sliding window plus periodic LLM-generated conversation summary
-- AC9.3: Graceful session expiry handling with context restoration
-- AC9.4: No permanent data storage for privacy (24-hour TTL auto-deletes all session data)
+- AC9.1: Session persists for 7 days from last message via DynamoDB TTL (target users may take days to gather documents between interactions)
+- AC9.2: Context maintained across 20+ conversational turns via 12-message sliding window (6 completed turns) plus LLM-generated working memory
+- AC9.3: Working memory system: deterministic profile facts + LLM-generated conversation summary, refreshed every 8 turns or when context exceeds ~6000 tokens
+- AC9.4: Background memory refresh via SQS queue (async) to avoid blocking user responses
 - AC9.5: Session includes:
-  - User profile (collected attributes)
-  - Message history (last 10 messages as sliding window)
-  - Conversation summary (LLM-generated every 5 turns to preserve early context)
-  - Conversation state
+  - User profile (collected attributes with scheme-aware required fields)
+  - Message history (last 12 messages as sliding window)
+  - Working memory (LLM-generated summary + deterministic profile facts + active scheme IDs + pending action)
+  - Conversation state (10-state FSM)
   - Discussed schemes (avoid repetition)
-  - Language preference
+  - Selected scheme ID (for deep-dive navigation)
+  - Presented schemes (for inline keyboard recall)
+  - Language preference (auto-detected or user-locked)
+  - Currently asking field (for contextual bare-value extraction)
+  - Skipped fields (profile fields user declined to answer)
+  - Awaiting profile change guard (prevents re-matching loops)
+  - Completed turn count and memory refresh tracking
 
-**Conversation States:**
-1. GREETING - Initial welcome
+**Conversation States (10-state FSM):**
+1. GREETING - Initial welcome and language detection
 2. SITUATION_UNDERSTANDING - User describes life event
-3. PROFILE_COLLECTION - Gathering eligibility attributes
-4. SCHEME_MATCHING - Running retrieval
-5. SCHEME_PRESENTATION - Showing eligible schemes
-6. SCHEME_DETAILS - Deep dive into one scheme
-7. DOCUMENT_GUIDANCE - Explaining document requirements
-8. REJECTION_WARNINGS - Highlighting common mistakes
-9. APPLICATION_HELP - Step-by-step guidance
-10. CSC_HANDOFF - Connecting to human help
+3. PROFILE_COLLECTION - Gathering eligibility attributes (scheme-aware)
+4. SCHEME_MATCHING - Running 3-stage hybrid retrieval (transient — auto-transitions)
+5. SCHEME_PRESENTATION - Showing eligible schemes with inline keyboard
+6. SCHEME_DETAILS - Deep dive into one scheme (benefits, eligibility match explanation)
+7. DOCUMENT_GUIDANCE - Document procurement with prerequisites, fees, offices
+8. REJECTION_WARNINGS - Common mistakes and prevention tips
+9. APPLICATION_HELP - Step-by-step online/offline guidance
+10. CSC_HANDOFF - Connecting to human help at nearest CSC
 
 **State Transition Notes:**
 - Backward transitions are supported: users can say "go back to documents" from REJECTION_WARNINGS or "show me the scheme list again" from APPLICATION_HELP. The state machine does not force a strictly linear path.
@@ -237,24 +248,25 @@ Income Certificate (आय प्रमाण पत्र)
 
 ### NFR2: Security
 - TLS 1.3 for all connections
-- No permanent conversation storage (24-hour TTL on all session data)
-- Rate limiting: 50 messages/hour/user
+- Session data expires via DynamoDB TTL (7-day default, configurable)
+- Rate limiting: via API Gateway throttling
 - Input sanitization for prompt injection prevention
 
 ### NFR3: Availability
 - 99.5% uptime target
-- Graceful degradation if Bhashini unavailable (text-only mode)
-- Fallback mechanisms for all external dependencies
+- Graceful degradation if Sarvam AI unavailable (Bhashini fallback, then text-only mode)
+- LLM fallback chain: AWS Bedrock Nova 2 Lite → xAI Grok → safe error message
+- Embedding fallback chain: Jina AI → Voyage AI → skip vector ranking
 
 ### NFR4: Scalability
 - Serverless auto-scaling architecture
 - Database read replicas for high load
 - CDN for static assets and audio files
 
-### NFR5: Data Sovereignty (100% Sovereign AI Stack)
+### NFR5: Data Sovereignty
 - All data stored in AWS Mumbai region (ap-south-1)
-- Voice processing through Bhashini (AI4Bharat, IIT Madras) — government-operated, India-hosted
-- No user data export outside India
+- Voice processing through Sarvam AI (India-based) with Bhashini (AI4Bharat, IIT Madras) fallback — both India-hosted
+- LLM processing via AWS Bedrock (India region) when available, xAI Grok as fallback
 - All language models accessed through India-region endpoints where available
 
 ### NFR6: Usability
@@ -278,17 +290,19 @@ Income Certificate (आय प्रमाण पत्र)
 ## Constraints and Assumptions
 
 ### Technical Constraints
-- Must use WhatsApp Business API (primary channel)
-- Must integrate with Bhashini for Hindi voice processing
+- Must use Telegram Bot API (primary channel for MVP; WhatsApp planned for future)
+- Must integrate with Sarvam AI (primary) and Bhashini (fallback) for Hindi voice processing
 - Must comply with Indian data localization requirements
+- AWS Bedrock availability varies by region — xAI Grok as universal fallback
 
 ### Business Constraints
 - Focus on Delhi schemes only (MVP scope)
+- 5 schemes deep (PMAY-U Housing, Delhi Arogya Kosh Health, Widow Pension, RGSRY Self-Employment, ELSD Education Loan)
 - No scheme application submission (guidance only)
 - No payment processing
 
 ### Assumptions
-- Users have smartphones with WhatsApp
+- Users have smartphones with Telegram (WhatsApp integration planned for post-MVP)
 - Users are comfortable with voice messages
 - Government scheme data is publicly available
 - CSC operators will cooperate with handoff process
@@ -306,10 +320,14 @@ Income Certificate (आय प्रमाण पत्र)
 ## Dependencies
 
 ### External Services
-- WhatsApp Business API
-- Bhashini (AI4Bharat) APIs
-- LLM API (Claude/GPT-4/Gemini)
-- AWS services (Lambda, DynamoDB, S3, API Gateway)
+- Telegram Bot API (primary messaging channel)
+- Sarvam AI APIs (Saaras v3 STT, Bulbul v3 TTS — primary voice)
+- Bhashini (AI4Bharat) APIs (fallback voice)
+- AWS Bedrock Nova 2 Lite (primary LLM)
+- xAI Grok via OpenAI-compatible API (fallback LLM)
+- Jina AI (primary embeddings, jina-embeddings-v3, 1024-dim)
+- Voyage AI (fallback embeddings, voyage-multilingual-2)
+- AWS services (Lambda, DynamoDB, S3, API Gateway, SQS, CloudWatch)
 
 ### Data Sources
 - Delhi government scheme database
@@ -344,13 +362,13 @@ Income Certificate (आय प्रमाण पत्र)
 ## Offline and Low-Bandwidth Considerations
 
 ### Low-Bandwidth Design
-- WhatsApp chosen as primary channel specifically because it works on 2G connections and compresses media automatically.
-- Voice messages are compressed to OGG Opus format (WhatsApp default) — typically 8-16 kbps, allowing a 30-second message in ~60KB.
+- Telegram chosen as primary channel because it works on slow connections, compresses media, and has free Bot API with no business verification delays.
+- Voice messages are compressed to OGG Opus format (Telegram default) — typically 8-16 kbps, allowing a 30-second message in ~60KB.
 - Text responses are prioritized over audio responses when network quality is poor.
 - Scheme data is served as structured text, not images or PDFs, to minimize payload size.
 
 ### Offline Fallback
-- If external APIs (Bhashini, LLM) are unreachable, the system degrades to rule-based keyword matching and pre-written Hindi response templates.
+- If external APIs (Sarvam AI, Bhashini, LLM) are unreachable, the system degrades to rule-based keyword matching and pre-written Hindi response templates.
 - Frequently accessed scheme information is cached in ElastiCache, so core scheme lookup works even during partial outages.
 - CSC handoff (connecting user to a human operator) is always available as the ultimate offline fallback.
 
