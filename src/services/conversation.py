@@ -22,7 +22,7 @@ from src.models.api import ChatRequest, ChatResponse
 from src.models.document import DocumentChain
 from src.models.scheme import SchemeMatch
 from src.models.session import ConversationState, Session, UserProfile
-from src.prompts.loader import get_system_prompt
+from src.prompts.loader import get_analysis_system_prompt
 from src.services import (
     document_resolver,
     fsm,
@@ -134,6 +134,10 @@ TOPIC_SWITCH_PATTERNS = (
     r"\bdifferent help\b",
     r"\bother help\b",
     r"\belse instead\b",
+    r"\bab mujhe\b",
+    r"\biske bajay\b",
+    r"\btopic badal\b",
+    r"\bab .* chahiye\b",
     r"अब मुझे",
     r"इसके बजाय",
     r"बजाय",
@@ -248,8 +252,10 @@ def _infer_text_language(text: str) -> str:
 
     text_lower = text.lower()
     hinglish_markers = (
-        "mujhe", "chahiye", "batao", "batayiye", "kyu", "kaise",
-        "sahayata", "madad", "mera", "meri", "mere", "kripya",
+        "mujhe", "chahiye", "batao", "batayiye", "kyu", "kya", "kaise",
+        "sahayata", "madad", "mera", "meri", "mere", "kripya", "hai",
+        "hain", "hoon", "saal", "nahi", "nahin", "liye", "bhi", "beti",
+        "pati", "patni",
     )
     marker_hits = sum(
         1 for marker in hinglish_markers
@@ -258,6 +264,82 @@ def _infer_text_language(text: str) -> str:
     if marker_hits >= 2:
         return "hinglish"
     return "en"
+
+
+def _preferred_turn_language(
+    inferred_turn_language: str,
+    detected_language: str,
+) -> str:
+    """Prefer raw user-language cues for unlocked non-English turns."""
+    if inferred_turn_language in {"hi", "hinglish"}:
+        return inferred_turn_language
+    return detected_language
+
+
+def _looks_like_low_context_field_reply(text: str) -> bool:
+    """Return True for short value-style replies that carry weak language signal."""
+    stripped = text.strip().lower()
+    if not stripped:
+        return False
+
+    if re.fullmatch(r"₹?\s*[\d,]+(?:\.\d+)?", stripped):
+        return True
+    if re.fullmatch(r"(sc|st|obc|ews|general)", stripped, re.IGNORECASE):
+        return True
+
+    word_tokens = re.findall(r"[a-z]+", stripped)
+    if not re.search(r"\d", stripped):
+        return False
+    if len(word_tokens) > 12:
+        return False
+
+    value_cues = (
+        "income",
+        "family",
+        "annual",
+        "year",
+        "yearly",
+        "around",
+        "approx",
+        "month",
+        "monthly",
+        "lakh",
+        "lac",
+        "rupees",
+        "rs",
+        "per",
+        "hai",
+        "age",
+        "category",
+    )
+    if any(cue in stripped for cue in value_cues):
+        return True
+
+    profile_reply_patterns = (
+        r"\bi am\b",
+        r"\bi'm\b",
+        r"\bmain\b",
+        r"\bmeri\b",
+        r"\bmy\b",
+    )
+    return any(re.search(pattern, stripped) for pattern in profile_reply_patterns)
+
+
+def _should_preserve_unlocked_session_language(
+    session: Session,
+    user_message: str,
+    inferred_turn_language: str,
+) -> bool:
+    """Keep the active unlocked Hindi/Hinglish session language on low-context field replies."""
+    if session.language_locked:
+        return False
+    if session.language_preference not in {"hi", "hinglish"}:
+        return False
+    if session.currently_asking is None:
+        return False
+    if inferred_turn_language in {"hi", "hinglish"}:
+        return False
+    return _looks_like_low_context_field_reply(user_message)
 
 
 def _detect_explicit_language_request(text: str) -> str | None:
@@ -380,6 +462,75 @@ def _detect_field_help_request(text: str, field: str | None) -> bool:
         "life_event": ("assistance", "help", "scheme", "support", "situation", "मदद"),
     }
     return any(keyword in text_lower for keyword in field_keywords.get(field, ()))
+
+
+def _is_multi_beneficiary_scope_followup(
+    text: str,
+    currently_asking: str | None,
+) -> bool:
+    """Detect scope questions about self vs child while a field is pending."""
+    if currently_asking is None:
+        return False
+    if _detect_reason_request(text):
+        return False
+    if _detect_field_help_request(text, currently_asking):
+        return False
+    if not _looks_like_scheme_question(text):
+        return False
+
+    text_lower = text.lower()
+    beneficiary_markers = (
+        "daughter",
+        "son",
+        "beti",
+        "beta",
+        "my daughter",
+        "my son",
+        "meri beti",
+        "mera beta",
+        "applicant",
+        "beneficiary",
+    )
+    scope_markers = (
+        "both",
+        "also",
+        "too",
+        "choose one",
+        "one person",
+        "one applicant",
+        "first",
+        "kiske liye",
+        "kis ke liye",
+        "scholarship",
+        "education",
+        "college",
+        "bhi",
+    )
+    return any(marker in text_lower for marker in beneficiary_markers) and any(
+        marker in text_lower for marker in scope_markers
+    )
+
+
+def _build_multi_beneficiary_scope_response(language: str) -> str:
+    """Explain how to handle self-plus-child support questions during collection."""
+    return _text_variant(
+        language,
+        (
+            "मैं आपकी और आपकी बेटी दोनों की मदद कर सकता हूँ, लेकिन सही योजना मिलाने के लिए "
+            "एक समय में एक आवेदक पर ध्यान देना बेहतर रहेगा। अभी बताइए कि पहले योजनाएँ "
+            "किसके लिए देखनी हैं, आपके लिए या आपकी बेटी के लिए?"
+        ),
+        (
+            "I can help both you and your daughter, but it is more accurate to check "
+            "schemes for one applicant at a time. Please tell me whose schemes you want "
+            "to focus on first: yours or your daughter's?"
+        ),
+        (
+            "Main aapki aur aapki beti dono ki madad kar sakta hoon, lekin sahi matching "
+            "ke liye ek time par ek applicant par focus karna better rahega. Ab batayiye "
+            "pehle schemes kiske liye dekhni hain, aapke liye ya aapki beti ke liye?"
+        ),
+    )
 
 
 def _looks_like_scheme_question(text: str) -> bool:
@@ -660,6 +811,133 @@ def _is_explicit_topic_switch(text: str) -> bool:
     """Return True when the user is clearly asking to change topics."""
     text_lower = text.lower()
     return any(re.search(pattern, text_lower) for pattern in TOPIC_SWITCH_PATTERNS)
+
+
+def _response_conflicts_with_spouse_reference(
+    user_message: str,
+    response_text: str | None,
+) -> bool:
+    """Return True when the LLM flips husband/wife relative to user wording."""
+    if not response_text:
+        return False
+
+    user_lower = user_message.lower()
+    response_lower = response_text.lower()
+
+    user_said_husband = any(token in user_lower for token in ("husband", "pati", "पति"))
+    user_said_wife = any(token in user_lower for token in ("wife", "patni", "पत्नी"))
+    response_said_husband = any(token in response_lower for token in ("husband", "pati", "पति"))
+    response_said_wife = any(token in response_lower for token in ("wife", "patni", "पत्नी"))
+
+    return bool(
+        user_said_husband
+        and response_said_wife
+        or user_said_wife
+        and response_said_husband
+    )
+
+
+def _response_has_empathy(text: str) -> bool:
+    """Return True when the reply already acknowledges distress or loss."""
+    lowered = text.lower()
+    empathy_markers = (
+        "sorry",
+        "condolence",
+        "dukh",
+        "afsos",
+        "samvedana",
+        "mushkil",
+        "खेद",
+        "दुख",
+        "माफ़",
+    )
+    return any(marker in lowered for marker in empathy_markers)
+
+
+def _prepend_death_in_family_empathy(
+    response_text: str,
+    language: str,
+) -> str:
+    """Prepend a brief condolence before deterministic widow-flow questions."""
+    if not response_text.strip() or _response_has_empathy(response_text):
+        return response_text
+
+    empathy_prefix = _text_variant(
+        language,
+        "मुझे आपके नुकसान का दुख है।",
+        "I am sorry for your loss.",
+        "Mujhe aapke nuksaan ka dukh hai.",
+    )
+    return f"{empathy_prefix}\n\n{response_text}"
+
+
+def _validated_selected_scheme_id(
+    session: Session,
+    selected_scheme_id: str | None,
+) -> str | None:
+    """Trust analysis-selected scheme IDs only when they match active scheme context."""
+    if not selected_scheme_id:
+        return None
+
+    valid_ids = {
+        scheme.get("id")
+        for scheme in session.presented_schemes
+        if scheme.get("id")
+    }
+    if session.selected_scheme_id:
+        valid_ids.add(session.selected_scheme_id)
+    if selected_scheme_id in valid_ids:
+        return selected_scheme_id
+    return None
+
+
+def _sanitize_extracted_fields(
+    user_message: str,
+    extracted_fields: dict[str, Any],
+    rule_based_fields: dict[str, Any],
+) -> dict[str, Any]:
+    """Drop relationship over-inference that is not directly supported by the text."""
+    sanitized = dict(extracted_fields)
+    text_lower = user_message.lower()
+
+    guardian_markers = (
+        "mother",
+        "father",
+        "maa",
+        "mom",
+        "mummy",
+        "parent",
+        "uski maa",
+        "uski mother",
+        "meri beti",
+        "my daughter",
+        "my son",
+        "mera beta",
+    )
+    beneficiary_markers = (
+        "beti",
+        "beta",
+        "daughter",
+        "son",
+        "child",
+        "applicant",
+    )
+    explicit_marital_markers = (
+        "married",
+        "शादीशुदा",
+        "विवाहित",
+    )
+
+    if (
+        sanitized.get("marital_status") == "married"
+        and "marital_status" not in rule_based_fields
+        and any(marker in text_lower for marker in guardian_markers)
+        and any(marker in text_lower for marker in beneficiary_markers)
+        and not any(marker in text_lower for marker in explicit_marital_markers)
+    ):
+        sanitized.pop("marital_status", None)
+
+    return sanitized
 
 
 def _should_update_life_event(
@@ -1615,10 +1893,18 @@ class ConversationService:
 
         # 3. Analyze message via LLM (intent + entities only)
         explicit_language = _detect_explicit_language_request(user_message)
+        explicit_topic_switch = _is_explicit_topic_switch(user_message)
         inferred_turn_language = explicit_language or _infer_text_language(user_message)
+        preserve_unlocked_language = _should_preserve_unlocked_session_language(
+            session,
+            user_message,
+            inferred_turn_language,
+        )
         llm_session_language = (
             session.language_preference
-            if session.language_locked and session.language_preference != "auto"
+            if (
+                session.language_locked and session.language_preference != "auto"
+            ) or preserve_unlocked_language
             else inferred_turn_language
         )
         conversation_history = session_manager.get_conversation_history(
@@ -1630,7 +1916,7 @@ class ConversationService:
             session=session,
             user_message=user_message,
             conversation_history=conversation_history,
-            system_prompt=get_system_prompt(),
+            system_prompt=get_analysis_system_prompt(),
             session_language=llm_session_language,
         )
 
@@ -1650,10 +1936,26 @@ class ConversationService:
             current_field=session.currently_asking,
         )
         extracted_fields = {**extracted_fields, **rule_based_fields}
+        extracted_fields = _sanitize_extracted_fields(
+            user_message,
+            extracted_fields,
+            rule_based_fields,
+        )
 
+        if explicit_topic_switch:
+            classified_switch_life_event = life_event_classifier.classify_by_keywords(user_message)
+            if (
+                classified_switch_life_event
+                and classified_switch_life_event != session.user_profile.life_event
+            ):
+                detected_life_event = classified_switch_life_event
+
+        selected_scheme_id = _validated_selected_scheme_id(session, selected_scheme_id)
         resolved_scheme_id = selected_scheme_id or _resolve_scheme_from_text(
             session, user_message
         )
+        if explicit_topic_switch:
+            resolved_scheme_id = None
         action = _detect_action_override(
             user_message,
             session.state,
@@ -1661,6 +1963,8 @@ class ConversationService:
             resolved_scheme_id,
             session.selected_scheme_id,
         ) or llm_action
+        if explicit_topic_switch and _should_preserve_scheme_context_action(action):
+            action = None
         has_scheme_context = bool(
             resolved_scheme_id
             or session.selected_scheme_id
@@ -1709,21 +2013,29 @@ class ConversationService:
             if session.language_locked and session.language_preference != "auto":
                 lang = session.language_preference
             else:
+                preferred_turn_language = (
+                    session.language_preference
+                    if preserve_unlocked_language and session.language_preference != "auto"
+                    else _preferred_turn_language(
+                        inferred_turn_language,
+                        detected_language,
+                    )
+                )
                 previous_language = session.language_preference
                 if (
-                    detected_language != previous_language
+                    preferred_turn_language != previous_language
                     or session.language_preference == "auto"
                 ):
                     session = session_manager.set_language(
                         session,
-                        detected_language,
+                        preferred_turn_language,
                         locked=False,
                     )
-                    language_changed = previous_language != detected_language
+                    language_changed = previous_language != preferred_turn_language
                 lang = (
                     session.language_preference
                     if session.language_preference != "auto"
-                    else detected_language
+                    else preferred_turn_language
                 )
 
         # If user switches language while still in GREETING and hasn't provided
@@ -1835,6 +2147,8 @@ class ConversationService:
             resolved_scheme_id=resolved_scheme_id,
             active_scheme_id=session.selected_scheme_id,
         )
+        if explicit_topic_switch and requested_state in SCHEME_CONTEXT_STATES:
+            requested_state = None
         next_state = fsm.determine_next_state(
             current_state=session.state,
             profile=profile,
@@ -1958,6 +2272,10 @@ class ConversationService:
                         session.skipped_fields,
                     )
                     previously_asking = session.currently_asking
+                    multi_beneficiary_scope_followup = _is_multi_beneficiary_scope_followup(
+                        user_message,
+                        previously_asking,
+                    )
 
                     # ---------- SKIP HANDLING ----------
                     # If user says "I don't know" or wants to skip, move to the next field
@@ -2061,6 +2379,11 @@ class ConversationService:
                             # When we are waiting for a specific field, prefer a deterministic
                             # re-ask over letting the LLM freewheel into another topic.
                             use_llm = False
+                        if use_llm and _response_conflicts_with_spouse_reference(
+                            user_message,
+                            llm_response_text,
+                        ):
+                            use_llm = False
 
                         # If there was a validation error, provide helpful guidance
                         # instead of just repeating the question or using LLM response.
@@ -2069,6 +2392,8 @@ class ConversationService:
                                 previously_asking, validation_error, lang
                             )
                             # Don't change currently_asking — we're still asking for the same field
+                        elif multi_beneficiary_scope_followup:
+                            response_text = _build_multi_beneficiary_scope_response(lang)
                         elif translated_reask:
                             response_text = profile_extractor.get_next_question(
                                 profile,
@@ -2097,6 +2422,11 @@ class ConversationService:
                             session = session_manager.set_currently_asking(
                                 session,
                                 previously_asking,
+                            )
+                        elif multi_beneficiary_scope_followup:
+                            session = session_manager.set_currently_asking(
+                                session,
+                                "life_event",
                             )
                         elif next_field:
                             session = session_manager.set_currently_asking(
@@ -2330,6 +2660,13 @@ class ConversationService:
 
             case _:
                 response_text = response_generator.generate_greeting_response(lang)
+
+        if (
+            profile.life_event == "DEATH_IN_FAMILY"
+            and "life_event" in changed_fields
+            and before_profile.life_event is None
+        ):
+            response_text = _prepend_death_in_family_empathy(response_text, lang)
 
         response_text = await response_generator.ensure_response_language(
             session,

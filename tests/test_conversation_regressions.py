@@ -125,6 +125,35 @@ async def test_explicit_language_lock_persists_across_turns_and_start() -> None:
 
 
 @pytest.mark.asyncio
+async def test_explicit_language_request_does_not_fall_into_farewell_when_llm_mislabels_goodbye() -> None:
+    """Language-only requests should not end the conversation even if the LLM says goodbye."""
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "goodbye",
+            "action": "goodbye",
+            "life_event": None,
+            "extracted_fields": {},
+            "language": "en",
+            "selected_scheme_id": None,
+            "response_text": "Goodbye.",
+        }
+    )
+
+    result = await service.handle_message(
+        ChatRequest(user_id="user-language-not-farewell", message="Please use English only.")
+    )
+
+    session = await get_session_store().get("user-language-not-farewell")
+    assert "Take care" not in result.text
+    assert "assistance do you need" in result.text
+    assert result.language == "en"
+    assert session is not None
+    assert session.language_preference == "en"
+    assert session.language_locked is True
+
+
+@pytest.mark.asyncio
 async def test_help_command_returns_bilingual_guide_for_new_user_without_llm() -> None:
     """New users should get a deterministic bilingual help guide from /help."""
     service = ConversationService(db_pool=AsyncMock())
@@ -214,6 +243,51 @@ async def test_unlocked_previous_language_does_not_bias_english_turn() -> None:
     assert result.language == "en"
     assert session is not None
     assert session.language_preference == "en"
+    assert session.language_locked is False
+
+
+@pytest.mark.asyncio
+async def test_unlocked_hindi_bare_age_reply_preserves_language_context() -> None:
+    """Bare-value field replies should keep the active Hindi language in unlocked sessions."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-unlocked-hi-bare-age",
+            state=ConversationState.PROFILE_COLLECTION,
+            user_profile=UserProfile(life_event="HOUSING"),
+            messages=[
+                Message(role="assistant", content="आवेदक (या लाभार्थी) की उम्र कितनी है?"),
+            ],
+            currently_asking="age",
+            language_preference="hi",
+            language_locked=False,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "answer_field",
+            "life_event": None,
+            "extracted_fields": {"age": 35},
+            "language": "en",
+            "selected_scheme_id": None,
+            "response_text": "What is the applicant's caste category?",
+        }
+    )
+
+    result = await service.handle_message(
+        ChatRequest(user_id="user-unlocked-hi-bare-age", message="35")
+    )
+
+    session = await store.get("user-unlocked-hi-bare-age")
+    assert service.llm.analyze_message.await_args.kwargs["session_language"] == "hi"
+    assert result.language == "hi"
+    assert "What is the applicant's" not in result.text
+    assert any("\u0900" <= char <= "\u097F" for char in result.text)
+    assert session is not None
+    assert session.language_preference == "hi"
     assert session.language_locked is False
 
 
@@ -875,6 +949,56 @@ async def test_field_help_question_stays_on_same_pending_field() -> None:
 
 
 @pytest.mark.asyncio
+async def test_multi_beneficiary_followup_while_collecting_answers_scope_question() -> None:
+    """Collection turns should answer applicant-scope questions instead of re-asking income."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-multi-beneficiary-followup",
+            state=ConversationState.PROFILE_COLLECTION,
+            user_profile=UserProfile(
+                life_event="DEATH_IN_FAMILY",
+                age=35,
+                category="SC",
+                gender="female",
+                marital_status="widowed",
+            ),
+            messages=[
+                Message(role="assistant", content="What is the applicant's approximate annual family income?"),
+            ],
+            currently_asking="annual_income",
+            language_preference="en",
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": None,
+            "life_event": None,
+            "extracted_fields": {},
+            "language": "en",
+            "selected_scheme_id": None,
+            "response_text": "I can help both you and your daughter, but we should focus on one applicant first.",
+        }
+    )
+
+    result = await service.handle_message(
+        ChatRequest(
+            user_id="user-multi-beneficiary-followup",
+            message="Can you help both me and my daughter, or do I need to choose one person first?",
+        )
+    )
+
+    session = await store.get("user-multi-beneficiary-followup")
+    assert "one applicant" in result.text.lower()
+    assert "income" not in result.text.lower()
+    assert session is not None
+    assert session.currently_asking == "life_event"
+
+
+@pytest.mark.asyncio
 async def test_widow_flow_skips_irrelevant_category_and_asks_income_next() -> None:
     """Widow-support collection should not insist on caste category before income."""
     store = get_session_store()
@@ -917,6 +1041,440 @@ async def test_widow_flow_skips_irrelevant_category_and_asks_income_next() -> No
     assert "category" not in result.text.lower()
     assert session is not None
     assert session.currently_asking == "annual_income"
+
+
+@pytest.mark.asyncio
+async def test_new_widow_flow_adds_empathy_before_first_collection_question() -> None:
+    """Death-in-family intake should prepend empathy before asking the next field."""
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": None,
+            "life_event": "DEATH_IN_FAMILY",
+            "extracted_fields": {
+                "gender": "female",
+                "marital_status": "widowed",
+            },
+            "language": "hinglish",
+            "selected_scheme_id": None,
+            "response_text": None,
+        }
+    )
+
+    result = await service.handle_message(
+        ChatRequest(
+            user_id="user-new-widow-empathy",
+            message="Mere pati ki maut ho gayi hai, mujhe widow pension ke baare mein batayiye.",
+        )
+    )
+
+    session = await get_session_store().get("user-new-widow-empathy")
+    assert "dukh" in result.text.lower() or "sorry" in result.text.lower()
+    assert "age" in result.text.lower()
+    assert session is not None
+    assert session.user_profile.life_event == "DEATH_IN_FAMILY"
+
+
+@pytest.mark.asyncio
+async def test_llm_inferred_widow_context_does_not_reask_gender() -> None:
+    """If the LLM infers widow context, the bot should move on to the next missing field."""
+    store = get_session_store()
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "answer_field",
+            "life_event": "DEATH_IN_FAMILY",
+            "extracted_fields": {
+                "gender": "female",
+                "marital_status": "widowed",
+            },
+            "language": "en",
+            "selected_scheme_id": None,
+            "response_text": None,
+        }
+    )
+
+    result = await service.handle_message(
+        ChatRequest(user_id="user-llm-widow-inference", message="My husband died in an accident.")
+    )
+
+    session = await store.get("user-llm-widow-inference")
+    assert "age" in result.text.lower()
+    assert "male or female" not in result.text.lower()
+    assert session is not None
+    assert session.user_profile.gender == "female"
+    assert session.user_profile.marital_status == "widowed"
+    assert session.currently_asking == "age"
+
+
+@pytest.mark.asyncio
+async def test_rule_based_spouse_loss_fallback_completes_gender_for_mixed_script_widow() -> None:
+    """Mixed-script widow wording should not re-ask gender when the LLM misses it."""
+    store = get_session_store()
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "answer_field",
+            "life_event": "DEATH_IN_FAMILY",
+            "extracted_fields": {
+                "marital_status": "widowed",
+            },
+            "language": "en",
+            "selected_scheme_id": None,
+            "response_text": None,
+        }
+    )
+
+    result = await service.handle_message(
+        ChatRequest(
+            user_id="user-mixed-script-widow-fallback",
+            message="Mere pati ki death ho gayi hai aur mujhe pension chahiye.",
+        )
+    )
+
+    session = await store.get("user-mixed-script-widow-fallback")
+    assert "male or female" not in result.text.lower()
+    assert "age" in result.text.lower()
+    assert session is not None
+    assert session.user_profile.gender == "female"
+    assert session.user_profile.marital_status == "widowed"
+    assert session.currently_asking == "age"
+
+
+@pytest.mark.asyncio
+async def test_unlocked_hinglish_turn_does_not_drift_to_english_reply() -> None:
+    """Strong Hinglish turns should stay Hinglish in unlocked sessions."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-unlocked-hinglish-drift",
+            state=ConversationState.PROFILE_COLLECTION,
+            user_profile=UserProfile(
+                life_event="EDUCATION",
+                age=18,
+                category="SC",
+            ),
+            language_preference="hinglish",
+            language_locked=False,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "answer_field",
+            "life_event": None,
+            "extracted_fields": {},
+            "language": "en",
+            "selected_scheme_id": None,
+            "response_text": (
+                "Yes, there are scholarships available for your daughter. "
+                "Could you share the approximate annual family income?"
+            ),
+        }
+    )
+    mock_ai = AsyncMock()
+    mock_ai.generate_response = AsyncMock(
+        return_value=(
+            "Haan, aapki beti ke liye scholarship options available hain. "
+            "Approx annual family income bata dijiye."
+        )
+    )
+
+    with patch(
+        "src.services.response_generator.get_ai_orchestrator",
+        return_value=mock_ai,
+    ):
+        result = await service.handle_message(
+            ChatRequest(
+                user_id="user-unlocked-hinglish-drift",
+                message="Meri beti ke liye scholarship ya college support bhi mil sakta hai kya?",
+            )
+        )
+
+    session = await store.get("user-unlocked-hinglish-drift")
+    assert service.llm.analyze_message.await_args.kwargs["session_language"] == "hinglish"
+    assert result.language == "hinglish"
+    assert mock_ai.generate_response.await_count == 1
+    assert result.text.startswith("Haan, aapki beti ke liye")
+    assert "beti ke liye" in result.text.lower()
+    assert session is not None
+    assert session.language_preference == "hinglish"
+    assert session.language_locked is False
+
+
+@pytest.mark.asyncio
+async def test_unlocked_hinglish_income_turn_preserves_scheme_list_language() -> None:
+    """Income collection turns should keep the active Hinglish language on scheme presentation."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-unlocked-hinglish-income",
+            state=ConversationState.PROFILE_COLLECTION,
+            user_profile=UserProfile(
+                life_event="EDUCATION",
+                age=18,
+                category="SC",
+            ),
+            messages=[
+                Message(role="assistant", content="Applicant ke family ki approx annual income kitni hai?"),
+            ],
+            currently_asking="annual_income",
+            language_preference="hinglish",
+            language_locked=False,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "answer_field",
+            "life_event": None,
+            "extracted_fields": {"annual_income": 120000},
+            "language": "en",
+            "selected_scheme_id": None,
+            "response_text": None,
+        }
+    )
+    match_schemes = AsyncMock(
+        return_value=[
+            SchemeMatch(
+                scheme=_make_scheme("SCH-EDU-LIST", life_event="EDUCATION", name="Education Loan Scheme - Delhi"),
+                eligibility_match={"age": True, "gender": True, "category": True, "income": True},
+                deterministic_score=0.9,
+            )
+        ]
+    )
+
+    with patch("src.services.conversation.scheme_matcher.match_schemes", match_schemes), patch(
+        "src.services.conversation.format_inline_keyboard",
+        return_value=[[{"text": "Education Loan Scheme - Delhi", "callback_data": "scheme:SCH-EDU-LIST"}]],
+    ):
+        result = await service.handle_message(
+            ChatRequest(
+                user_id="user-unlocked-hinglish-income",
+                message="Family income 120000 per year hai.",
+            )
+        )
+
+    session = await store.get("user-unlocked-hinglish-income")
+    assert service.llm.analyze_message.await_args.kwargs["session_language"] == "hinglish"
+    assert result.language == "hinglish"
+    assert result.next_state == ConversationState.SCHEME_PRESENTATION.value
+    assert "Aapke liye ye schemes mili hain" in result.text
+    assert session is not None
+    assert session.language_preference == "hinglish"
+    assert session.language_locked is False
+
+
+@pytest.mark.asyncio
+async def test_explicit_topic_switch_ignores_bogus_scheme_selection_and_updates_need() -> None:
+    """Topic switches should not get trapped by a hallucinated selected_scheme_id."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-topic-switch-live-shape",
+            state=ConversationState.SCHEME_PRESENTATION,
+            user_profile=UserProfile(
+                life_event="DEATH_IN_FAMILY",
+                gender="female",
+                marital_status="widowed",
+                age=35,
+                category="SC",
+                annual_income=90000,
+            ),
+            presented_schemes=[
+                {
+                    "id": "SCH-WIDOW",
+                    "name": "Delhi Pension Scheme to Women in Distress (Widow Pension)",
+                    "name_hindi": "दिल्ली महिला संकट पेंशन योजना",
+                }
+            ],
+            language_preference="hinglish",
+            language_locked=False,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": None,
+            "life_event": "EDUCATION",
+            "extracted_fields": {},
+            "language": "hinglish",
+            "selected_scheme_id": "education",
+            "response_text": None,
+        }
+    )
+    match_schemes = AsyncMock(return_value=[])
+
+    with patch("src.services.conversation.scheme_matcher.match_schemes", match_schemes):
+        result = await service.handle_message(
+            ChatRequest(
+                user_id="user-topic-switch-live-shape",
+                message="Ab mujhe meri beti ke liye education scheme dekhni hai, widow pension nahin.",
+            )
+        )
+
+    session = await store.get("user-topic-switch-live-shape")
+    assert match_schemes.await_count == 1
+    called_profile = match_schemes.await_args.kwargs["profile"]
+    assert called_profile.life_event == "EDUCATION"
+    assert result.next_state == ConversationState.PROFILE_COLLECTION.value
+    assert session is not None
+    assert session.user_profile.life_event == "EDUCATION"
+    assert session.selected_scheme_id is None
+    assert session.presented_schemes == []
+
+
+@pytest.mark.asyncio
+async def test_explicit_topic_switch_suppresses_old_scheme_details_action() -> None:
+    """A topic-switch turn should not reopen the old single presented scheme."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-topic-switch-old-details",
+            state=ConversationState.SCHEME_PRESENTATION,
+            user_profile=UserProfile(
+                life_event="DEATH_IN_FAMILY",
+                gender="female",
+                marital_status="widowed",
+                age=35,
+                category="SC",
+                annual_income=90000,
+            ),
+            presented_schemes=[
+                {
+                    "id": "SCH-DELHI-003",
+                    "name": "Delhi Pension Scheme to Women in Distress (Widow Pension)",
+                    "name_hindi": "दिल्ली महिला संकट पेंशन योजना",
+                }
+            ],
+            language_preference="hinglish",
+            language_locked=False,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "request_details",
+            "life_event": "DEATH_IN_FAMILY",
+            "extracted_fields": {},
+            "language": "hinglish",
+            "selected_scheme_id": None,
+            "response_text": None,
+        }
+    )
+    match_schemes = AsyncMock(return_value=[])
+
+    with patch("src.services.conversation.scheme_matcher.match_schemes", match_schemes), patch(
+        "src.services.conversation._build_scheme_details_text",
+        AsyncMock(return_value="DETAILS"),
+    ) as details_mock:
+        result = await service.handle_message(
+            ChatRequest(
+                user_id="user-topic-switch-old-details",
+                message="Ab mujhe meri beti ke liye education scheme dekhni hai, widow pension nahin.",
+            )
+        )
+
+    session = await store.get("user-topic-switch-old-details")
+    assert details_mock.await_count == 0
+    assert match_schemes.await_count == 1
+    called_profile = match_schemes.await_args.kwargs["profile"]
+    assert called_profile.life_event == "EDUCATION"
+    assert result.next_state == ConversationState.PROFILE_COLLECTION.value
+    assert session is not None
+    assert session.user_profile.life_event == "EDUCATION"
+    assert session.selected_scheme_id is None
+    assert session.presented_schemes == []
+
+
+@pytest.mark.asyncio
+async def test_spouse_conflict_in_llm_reply_falls_back_to_deterministic_question() -> None:
+    """A wrong-spouse LLM reply should be discarded in favor of a safe deterministic prompt."""
+    store = get_session_store()
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "answer_field",
+            "life_event": "DEATH_IN_FAMILY",
+            "extracted_fields": {
+                "gender": "female",
+                "marital_status": "widowed",
+            },
+            "language": "hinglish",
+            "selected_scheme_id": None,
+            "response_text": (
+                "Aapki patni ki maut ho gayi hai, mujhe samajh aaya. "
+                "Kya aap apna district bata sakti hain?"
+            ),
+        }
+    )
+
+    result = await service.handle_message(
+        ChatRequest(
+            user_id="user-spouse-conflict-reply",
+            message="Mere pati ki maut ho gayi hai, mujhe widow pension ke baare mein batayiye.",
+        )
+    )
+
+    session = await store.get("user-spouse-conflict-reply")
+    assert "patni" not in result.text.lower()
+    assert result.text != (
+        "Aapki patni ki maut ho gayi hai, mujhe samajh aaya. "
+        "Kya aap apna district bata sakti hain?"
+    )
+    assert session is not None
+    assert session.user_profile.gender == "female"
+    assert session.user_profile.marital_status == "widowed"
+
+
+@pytest.mark.asyncio
+async def test_guardian_context_does_not_overinfer_married_for_child_beneficiary() -> None:
+    """Guardian wording should not create a married applicant profile by default."""
+    store = get_session_store()
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "answer_field",
+            "life_event": "EDUCATION",
+            "extracted_fields": {
+                "age": 18,
+                "gender": "female",
+                "marital_status": "married",
+            },
+            "language": "hinglish",
+            "selected_scheme_id": None,
+            "response_text": "Kya aap district bata sakti hain?",
+        }
+    )
+
+    await service.handle_message(
+        ChatRequest(
+            user_id="user-guardian-overinference",
+            message=(
+                "Meri beti 18 saal ki hai aur usko college scholarship chahiye. "
+                "Main uski maa hoon, meri age 35 hai."
+            ),
+        )
+    )
+
+    session = await store.get("user-guardian-overinference")
+    assert session is not None
+    assert session.user_profile.age == 18
+    assert session.user_profile.gender == "female"
+    assert session.user_profile.marital_status is None
 
 
 @pytest.mark.asyncio
@@ -1597,6 +2155,83 @@ async def test_low_context_field_answer_skips_relevance_clarification_loop() -> 
     assert "Need area: HOUSING" in query_text
     assert "Need area: HOUSING" in judge_message
     assert service.llm.judge_scheme_relevance.await_count == 1
+
+
+@pytest.mark.asyncio
+async def test_unlocked_hinglish_field_style_reply_preserves_language_for_matching() -> None:
+    """Longer field-style replies should keep unlocked Hinglish sessions stable."""
+    store = get_session_store()
+    await store.save(
+        Session(
+            user_id="user-hinglish-field-style",
+            state=ConversationState.PROFILE_COLLECTION,
+            user_profile=UserProfile(
+                life_event="DEATH_IN_FAMILY",
+                gender="female",
+                marital_status="widowed",
+            ),
+            messages=[
+                Message(
+                    role="assistant",
+                    content=(
+                        "Aapko kis tarah ki madad chahiye? "
+                        "Jaise housing, health, education, ya rojgaar?"
+                    ),
+                ),
+            ],
+            currently_asking="life_event",
+            language_preference="hinglish",
+            language_locked=False,
+        )
+    )
+
+    service = ConversationService(db_pool=AsyncMock())
+    service.llm.analyze_message = AsyncMock(
+        return_value={
+            "intent": "question",
+            "action": "answer_field",
+            "life_event": None,
+            "extracted_fields": {
+                "age": 35,
+                "category": "SC",
+                "annual_income": 70000,
+            },
+            "language": "en",
+            "selected_scheme_id": None,
+            "response_text": None,
+        }
+    )
+    match_schemes = AsyncMock(
+        return_value=[
+            SchemeMatch(
+                scheme=_make_scheme(
+                    "SCH-WIDOW",
+                    life_event="DEATH_IN_FAMILY",
+                    name="Widow Pension",
+                    name_hindi="Widow Pension",
+                    genders=["female"],
+                    categories=["all"],
+                ),
+                eligibility_match={"age": True, "gender": True, "income": True},
+                deterministic_score=0.9,
+            )
+        ]
+    )
+
+    with patch("src.services.conversation.scheme_matcher.match_schemes", match_schemes):
+        result = await service.handle_message(
+            ChatRequest(
+                user_id="user-hinglish-field-style",
+                message="I am 35, SC, and family income is around 70000 yearly.",
+            )
+        )
+
+    session = await store.get("user-hinglish-field-style")
+    assert service.llm.analyze_message.await_args.kwargs["session_language"] == "hinglish"
+    assert result.language == "hinglish"
+    assert "Aapke liye ye schemes mili hain" in result.text
+    assert session is not None
+    assert session.language_preference == "hinglish"
 
 
 @pytest.mark.asyncio

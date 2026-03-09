@@ -10,12 +10,10 @@ from typing import Any
 from src.config import get_settings
 from src.db.session_store import DynamoDBSessionStore, configure_session_store
 from src.services.ai_background import deserialize_work_item, process_work_item
+from src.utils.logging_config import configure_logging
 
 settings = get_settings()
-logging.basicConfig(
-    level=getattr(logging, settings.log_level.upper()),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
+configure_logging(settings.log_level)
 logger = logging.getLogger(__name__)
 
 _runtime_configured = False

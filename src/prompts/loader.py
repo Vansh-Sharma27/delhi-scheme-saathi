@@ -21,8 +21,13 @@ def load_prompt(name: str) -> str:
 
 
 def get_system_prompt() -> str:
-    """Get the main system prompt for conversation."""
-    return load_prompt("system_prompt")
+    """Backward-compatible alias for the analysis system prompt."""
+    return get_analysis_system_prompt()
+
+
+def get_analysis_system_prompt() -> str:
+    """Get the dedicated system prompt for message analysis."""
+    return load_prompt("analysis_system_prompt")
 
 
 def get_generate_response_prompt() -> str:
