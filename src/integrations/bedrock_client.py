@@ -257,13 +257,13 @@ Respond with ONLY the JSON object, no other text.
             return {"intent": "unknown", "language": "hi"}
 
         except (BotoCoreError, ClientError) as e:
-            logger.error(f"Bedrock API error: {e}")
+            logger.error("Bedrock API error: %s", e)
             raise
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse Bedrock response as JSON: {e}")
+            logger.error("Failed to parse Bedrock response as JSON: %s", e)
             raise
         except Exception as e:
-            logger.error(f"Bedrock analysis failed: {e}")
+            logger.error("Bedrock analysis failed: %s", e)
             raise
 
     async def judge_scheme_relevance(
@@ -434,7 +434,7 @@ Generate response:
             return "मुझे समझने में कठिनाई हो रही है। कृपया दोबारा बताएं।"
 
         except Exception as e:
-            logger.error(f"Bedrock response generation failed: {e}")
+            logger.error("Bedrock response generation failed: %s", e)
             raise
 
     async def summarize_conversation(
@@ -501,7 +501,7 @@ Provide a 2-3 sentence summary in English:
             return current_summary or ""
 
         except Exception as e:
-            logger.error(f"Bedrock summarization failed: {e}")
+            logger.error("Bedrock summarization failed: %s", e)
             return current_summary or ""
 
 

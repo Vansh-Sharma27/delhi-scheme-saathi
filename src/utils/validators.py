@@ -33,7 +33,7 @@ def validate_age(age: Any) -> int | None:
     """Validate age value."""
     try:
         age_int = int(age)
-        if 0 <= age_int <= 120:
+        if 1 <= age_int <= 120:
             return age_int
     except (ValueError, TypeError):
         pass

@@ -152,13 +152,13 @@ class BhashiniClient:
         try:
             client = await self._get_client()
             response = await client.post(
-                f"{self.PIPELINE_URL}",
+                self.PIPELINE_URL,
                 json=payload,
             )
             response.raise_for_status()
 
             data = response.json()
-            logger.debug(f"Bhashini ASR response: {data}")
+            logger.debug("Bhashini ASR response: %s", data)
 
             # Extract transcription from response
             if "pipelineResponse" in data:
@@ -181,7 +181,7 @@ class BhashiniClient:
             )
 
         except httpx.HTTPError as e:
-            logger.error(f"Bhashini ASR request failed: {e}")
+            logger.error("Bhashini ASR request failed: %s", e)
             return STTResult(
                 text="[Voice recognition failed - please type your query]",
                 confidence=0.0,
@@ -239,13 +239,13 @@ class BhashiniClient:
         try:
             client = await self._get_client()
             response = await client.post(
-                f"{self.PIPELINE_URL}",
+                self.PIPELINE_URL,
                 json=payload,
             )
             response.raise_for_status()
 
             data = response.json()
-            logger.debug(f"Bhashini TTS response received")
+            logger.debug("Bhashini TTS response received")
 
             # Extract audio from response
             if "pipelineResponse" in data:
@@ -263,7 +263,7 @@ class BhashiniClient:
             return TTSResult(audio_bytes=b"", content_type="audio/wav")
 
         except httpx.HTTPError as e:
-            logger.error(f"Bhashini TTS request failed: {e}")
+            logger.error("Bhashini TTS request failed: %s", e)
             return TTSResult(audio_bytes=b"", content_type="audio/wav")
 
     async def detect_language(self, text: str) -> str:

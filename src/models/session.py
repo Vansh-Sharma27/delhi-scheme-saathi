@@ -1,6 +1,6 @@
 """Session and conversation state models."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -94,7 +94,7 @@ class Message(BaseModel, frozen=True):
 
     role: str  # user, assistant, system
     content: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class ConversationMemory(BaseModel):
@@ -138,15 +138,17 @@ class Session(BaseModel):
     completed_turn_count: int = 0
     last_memory_refresh_turn: int = 0
     pending_memory_job: bool = False
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     def copy_with(self, **updates: Any) -> "Session":
         """Return a deep-copied session with updated fields."""
         data = self.model_dump(round_trip=True)
         data.update(updates)
-        data.setdefault("updated_at", datetime.utcnow())
+        # Always update timestamp unless caller explicitly provides one
+        if "updated_at" not in updates:
+            data["updated_at"] = datetime.now(UTC)
         return Session(**data)
 
     def add_message(self, role: str, content: str) -> "Session":
@@ -159,15 +161,15 @@ class Session(BaseModel):
         if len(messages) > 12:
             messages = messages[-12:]
 
-        return self.copy_with(messages=messages, updated_at=datetime.utcnow())
+        return self.copy_with(messages=messages, updated_at=datetime.now(UTC))
 
     def with_state(self, new_state: ConversationState) -> "Session":
         """Return new session with updated state."""
-        return self.copy_with(state=new_state, updated_at=datetime.utcnow())
+        return self.copy_with(state=new_state, updated_at=datetime.now(UTC))
 
     def with_profile(self, profile: UserProfile) -> "Session":
         """Return new session with updated profile."""
-        return self.copy_with(user_profile=profile, updated_at=datetime.utcnow())
+        return self.copy_with(user_profile=profile, updated_at=datetime.now(UTC))
 
     def to_dynamodb_item(self) -> dict[str, Any]:
         """Serialize for DynamoDB storage."""
@@ -248,8 +250,8 @@ class Session(BaseModel):
             completed_turn_count=item.get("completed_turn_count", 0),
             last_memory_refresh_turn=item.get("last_memory_refresh_turn", 0),
             pending_memory_job=item.get("pending_memory_job", False),
-            created_at=datetime.fromisoformat(item["created_at"]) if isinstance(item["created_at"], str) else item["created_at"],
-            updated_at=datetime.fromisoformat(item["updated_at"]) if isinstance(item["updated_at"], str) else item["updated_at"],
+            created_at=datetime.fromisoformat(item["created_at"]) if isinstance(item.get("created_at"), str) else (item.get("created_at") or datetime.now(UTC)),
+            updated_at=datetime.fromisoformat(item["updated_at"]) if isinstance(item.get("updated_at"), str) else (item.get("updated_at") or datetime.now(UTC)),
             metadata=item.get("metadata", {}),
         )
 

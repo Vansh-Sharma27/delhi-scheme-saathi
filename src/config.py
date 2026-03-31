@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     # Database
     database_url: str = Field(
         default="postgresql://postgres:postgres@localhost:5432/delhi_scheme_saathi",
-        description="PostgreSQL connection URL"
+        description="PostgreSQL connection URL (override via DATABASE_URL env var in production)"
     )
 
     # xAI (Grok) API - OpenAI-compatible

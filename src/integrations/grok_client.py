@@ -180,7 +180,7 @@ Respond with ONLY the JSON object, no other text.
                 model=self._model,
                 messages=messages,
                 temperature=0,
-                max_tokens=500,
+                max_tokens=1024,
                 response_format={"type": "json_object"},
             )
 
@@ -190,7 +190,7 @@ Respond with ONLY the JSON object, no other text.
             return {"intent": "unknown", "language": "hi"}
 
         except Exception as e:
-            logger.error(f"LLM analysis failed: {e}")
+            logger.error("LLM analysis failed: %s", e)
             # Re-raise so the fallback wrapper can route to safe defaults.
             raise
 
@@ -327,7 +327,7 @@ Generate response:
             return content or "मुझे समझने में कठिनाई हो रही है। कृपया दोबारा बताएं।"
 
         except Exception as e:
-            logger.error(f"LLM response generation failed: {e}")
+            logger.error("LLM response generation failed: %s", e)
             # Re-raise so the fallback wrapper can decide the final response.
             raise
 
@@ -373,7 +373,7 @@ Provide a 2-3 sentence summary in English:
             return response.choices[0].message.content or ""
 
         except Exception as e:
-            logger.error(f"Conversation summarization failed: {e}")
+            logger.error("Conversation summarization failed: %s", e)
             # Re-raise so the fallback wrapper can decide fallback behavior.
             raise
 

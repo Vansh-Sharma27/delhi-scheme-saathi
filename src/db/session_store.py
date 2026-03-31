@@ -1,6 +1,6 @@
 """Session store - in-memory for MVP, DynamoDB for production."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Protocol
 
 from src.models.session import Session
@@ -35,7 +35,7 @@ class InMemorySessionStore:
 
     async def save(self, session: Session) -> None:
         """Save or update session."""
-        updated = session.copy_with(updated_at=datetime.utcnow())
+        updated = session.copy_with(updated_at=datetime.now(UTC))
         self._sessions[session.user_id] = updated
 
     async def delete(self, user_id: str) -> None:
@@ -67,7 +67,7 @@ class DynamoDBSessionStore:
             )
             return response.get("Item")
 
-        item = await asyncio.get_event_loop().run_in_executor(None, _get)
+        item = await asyncio.get_running_loop().run_in_executor(None, _get)
         if item:
             return Session.from_dynamodb_item(item)
         return None
@@ -81,7 +81,7 @@ class DynamoDBSessionStore:
         def _put():
             self._table.put_item(Item=item)
 
-        await asyncio.get_event_loop().run_in_executor(None, _put)
+        await asyncio.get_running_loop().run_in_executor(None, _put)
 
     async def delete(self, user_id: str) -> None:
         """Delete session."""
@@ -90,7 +90,7 @@ class DynamoDBSessionStore:
         def _delete():
             self._table.delete_item(Key={"user_id": user_id})
 
-        await asyncio.get_event_loop().run_in_executor(None, _delete)
+        await asyncio.get_running_loop().run_in_executor(None, _delete)
 
 
 # Global session store instance (configured at startup)
