@@ -255,13 +255,17 @@ def _infer_text_language(text: str) -> str:
         "mujhe", "chahiye", "batao", "batayiye", "kyu", "kya", "kaise",
         "sahayata", "madad", "mera", "meri", "mere", "kripya", "hai",
         "hain", "hoon", "saal", "nahi", "nahin", "liye", "bhi", "beti",
-        "pati", "patni",
+        "pati", "patni", "umar", "vidhwa", "bhai", "aap", "karo",
+        "karein", "kariye", "baare", "guzar",
     )
     marker_hits = sum(
         1 for marker in hinglish_markers
         if re.search(rf"(?<!\w){re.escape(marker)}(?!\w)", text_lower)
     )
-    if marker_hits >= 2:
+    # For short messages (≤4 words), a single Hinglish marker is sufficient.
+    word_count = len(re.findall(r"[A-Za-z0-9\u0900-\u097F]+", text))
+    threshold = 1 if word_count <= 4 else 2
+    if marker_hits >= threshold:
         return "hinglish"
     return "en"
 
@@ -311,6 +315,14 @@ def _looks_like_low_context_field_reply(text: str) -> bool:
         "hai",
         "age",
         "category",
+        "saal",
+        "mahina",
+        "hazar",
+        "hazaar",
+        "ka",
+        "ki",
+        "umar",
+        "sal",
     )
     if any(cue in stripped for cue in value_cues):
         return True
@@ -542,21 +554,58 @@ def _looks_like_scheme_question(text: str) -> bool:
 
 
 def _is_navigation_only_scheme_followup(text: str) -> bool:
-    """Return True for short view-switch commands, not substantive follow-up questions."""
+    """Return True for short view-switch commands, not substantive follow-up questions.
+
+    A short request like "Kaunse documents chahiye?" or "documents?" is a
+    navigation intent even though it contains a ``?``.  Only reject as
+    non-navigation when the utterance is long or contains analytical question
+    patterns (indicating a genuine question needing LLM analysis).
+    """
     stripped = text.strip()
-    if not stripped or "?" in stripped:
+    if not stripped:
+        return False
+
+    nav_patterns = (
+        DOCUMENT_REQUEST_PATTERNS
+        + REJECTION_REQUEST_PATTERNS
+        + APPLICATION_REQUEST_PATTERNS
+    )
+    if not _matches_any_pattern(stripped, nav_patterns):
+        return False
+
+    text_lower = stripped.lower()
+
+    # Analytical question patterns - these need LLM treatment, not simple navigation.
+    # Matches questions like "which document needs...", "what if I don't have...",
+    # "is X required?", "how do I get X?", etc.
+    analytical_patterns = (
+        r"^which\b",
+        r"^what\b",
+        r"^how\b",
+        r"^why\b",
+        r"^is\b",
+        r"^are\b",
+        r"^do\b",
+        r"^does\b",
+        r"^can\b",
+        r"^will\b",
+        r"\bif\b",
+        r"\bwithout\b",
+        r"\bneed\b",
+        r"\brequire",
+        r"\bकौन(?:सा|सी|से)\b",
+        r"\bक्या\b",
+        r"\bकैसे\b",
+        r"\bअगर\b",
+        r"\bकिस\b",
+    )
+    if any(re.search(pattern, text_lower) for pattern in analytical_patterns):
         return False
 
     token_count = len(re.findall(r"[A-Za-z0-9\u0900-\u097F]+", stripped))
-    if token_count > 4:
-        return False
-
-    return _matches_any_pattern(
-        stripped,
-        DOCUMENT_REQUEST_PATTERNS
-        + REJECTION_REQUEST_PATTERNS
-        + APPLICATION_REQUEST_PATTERNS,
-    )
+    # Short requests (≤4 tokens) that match nav patterns and don't have
+    # analytical markers are navigation.  Longer questions deserve LLM treatment.
+    return token_count <= 4
 
 
 def _resolved_scheme_matches_active_scheme(
@@ -735,18 +784,21 @@ def _requested_scheme_view(
         return ConversationState.SCHEME_PRESENTATION
     if action == "request_handoff":
         return ConversationState.CSC_HANDOFF
-    if action == "request_application" or _matches_any_pattern(text, APPLICATION_REQUEST_PATTERNS):
-        return ConversationState.APPLICATION_HELP
-    if _matches_any_pattern(text, DOCUMENT_REQUEST_PATTERNS):
-        return ConversationState.DOCUMENT_GUIDANCE
-    if _matches_any_pattern(text, REJECTION_REQUEST_PATTERNS):
-        return ConversationState.REJECTION_WARNINGS
+    # Check answer_scheme_question BEFORE pattern matching - when the user is
+    # asking an analytical question, preserve their current view rather than
+    # switching based on keyword matches.
     if action == "answer_scheme_question":
         return (
             current_state
             if current_state in SCHEME_CONTEXT_STATES
             else ConversationState.SCHEME_DETAILS
         )
+    if action == "request_application" or _matches_any_pattern(text, APPLICATION_REQUEST_PATTERNS):
+        return ConversationState.APPLICATION_HELP
+    if _matches_any_pattern(text, DOCUMENT_REQUEST_PATTERNS):
+        return ConversationState.DOCUMENT_GUIDANCE
+    if _matches_any_pattern(text, REJECTION_REQUEST_PATTERNS):
+        return ConversationState.REJECTION_WARNINGS
     if action == "request_details" or _matches_any_pattern(text, JUSTIFICATION_PATTERNS):
         return ConversationState.SCHEME_DETAILS
     if action in {"select_scheme", "switch_scheme"} or (

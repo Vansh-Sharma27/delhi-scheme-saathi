@@ -452,6 +452,9 @@ def _clean_for_telegram(text: str) -> str:
     text = re.sub(r"`{1,3}([^`]+)`{1,3}", r"\1", text)
     text = re.sub(r"_([^_]+)_", r"\1", text)
 
+    # Convert markdown links [text](url) to "text (url)" for readability.
+    text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\1 (\2)", text)
+
     # Normalize spacing while preserving readable line breaks.
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
