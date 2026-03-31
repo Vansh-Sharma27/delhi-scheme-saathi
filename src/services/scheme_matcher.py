@@ -5,7 +5,7 @@ from typing import Any
 
 import asyncpg
 
-from src.db.scheme_repo import hybrid_search, get_schemes_by_life_event
+from src.db.scheme_repo import get_schemes_by_life_event, hybrid_search
 from src.integrations.embedding_client import EMBEDDING_DIM, get_embedding_client
 from src.models.scheme import Scheme, SchemeMatch
 from src.models.session import UserProfile
@@ -55,13 +55,14 @@ async def match_schemes(
                 query_embedding = embedding
             elif embedding:
                 logger.warning(
-                    f"Skipping vector ranking: expected {EMBEDDING_DIM}-dim embedding, "
-                    f"received {len(embedding)}"
+                    "Skipping vector ranking: expected %s-dim embedding, received %s",
+                    EMBEDDING_DIM,
+                    len(embedding),
                 )
             else:
                 logger.warning("Skipping vector ranking: embedding unavailable from all providers")
         except Exception as e:
-            logger.warning(f"Failed to get query embedding: {e}")
+            logger.warning("Failed to get query embedding: %s", e)
 
     # Run hybrid search
     fetch_limit = max(limit * 3, 10)
@@ -149,6 +150,7 @@ def format_scheme_for_display(
 
     # Format benefits
     benefits = scheme.benefits_summary or ""
+    amount_str = None
     if scheme.benefits_amount:
         amount_str = f"₹{scheme.benefits_amount:,}"
         if scheme.benefits_amount >= 100000:
@@ -159,7 +161,7 @@ def format_scheme_for_display(
         "name": scheme.name_hindi if language == "hi" else scheme.name,
         "department": scheme.department_hindi if language == "hi" else scheme.department,
         "benefits_amount": scheme.benefits_amount,
-        "benefits_display": amount_str if scheme.benefits_amount else None,
+        "benefits_display": amount_str,
         "benefits_summary": benefits[:200] if benefits else None,
         "eligibility_match": match.eligibility_match,
         "eligibility_text": " | ".join(eligibility_text) if eligibility_text else None,
@@ -169,26 +171,26 @@ def format_scheme_for_display(
 
 def rank_schemes(matches: list[SchemeMatch]) -> list[SchemeMatch]:
     """Re-rank schemes by a combined score."""
-    def score(match: SchemeMatch) -> float:
+    def _compute_score(match: SchemeMatch) -> float:
         # Base similarity score
-        score = match.similarity * 0.4
+        result = match.similarity * 0.4
 
         # Eligibility match bonus
         if match.eligibility_match:
             match_rate = sum(match.eligibility_match.values()) / len(match.eligibility_match)
-            score += match_rate * 0.4
+            result += match_rate * 0.4
 
         # Benefits amount bonus (normalized)
         if match.scheme.benefits_amount:
             # Normalize to 0-1 range (assuming max 10 lakh)
             normalized_benefit = min(match.scheme.benefits_amount / 1000000, 1.0)
-            score += normalized_benefit * 0.2
+            result += normalized_benefit * 0.2
 
-        return score
+        return result
 
     ranked: list[SchemeMatch] = []
     for match in matches:
         ranked.append(
-            match.model_copy(update={"deterministic_score": score(match)})
+            match.model_copy(update={"deterministic_score": _compute_score(match)})
         )
     return sorted(ranked, key=lambda match: match.deterministic_score, reverse=True)

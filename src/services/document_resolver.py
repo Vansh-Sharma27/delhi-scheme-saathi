@@ -29,7 +29,7 @@ async def resolve_document_chain(
 
     # Prevent cycles and excessive depth
     if document_id in visited or depth > MAX_CHAIN_DEPTH:
-        logger.warning(f"Cycle or max depth reached for document {document_id}")
+        logger.warning("Cycle or max depth reached for document %s", document_id)
         return None
 
     visited.add(document_id)
@@ -37,7 +37,7 @@ async def resolve_document_chain(
     # Get the document
     document = await get_document_by_id(pool, document_id)
     if not document:
-        logger.warning(f"Document not found: {document_id}")
+        logger.warning("Document not found: %s", document_id)
         return None
 
     # Recursively resolve prerequisites

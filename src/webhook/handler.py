@@ -205,7 +205,7 @@ async def handle_telegram_update(
     user_id = update.user_id
 
     if not chat_id or not user_id:
-        logger.warning(f"Invalid update, missing chat_id or user_id: {update_data}")
+        logger.warning("Invalid update, missing chat_id or user_id")
         return {"status": "ignored", "reason": "missing_ids"}
 
     # Send typing indicator
@@ -227,7 +227,7 @@ async def handle_telegram_update(
         text = update.text
 
     if not text:
-        logger.warning(f"No text in update: {update_data}")
+        logger.warning("No text in update for chat_id=%s", chat_id)
         return {"status": "ignored", "reason": "no_text"}
 
     # Build chat request
@@ -249,19 +249,19 @@ async def handle_telegram_update(
         conversation = ConversationService(db_pool)
         response = await conversation.handle_message(request)
     except Exception as e:
-        logger.error(f"Conversation error: {e}", exc_info=True)
+        logger.error("Conversation error for chat_id=%s: %s", chat_id, e, exc_info=True)
         await telegram.send_text(
             chat_id,
             "माफ़ कीजिए, कुछ तकनीकी समस्या है। कृपया थोड़ी देर बाद प्रयास करें।\n\n"
             "Sorry, there was a technical issue. Please try again later."
         )
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": "internal_error"}
 
     # Send response
     try:
         await _send_response(telegram, chat_id, response, is_voice_input)
     except Exception as e:
-        logger.error(f"Failed to send Telegram message: {e}", exc_info=True)
+        logger.error("Failed to send Telegram message: %s", e, exc_info=True)
         # Try sending without any formatting
         with suppress(Exception):
             await telegram.send_text(chat_id, _clean_for_telegram(response.text)[:4000])
@@ -308,7 +308,7 @@ async def _handle_voice_message(
             return None
 
         # Download voice file from Telegram
-        logger.info(f"Downloading voice file: {file_id}")
+        logger.info("Downloading voice file: %s", file_id)
         audio_bytes = await telegram.download_voice(file_id)
 
         if not audio_bytes:
@@ -334,7 +334,7 @@ async def _handle_voice_message(
             language_candidates,
         )
 
-        if not result or not result.text or result.confidence < STT_CONFIDENCE_THRESHOLD:
+        if not result or not result.text or (result.confidence or 0.0) < STT_CONFIDENCE_THRESHOLD:
             logger.warning(
                 "Low STT confidence after probing: %s",
                 result.confidence if result else None,
@@ -361,7 +361,7 @@ async def _handle_voice_message(
         return result.text
 
     except Exception as e:
-        logger.error(f"Voice processing error: {e}", exc_info=True)
+        logger.error("Voice processing error: %s", e, exc_info=True)
         await telegram.send_text(
             chat_id,
             "माफ़ कीजिए, आवाज़ प्रोसेस नहीं हो सकी। कृपया टाइप करें।\n"
@@ -438,13 +438,11 @@ async def _send_response(
                         content_type=tts_result.content_type,
                     )
         except Exception as e:
-            logger.warning(f"TTS failed, skipping voice response: {e}")
+            logger.warning("TTS failed, skipping voice response: %s", e)
 
 
 def _clean_for_telegram(text: str) -> str:
     """Normalize markdown-heavy LLM output for plain Telegram text rendering."""
-    import re
-
     if not text:
         return ""
 

@@ -65,14 +65,14 @@ class FallbackEmbeddingClient:
             try:
                 return await self._jina_embedding(text)
             except Exception as e:
-                logger.warning(f"Jina embedding failed, trying Voyage: {e}")
+                logger.warning("Jina embedding failed, trying Voyage: %s", e)
 
         # Fallback to Voyage
         if self._voyage_key:
             try:
                 return await self._voyage_embedding(text)
             except Exception as e:
-                logger.error(f"Voyage embedding also failed: {e}")
+                logger.error("Voyage embedding also failed: %s", e)
 
         # Last resort: return None so callers can skip vector ranking.
         logger.error("All embedding providers failed, returning None")
@@ -95,14 +95,14 @@ class FallbackEmbeddingClient:
             try:
                 return await self._jina_embeddings_batch(texts)
             except Exception as e:
-                logger.warning(f"Jina batch embedding failed, trying Voyage: {e}")
+                logger.warning("Jina batch embedding failed, trying Voyage: %s", e)
 
         # Fallback to Voyage
         if self._voyage_key:
             try:
                 return await self._voyage_embeddings_batch(texts)
             except Exception as e:
-                logger.error(f"Voyage batch embedding also failed: {e}")
+                logger.error("Voyage batch embedding also failed: %s", e)
 
         # Last resort: return empty batch for explicit failure handling by caller.
         logger.error("All embedding providers failed for batch, returning empty list")

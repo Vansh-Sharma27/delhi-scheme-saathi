@@ -235,13 +235,19 @@ async def process_work_item(item: AIWorkItem) -> None:
 async def _worker_loop(queue: AIWorkQueue) -> None:
     """Continuously process background AI jobs."""
     while True:
-        item = await queue.dequeue()
-        if item is None:
-            continue
         try:
-            await process_work_item(item)
-        finally:
-            await queue.ack(item)
+            item = await queue.dequeue()
+            if item is None:
+                continue
+            try:
+                await process_work_item(item)
+            finally:
+                await queue.ack(item)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.error("Unhandled error in background worker loop", exc_info=True)
+            await asyncio.sleep(1)  # brief pause before retrying
 
 
 async def start_ai_background_worker() -> None:
@@ -249,8 +255,13 @@ async def start_ai_background_worker() -> None:
     global _worker_task
 
     queue = get_ai_work_queue()
-    if queue is None or _worker_task is not None:
+    if queue is None:
         return
+
+    # Restart if the task completed or was cancelled (silent death guard).
+    if _worker_task is not None and not _worker_task.done():
+        return
+
     _worker_task = asyncio.create_task(_worker_loop(queue), name="ai-background-worker")
     logger.info("Started AI background worker")
 
