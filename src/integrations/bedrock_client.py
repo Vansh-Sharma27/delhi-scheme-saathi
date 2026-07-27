@@ -56,14 +56,25 @@ class BedrockLLMClient:
     def __init__(self) -> None:
         """Initialize Bedrock client with regional configuration."""
         settings = get_settings()
-        config = Config(
+        self._config = Config(
             region_name=settings.aws_region,
             read_timeout=60,
             connect_timeout=10,
             retries={"max_attempts": 2},
         )
-        self._client = boto3.client("bedrock-runtime", config=config)
+        self._client: Any = None
         self._model_id = settings.bedrock_model or NOVA_MODEL_ID
+
+    def _runtime(self) -> Any:
+        """Return the boto3 runtime client, creating it on first use.
+
+        Construction is deferred because boto3 resolves AWS credentials
+        eagerly. Instantiating this class must stay cheap and credential-free
+        so the Grok fallback path works where AWS is not configured.
+        """
+        if self._client is None:
+            self._client = boto3.client("bedrock-runtime", config=self._config)
+        return self._client
 
     async def analyze_message(
         self,
@@ -230,7 +241,7 @@ Respond with ONLY the JSON object, no other text.
             loop = asyncio.get_running_loop()
             response = await loop.run_in_executor(
                 _get_executor(priority),
-                lambda: self._client.converse(
+                lambda: self._runtime().converse(
                     modelId=self._model_id,
                     system=[{"text": system_prompt}],
                     messages=messages,
@@ -344,7 +355,7 @@ Rules:
             loop = asyncio.get_running_loop()
             response = await loop.run_in_executor(
                 _get_executor(priority),
-                lambda: self._client.converse(
+                lambda: self._runtime().converse(
                     modelId=self._model_id,
                     system=[{"text": "You audit relevance between user needs and deterministic scheme candidates."}],
                     messages=messages,
@@ -417,7 +428,7 @@ Generate response:
             loop = asyncio.get_running_loop()
             response = await loop.run_in_executor(
                 _get_executor(priority),
-                lambda: self._client.converse(
+                lambda: self._runtime().converse(
                     modelId=self._model_id,
                     system=[{"text": system_prompt}],
                     messages=messages,
@@ -482,7 +493,7 @@ Provide a 2-3 sentence summary in English:
             loop = asyncio.get_running_loop()
             response = await loop.run_in_executor(
                 _get_executor(priority),
-                lambda: self._client.converse(
+                lambda: self._runtime().converse(
                     modelId=self._model_id,
                     system=[{
                         "text": "You are a conversation summarizer. Create a concise summary of the key information exchanged."

@@ -27,7 +27,9 @@ ACTIVE_SCHEME_SEEDS = [
         "name_hindi": scheme.get("name_hindi", scheme["name"]),
     }
     for scheme in json.loads(
-        (Path(__file__).resolve().parents[1] / "data" / "all_schemes.json").read_text()
+        (Path(__file__).resolve().parents[1] / "data" / "all_schemes.json").read_text(
+            encoding="utf-8"
+        )
     )
     if scheme.get("is_active", True)
 ]

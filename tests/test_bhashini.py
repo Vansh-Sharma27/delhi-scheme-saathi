@@ -1,15 +1,16 @@
 """Tests for Bhashini speech services client."""
 
 import base64
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 
 from src.integrations.bhashini import (
     BhashiniClient,
     STTResult,
     TTSResult,
-    get_bhashini_client,
     configure_bhashini_client,
+    get_bhashini_client,
 )
 
 
@@ -252,5 +253,6 @@ class TestSingleton:
         new_client = configure_bhashini_client(api_key="new-key")
         latest = get_bhashini_client()
 
+        assert new_client is not original
         assert new_client is latest
         assert new_client.api_key == "new-key"

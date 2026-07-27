@@ -30,7 +30,7 @@ def test_resolve_database_url_rejects_invalid_scheme() -> None:
 def test_all_active_seed_schemes_have_followup_data() -> None:
     """Every active seed scheme should have docs, rejection rules, and application steps."""
     all_schemes_path = Path(__file__).resolve().parents[1] / "data" / "all_schemes.json"
-    schemes = json.loads(all_schemes_path.read_text())
+    schemes = json.loads(all_schemes_path.read_text(encoding="utf-8"))
 
     missing_fields: list[str] = []
     for scheme in schemes:

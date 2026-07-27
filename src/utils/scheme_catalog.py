@@ -18,7 +18,7 @@ _INCOME_SEGMENT_KEYS = {"EWS", "LIG", "MIG", "HIG"}
 def _load_catalog() -> dict[str, dict[str, Any]]:
     """Load bundled scheme metadata keyed by scheme id."""
     try:
-        schemes = json.loads(_CATALOG_PATH.read_text())
+        schemes = json.loads(_CATALOG_PATH.read_text(encoding="utf-8"))
     except FileNotFoundError:
         logger.warning("Canonical scheme catalog not found at %s", _CATALOG_PATH)
         return {}

@@ -7,7 +7,6 @@ from pathlib import Path
 
 import asyncpg
 
-
 DATA_DIR = Path(__file__).parent.parent / "data"
 DEFAULT_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/delhi_scheme_saathi"
 
@@ -49,7 +48,7 @@ async def seed_database() -> None:
         # Load schemes
         schemes_file = DATA_DIR / "all_schemes.json"
         if schemes_file.exists():
-            schemes = json.loads(schemes_file.read_text())
+            schemes = json.loads(schemes_file.read_text(encoding="utf-8"))
             print(f"Loading {len(schemes)} schemes...")
 
             for scheme in schemes:
@@ -130,7 +129,7 @@ async def seed_database() -> None:
         # Load documents
         docs_file = DATA_DIR / "all_documents.json"
         if docs_file.exists():
-            docs = json.loads(docs_file.read_text())
+            docs = json.loads(docs_file.read_text(encoding="utf-8"))
             print(f"Loading {len(docs)} documents...")
 
             for doc in docs:
@@ -166,7 +165,7 @@ async def seed_database() -> None:
         # Load offices
         offices_file = DATA_DIR / "all_offices.json"
         if offices_file.exists():
-            offices = json.loads(offices_file.read_text())
+            offices = json.loads(offices_file.read_text(encoding="utf-8"))
             print(f"Loading {len(offices)} offices...")
 
             for office in offices:
@@ -201,7 +200,7 @@ async def seed_database() -> None:
         # Load rejection rules
         rules_file = DATA_DIR / "all_rejection_rules.json"
         if rules_file.exists():
-            rules = json.loads(rules_file.read_text())
+            rules = json.loads(rules_file.read_text(encoding="utf-8"))
             print(f"Loading {len(rules)} rejection rules...")
 
             for rule in rules:
@@ -233,7 +232,7 @@ async def seed_database() -> None:
         office_count = await conn.fetchval("SELECT COUNT(*) FROM offices")
         rule_count = await conn.fetchval("SELECT COUNT(*) FROM rejection_rules")
 
-        print(f"\nDatabase seeded successfully!")
+        print("\nDatabase seeded successfully!")
         print(f"  Schemes: {scheme_count}")
         print(f"  Documents: {doc_count}")
         print(f"  Offices: {office_count}")
