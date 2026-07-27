@@ -157,7 +157,7 @@ class SarvamClient:
             response.raise_for_status()
 
             result = response.json()
-            logger.debug(f"Sarvam STT response: {result}")
+            logger.debug("Sarvam STT response: %s", result)
 
             transcript = result.get("transcript", "")
             confidence = result.get("transcript_confidence")
@@ -183,7 +183,7 @@ class SarvamClient:
             )
 
         except httpx.HTTPError as e:
-            logger.error(f"Sarvam STT request failed: {e}")
+            logger.error("Sarvam STT request failed: %s", e)
             return STTResult(
                 text="[Voice recognition failed - please type your query]",
                 confidence=0.0,
@@ -260,7 +260,7 @@ class SarvamClient:
             return TTSResult(audio_bytes=b"", content_type="audio/wav")
 
         except httpx.HTTPError as e:
-            logger.error(f"Sarvam TTS request failed: {e}")
+            logger.error("Sarvam TTS request failed: %s", e)
             return TTSResult(audio_bytes=b"", content_type="audio/wav")
 
     async def detect_language(self, text: str) -> str:
@@ -297,5 +297,13 @@ def get_sarvam_client() -> SarvamClient:
 def configure_sarvam_client(api_key: str | None = None) -> SarvamClient:
     """Configure and return Sarvam client."""
     global _sarvam_client
+    old = _sarvam_client
     _sarvam_client = SarvamClient(api_key=api_key)
+    if old is not None:
+        import asyncio
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(old.close())
+        except RuntimeError:
+            pass  # No running loop (startup context); old client has no open connections yet
     return _sarvam_client

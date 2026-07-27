@@ -100,13 +100,15 @@ def extract_by_patterns(
                 amount = match.group(1).replace(",", "")
                 try:
                     income = float(amount)
+                    # Use matched context (not full text) to avoid double-multiplier
+                    matched_text = match.group(0)
                     # Check if in lakhs
-                    if "lakh" in text_lower or "lac" in text_lower or "लाख" in text_lower:
+                    if "lakh" in matched_text or "lac" in matched_text or "लाख" in matched_text:
                         income *= 100000
-                    elif re.search(r"\b\d+(?:\.\d+)?\s*(k|thousand|हजार)\b", text_lower):
+                    elif re.search(r"(?:(?<=\d)k|thousand|हजार)\b", matched_text):
                         income *= 1000
                     # Check if monthly - convert to annual
-                    if "month" in text_lower or "mahina" in text_lower or "महीना" in text_lower:
+                    if "month" in matched_text or "mahina" in matched_text or "महीना" in matched_text:
                         income *= 12
                     extracted["annual_income"] = int(income)
                     break
@@ -120,7 +122,7 @@ def extract_by_patterns(
             extracted["age"] = value
         elif (
             "annual_income" not in extracted
-            and value > 1000
+            and value >= 1000
             and current_field == "annual_income"
         ):
             extracted["annual_income"] = value
@@ -354,10 +356,12 @@ def validate_field_response(
         elif re.search(
             r"\d"
             r".*(?:₹|\brs\.?\b|\brupees?\b|\binr\b|\blakh\b|\blac\b|\bthousand\b|\bmonthly\b|\bper\s*month\b|\bmahina\b|महीना|हजार)"
-            r"|(?:₹|\brs\.?\b|\brupees?\b|\binr\b|\bincome\b|\bsalary\b|\blakh\b|\blac\b|\bthousand\b|\bmonthly\b|\bper\s*month\b|\bmahina\b|महीना|हजार).*\d"
-            r"|(?:₹|\brs\.?\b|\brupees?\b|\binr\b|\bincome\b|\bsalary\b|\blakh\b|\blac\b|\bthousand\b|\bmonthly\b|\bper\s*month\b|\bmahina\b|महीना|हजार)",
+            r"|(?:₹|\brs\.?\b|\brupees?\b|\binr\b|\blakh\b|\blac\b|\bthousand\b|\bmonthly\b|\bper\s*month\b|\bmahina\b|महीना|हजार).*\d",
             text,
         ):
+            return False, "invalid_income"
+        # Currency symbol present but no parseable digits — user tried to give income
+        elif re.search(r"₹|\brs\.?\b|\brupees?\b", text):
             return False, "invalid_income"
 
     # Default: assume valid (let conversation flow naturally)

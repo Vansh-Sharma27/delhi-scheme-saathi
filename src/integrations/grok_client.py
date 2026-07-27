@@ -161,6 +161,9 @@ IMPORTANT RULES:
    i) Keep it 1-3 sentences max, conversational tone
    j) NEVER mention any scheme names, benefits, eligibility, or document details — that comes from the database later
    k) If a field is already explicit or directly entailed by the user's wording, do not ask for that same field again. Ask only for the next missing field.
+   l) EMPATHY FIRST: When the user shares grief, loss, distress, or hardship (death of spouse, illness, job loss, etc.), ALWAYS acknowledge their pain compassionately BEFORE asking the next question. Never jump straight to data collection without empathy.
+   m) DO NOT RE-ASK LIFE EVENT: If the user's message clearly states their need (e.g., "विधवा पेंशन चाहिए" = pension, "education loan chahiye" = education), you have already identified their life_event. Do NOT ask "what kind of help do you need?" — instead acknowledge their need and ask for the FIRST missing profile field (usually age).
+   n) PLAIN TEXT ONLY: Do NOT use markdown formatting like **bold**, [link](url), or # headers in response_text. Use plain text only.
 5. Set action conservatively:
    - change_language only when the user explicitly asks for another language
    - ask_field_reason when the user asks why a requested field matters
@@ -180,7 +183,7 @@ Respond with ONLY the JSON object, no other text.
                 model=self._model,
                 messages=messages,
                 temperature=0,
-                max_tokens=500,
+                max_tokens=1024,
                 response_format={"type": "json_object"},
             )
 
@@ -190,7 +193,7 @@ Respond with ONLY the JSON object, no other text.
             return {"intent": "unknown", "language": "hi"}
 
         except Exception as e:
-            logger.error(f"LLM analysis failed: {e}")
+            logger.error("LLM analysis failed: %s", e)
             # Re-raise so the fallback wrapper can route to safe defaults.
             raise
 
@@ -327,7 +330,7 @@ Generate response:
             return content or "मुझे समझने में कठिनाई हो रही है। कृपया दोबारा बताएं।"
 
         except Exception as e:
-            logger.error(f"LLM response generation failed: {e}")
+            logger.error("LLM response generation failed: %s", e)
             # Re-raise so the fallback wrapper can decide the final response.
             raise
 
@@ -373,7 +376,7 @@ Provide a 2-3 sentence summary in English:
             return response.choices[0].message.content or ""
 
         except Exception as e:
-            logger.error(f"Conversation summarization failed: {e}")
+            logger.error("Conversation summarization failed: %s", e)
             # Re-raise so the fallback wrapper can decide fallback behavior.
             raise
 

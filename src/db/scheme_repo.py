@@ -123,9 +123,12 @@ async def hybrid_search(
 
         # Stage 3: Vector similarity (if embedding provided)
         if query_embedding and len(query_embedding) > 0:
-            embedding_str = f"[{','.join(map(str, query_embedding))}]"
-            order_by = f"description_embedding <=> '{embedding_str}'::vector"
-            similarity_select = f", 1 - (description_embedding <=> '{embedding_str}'::vector) as similarity"
+            # Pass embedding as a parameterized value to avoid SQL injection
+            embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
+            params.append(embedding_str)
+            order_by = f"description_embedding <=> ${param_idx}::vector"
+            similarity_select = f", 1 - (description_embedding <=> ${param_idx}::vector) as similarity"
+            param_idx += 1
         else:
             order_by = "benefits_amount DESC NULLS LAST"
             similarity_select = ", 0.0 as similarity"

@@ -14,6 +14,7 @@ def get_valid_transitions(state: ConversationState) -> list[ConversationState]:
             ConversationState.GREETING,
             ConversationState.SITUATION_UNDERSTANDING,
             ConversationState.PROFILE_COLLECTION,
+            ConversationState.SCHEME_MATCHING,
         ],
         ConversationState.SITUATION_UNDERSTANDING: [
             ConversationState.SITUATION_UNDERSTANDING,
@@ -28,6 +29,7 @@ def get_valid_transitions(state: ConversationState) -> list[ConversationState]:
             ConversationState.GREETING,
         ],
         ConversationState.SCHEME_MATCHING: [
+            ConversationState.SCHEME_MATCHING,
             ConversationState.SCHEME_PRESENTATION,
             ConversationState.SITUATION_UNDERSTANDING,
             ConversationState.PROFILE_COLLECTION,

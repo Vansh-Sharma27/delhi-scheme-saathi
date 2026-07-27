@@ -204,6 +204,9 @@ IMPORTANT RULES:
    i) Keep it 1-3 sentences max, conversational tone
    j) NEVER mention any scheme names, benefits, eligibility, or document details — that comes from the database later
    k) If a field is already explicit or directly entailed by the user's wording, do not ask for that same field again. Ask only for the next missing field.
+   l) EMPATHY FIRST: When the user shares grief, loss, distress, or hardship (death of spouse, illness, job loss, etc.), ALWAYS acknowledge their pain compassionately BEFORE asking the next question. Never jump straight to data collection without empathy.
+   m) DO NOT RE-ASK LIFE EVENT: If the user's message clearly states their need (e.g., "विधवा पेंशन चाहिए" = pension, "education loan chahiye" = education), you have already identified their life_event. Do NOT ask "what kind of help do you need?" — instead acknowledge their need and ask for the FIRST missing profile field (usually age).
+   n) PLAIN TEXT ONLY: Do NOT use markdown formatting like **bold**, [link](url), or # headers in response_text. Use plain text only.
 5. Set action conservatively:
    - change_language only when the user explicitly asks for another language
    - ask_field_reason when the user asks why a requested field matters
@@ -257,13 +260,13 @@ Respond with ONLY the JSON object, no other text.
             return {"intent": "unknown", "language": "hi"}
 
         except (BotoCoreError, ClientError) as e:
-            logger.error(f"Bedrock API error: {e}")
+            logger.error("Bedrock API error: %s", e)
             raise
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse Bedrock response as JSON: {e}")
+            logger.error("Failed to parse Bedrock response as JSON: %s", e)
             raise
         except Exception as e:
-            logger.error(f"Bedrock analysis failed: {e}")
+            logger.error("Bedrock analysis failed: %s", e)
             raise
 
     async def judge_scheme_relevance(
@@ -434,7 +437,7 @@ Generate response:
             return "मुझे समझने में कठिनाई हो रही है। कृपया दोबारा बताएं।"
 
         except Exception as e:
-            logger.error(f"Bedrock response generation failed: {e}")
+            logger.error("Bedrock response generation failed: %s", e)
             raise
 
     async def summarize_conversation(
@@ -501,7 +504,7 @@ Provide a 2-3 sentence summary in English:
             return current_summary or ""
 
         except Exception as e:
-            logger.error(f"Bedrock summarization failed: {e}")
+            logger.error("Bedrock summarization failed: %s", e)
             return current_summary or ""
 
 

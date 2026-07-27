@@ -103,15 +103,15 @@ class JinaEmbeddingClient:
 
             embedding = data["data"][0]["embedding"]
             tokens = data.get("usage", {}).get("total_tokens", 0)
-            logger.debug(f"Jina embedding: {len(embedding)} dims, {tokens} tokens")
+            logger.debug("Jina embedding: %s dims, %s tokens", len(embedding), tokens)
 
             return embedding
 
         except httpx.HTTPStatusError as e:
-            logger.error(f"Jina API error: {e.response.status_code} - {e.response.text}")
+            logger.error("Jina API error: %s - %s", e.response.status_code, e.response.text)
             raise
         except Exception as e:
-            logger.error(f"Jina embedding request failed: {e}")
+            logger.error("Jina embedding request failed: %s", e)
             raise
 
     async def get_embeddings_batch(
@@ -162,15 +162,15 @@ class JinaEmbeddingClient:
             # Extract embeddings preserving order
             embeddings = [item["embedding"] for item in data["data"]]
             tokens = data.get("usage", {}).get("total_tokens", 0)
-            logger.debug(f"Jina batch: {len(embeddings)} embeddings, {tokens} tokens")
+            logger.debug("Jina batch: %s embeddings, %s tokens", len(embeddings), tokens)
 
             return embeddings
 
         except httpx.HTTPStatusError as e:
-            logger.error(f"Jina API batch error: {e.response.status_code}")
+            logger.error("Jina API batch error: %s", e.response.status_code)
             raise
         except Exception as e:
-            logger.error(f"Jina batch embedding failed: {e}")
+            logger.error("Jina batch embedding failed: %s", e)
             raise
 
     async def close(self) -> None:

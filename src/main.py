@@ -5,11 +5,12 @@ and apply for government welfare schemes.
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import Any
 
 import asyncpg
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import get_settings
@@ -53,7 +54,7 @@ async def lifespan(app: FastAPI):
         db_pool = await init_db_pool()
         logger.info("Database connection pool initialized")
     except Exception as e:
-        logger.error(f"Failed to initialize database: {e}")
+        logger.error("Failed to initialize database: %s", e)
         db_pool = None
     else:
         try:
@@ -74,7 +75,7 @@ async def lifespan(app: FastAPI):
                     row["income_segments"],
                 )
         except Exception as e:
-            logger.warning(f"Scheme verification logging failed: {e}")
+            logger.warning("Scheme verification logging failed: %s", e)
 
     # Configure session store based on environment
     _configure_session_store()
@@ -102,8 +103,8 @@ def _configure_session_store() -> None:
 
     settings = get_settings()
 
-    # Check if running in AWS Lambda or production environment
-    if settings.session_table_name and settings.session_table_name != "dss-sessions":
+    # Use DynamoDB when running in production (USE_BEDROCK=true or non-default table name)
+    if settings.session_table_name and (settings.use_bedrock or settings.session_table_name != "dss-sessions"):
         # DynamoDB configured (production)
         try:
             store = DynamoDBSessionStore(
@@ -111,9 +112,9 @@ def _configure_session_store() -> None:
                 region=settings.aws_region,
             )
             configure_session_store(store)
-            logger.info(f"Session store: DynamoDB ({settings.session_table_name})")
+            logger.info("Session store: DynamoDB (%s)", settings.session_table_name)
         except Exception as e:
-            logger.warning(f"DynamoDB init failed, using in-memory: {e}")
+            logger.warning("DynamoDB init failed, using in-memory: %s", e)
             configure_session_store(InMemorySessionStore())
     else:
         # Local development - use in-memory store
@@ -159,13 +160,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware
+# CORS middleware — restrict to known origins in production
+_cors_origins = [
+    origin.strip()
+    for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_cors_origins or ["http://localhost:3000"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 
@@ -186,8 +192,8 @@ async def health_check() -> dict[str, Any]:
                 result["database"] = "connected"
                 result["schemes_count"] = count or 0
         except Exception as e:
-            logger.error(f"Database health check failed: {e}")
-            result["database"] = f"error: {str(e)}"
+            logger.error("Database health check failed: %s", e)
+            result["database"] = "error"
             result["status"] = "degraded"
 
     return result
@@ -245,7 +251,7 @@ async def get_scheme(scheme_id: str) -> dict[str, Any]:
 @app.get("/api/schemes")
 async def list_schemes(
     life_event: str | None = None,
-    limit: int = 10
+    limit: int = Query(default=10, ge=1, le=100),
 ) -> dict[str, Any]:
     """List schemes, optionally filtered by life event."""
     from src.db import scheme_repo
@@ -293,11 +299,11 @@ async def get_document(document_id: str) -> dict[str, Any]:
 
 @app.get("/api/csc/nearest")
 async def get_nearest_offices(
-    lat: float | None = None,
-    lng: float | None = None,
+    lat: float | None = Query(default=None, ge=-90, le=90),
+    lng: float | None = Query(default=None, ge=-180, le=180),
     district: str | None = None,
     office_type: str | None = None,
-    limit: int = 5
+    limit: int = Query(default=5, ge=1, le=50),
 ) -> dict[str, Any]:
     """Get nearest CSC/government offices."""
     from src.db import office_repo
@@ -355,9 +361,20 @@ async def list_life_events() -> dict[str, Any]:
 # =============================================================================
 
 @app.post("/webhook/telegram")
-async def telegram_webhook(update: dict[str, Any]) -> dict[str, str]:
-    """Handle incoming Telegram updates."""
+async def telegram_webhook(request: Request) -> dict[str, str]:
+    """Handle incoming Telegram updates with secret token verification."""
     from src.webhook.handler import handle_telegram_update
+
+    # Verify Telegram webhook secret token
+    webhook_secret = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "")
+    if webhook_secret:
+        token_header = request.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
+        if token_header != webhook_secret:
+            raise HTTPException(status_code=403, detail="Forbidden")
+
+    update = await request.json()
+    if not isinstance(update, dict):
+        raise HTTPException(status_code=400, detail="Invalid payload")
 
     pool = get_db_pool()
     return await handle_telegram_update(update, pool)
@@ -376,15 +393,18 @@ async def chat_endpoint(request: dict[str, Any]) -> dict[str, Any]:
     """
     from src.models.api import ChatRequest
     from src.services.conversation import ConversationService
+    from src.utils.validators import sanitize_input
 
     pool = get_db_pool()
-    user_id = request.get("user_id", "test_user")
-    message = request.get("message", "")
+    user_id = str(request.get("user_id", "test_user"))[:64]
+    message = sanitize_input(request.get("message", ""))
+
+    if not message:
+        raise HTTPException(status_code=400, detail="Message is required")
 
     chat_request = ChatRequest(
         user_id=user_id,
         message=message,
-        language="auto"
     )
 
     service = ConversationService(pool)

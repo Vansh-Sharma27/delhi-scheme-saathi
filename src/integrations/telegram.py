@@ -60,7 +60,7 @@ class TelegramClient:
             )
             return self._parse_response(response)
         except httpx.HTTPStatusError as e:
-            logger.error(f"Telegram API error: {e.response.text}")
+            logger.error("Telegram API error: status=%s", e.response.status_code)
             # Retry without parse_mode if markdown fails
             if parse_mode:
                 payload.pop("parse_mode")
@@ -193,6 +193,9 @@ class TelegramClient:
 
     async def download_file(self, file_path: str) -> bytes:
         """Download file content."""
+        import re
+        if not re.match(r"^[a-zA-Z0-9/_.\-]+$", file_path):
+            raise ValueError("Invalid file_path from Telegram API")
         url = f"https://api.telegram.org/file/bot{self._token}/{file_path}"
         response = await self._client.get(url)
         response.raise_for_status()
@@ -207,11 +210,14 @@ class TelegramClient:
         file_path = file_info["result"]["file_path"]
         return await self.download_file(file_path)
 
-    async def set_webhook(self, url: str) -> dict[str, Any]:
+    async def set_webhook(self, url: str, secret_token: str | None = None) -> dict[str, Any]:
         """Set webhook URL for receiving updates."""
+        payload: dict[str, Any] = {"url": url}
+        if secret_token:
+            payload["secret_token"] = secret_token
         response = await self._client.post(
             f"{self._base_url}/setWebhook",
-            json={"url": url},
+            json=payload,
         )
         return self._parse_response(response)
 
