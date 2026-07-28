@@ -33,10 +33,10 @@ async def main():
         print("⚠️  DATABASE_URL not set - using default localhost")
 
     # Import after env is loaded
+    from src.db.connection import close_pool, init_pool
     from src.db.session_store import InMemorySessionStore, configure_session_store
     from src.models.api import ChatRequest
     from src.services.conversation import ConversationService
-    from src.db.connection import init_pool, close_pool
 
     # Use in-memory session store
     configure_session_store(InMemorySessionStore())
@@ -81,7 +81,7 @@ async def main():
                 from src.services import session_manager
                 session = await session_manager.get_or_create_session(user_id)
                 profile = session.user_profile
-                print(f"📋 Current Profile:")
+                print("📋 Current Profile:")
                 print(f"   State: {session.state.value}")
                 print(f"   Life Event: {profile.life_event}")
                 print(f"   Age: {profile.age}")

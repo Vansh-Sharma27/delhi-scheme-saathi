@@ -12,7 +12,6 @@ import base64
 import logging
 import os
 from dataclasses import dataclass
-from typing import Any
 
 import httpx
 

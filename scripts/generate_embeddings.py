@@ -33,6 +33,7 @@ async def main():
         sys.exit(1)
 
     import asyncpg
+
     from src.integrations.embedding_client import get_embedding_client
 
     print("Connecting to database...")

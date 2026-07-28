@@ -5,7 +5,7 @@ from typing import Any
 
 import asyncpg
 
-from src.db.rejection_rule_repo import get_rules_by_scheme, get_rules_by_ids
+from src.db.rejection_rule_repo import get_rules_by_ids, get_rules_by_scheme
 from src.models.rejection_rule import RejectionRule
 from src.models.session import UserProfile
 

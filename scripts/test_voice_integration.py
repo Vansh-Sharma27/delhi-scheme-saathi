@@ -80,7 +80,7 @@ async def test_text_to_speech(client, provider):
         )
 
         if result.audio_bytes:
-            print(f"[OK] TTS successful!")
+            print("[OK] TTS successful!")
             print(f"     Audio size: {len(result.audio_bytes)} bytes")
             print(f"     Content type: {result.content_type}")
 
@@ -133,7 +133,7 @@ async def test_speech_to_text(client, provider, audio_file: str = None):
         )
 
         if result.text:
-            print(f"[OK] STT successful!")
+            print("[OK] STT successful!")
             print(f"     Transcription: {result.text}")
             print(f"     Confidence: {result.confidence:.2f}")
             print(f"     Language: {result.language}")

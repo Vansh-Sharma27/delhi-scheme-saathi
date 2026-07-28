@@ -324,7 +324,7 @@ def print_scenario(scenario: DemoScenario, interactive: bool = False):
     print(f"🎯 Life Event: {scenario.life_event}")
     print(f"🗣️ Language: {scenario.language}")
     print(f"⏱️ Duration: ~{scenario.duration_seconds} seconds")
-    print(f"\n🔑 Key Features Demonstrated:")
+    print("\n🔑 Key Features Demonstrated:")
     for feature in scenario.key_features:
         print(f"   • {feature}")
 
@@ -332,7 +332,7 @@ def print_scenario(scenario: DemoScenario, interactive: bool = False):
     print("CONVERSATION FLOW")
     print("-" * 70)
 
-    for i, msg in enumerate(scenario.messages, 1):
+    for msg in scenario.messages:
         if interactive:
             input("\n[Press Enter for next message...]")
 

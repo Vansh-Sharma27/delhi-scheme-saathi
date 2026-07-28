@@ -1,7 +1,8 @@
 """Tests for local Docker seed bootstrap helpers."""
 
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from scripts.ensure_seed_data import auto_seed_enabled, ensure_seed_data
 

@@ -11,7 +11,6 @@ API Documentation: https://jina.ai/embeddings/
 
 import logging
 from dataclasses import dataclass
-from typing import Optional
 
 import httpx
 
@@ -40,14 +39,14 @@ class JinaEmbeddingClient:
     - Task-specific adapters for better retrieval quality
     """
 
-    def __init__(self, api_key: Optional[str] = None) -> None:
+    def __init__(self, api_key: str | None = None) -> None:
         """Initialize Jina client.
 
         Args:
             api_key: Jina AI API key (or from settings if not provided)
         """
         self._api_key = api_key
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
     async def _get_client(self) -> httpx.AsyncClient:
         """Get or create HTTP client."""
@@ -181,7 +180,7 @@ class JinaEmbeddingClient:
 
 
 # Singleton instance
-_jina_client: Optional[JinaEmbeddingClient] = None
+_jina_client: JinaEmbeddingClient | None = None
 
 
 def get_jina_client() -> JinaEmbeddingClient:

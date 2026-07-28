@@ -17,6 +17,16 @@ _SPOUSE_LOSS_EVENT_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+_INCOME_UNIT = (
+    r"₹|\brs\.?\b|\brupees?\b|\binr\b|\blakh\b|\blac\b|\bthousand\b|"
+    r"\bmonthly\b|\bper\s*month\b|\bmahina\b|महीना|हजार"
+)
+# The user clearly meant to state income — a currency unit sitting next to a
+# number, or a bare currency symbol with nothing parseable attached to it.
+_INCOME_ATTEMPT_PATTERN = re.compile(
+    rf"\d.*(?:{_INCOME_UNIT})|(?:{_INCOME_UNIT}).*\d|₹|\brs\.?\b|\brupees?\b"
+)
+
 
 def get_required_matching_fields(profile: UserProfile) -> tuple[str, ...]:
     """Return the scheme-aware profile fields that matter before matching."""
@@ -353,15 +363,7 @@ def validate_field_response(
             # the extraction logic handles it. Only flag truly nonsensical values.
             if num == 0:
                 return False, "invalid_income"
-        elif re.search(
-            r"\d"
-            r".*(?:₹|\brs\.?\b|\brupees?\b|\binr\b|\blakh\b|\blac\b|\bthousand\b|\bmonthly\b|\bper\s*month\b|\bmahina\b|महीना|हजार)"
-            r"|(?:₹|\brs\.?\b|\brupees?\b|\binr\b|\blakh\b|\blac\b|\bthousand\b|\bmonthly\b|\bper\s*month\b|\bmahina\b|महीना|हजार).*\d",
-            text,
-        ):
-            return False, "invalid_income"
-        # Currency symbol present but no parseable digits — user tried to give income
-        elif re.search(r"₹|\brs\.?\b|\brupees?\b", text):
+        elif _INCOME_ATTEMPT_PATTERN.search(text):
             return False, "invalid_income"
 
     # Default: assume valid (let conversation flow naturally)

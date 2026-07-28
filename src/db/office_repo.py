@@ -9,7 +9,7 @@ from src.models.office import Office
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calculate distance between two points in kilometers using Haversine formula."""
-    R = 6371  # Earth's radius in kilometers
+    earth_radius_km = 6371
 
     lat1_rad = math.radians(lat1)
     lat2_rad = math.radians(lat2)
@@ -22,7 +22,7 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     )
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
-    return R * c
+    return earth_radius_km * c
 
 
 async def get_office_by_id(pool: asyncpg.Pool, office_id: str) -> Office | None:

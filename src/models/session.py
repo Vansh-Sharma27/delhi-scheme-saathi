@@ -9,7 +9,9 @@ from pydantic import BaseModel, Field
 from src.utils.scheme_catalog import get_required_profile_fields_for_life_event
 
 
-class ConversationState(str, Enum):
+# Not StrEnum: str(state) must keep the "ConversationState.X" form, and the
+# legacy aliases below rely on plain Enum value aliasing.
+class ConversationState(str, Enum):  # noqa: UP042
     """FSM states for the explicit 10-state conversation flow."""
 
     GREETING = "GREETING"

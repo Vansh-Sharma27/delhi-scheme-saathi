@@ -12,7 +12,6 @@ API Documentation: https://bhashini.gov.in/ulca/documentation
 import logging
 import os
 from dataclasses import dataclass
-from typing import Any
 
 import httpx
 

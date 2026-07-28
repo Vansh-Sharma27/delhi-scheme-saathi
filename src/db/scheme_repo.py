@@ -231,11 +231,14 @@ def calculate_eligibility_match(scheme: Scheme, profile: UserProfile) -> dict[st
         )
 
     # Category check
-    if profile.category is not None and elig.caste_categories:
-        if not any(category.upper() == "ALL" for category in elig.caste_categories):
-            match["category"] = (
-                profile.category.upper() in [c.upper() for c in elig.caste_categories]
-            )
+    if (
+        profile.category is not None
+        and elig.caste_categories
+        and not any(category.upper() == "ALL" for category in elig.caste_categories)
+    ):
+        match["category"] = (
+            profile.category.upper() in [c.upper() for c in elig.caste_categories]
+        )
 
     # Income check
     if profile.annual_income is not None:
