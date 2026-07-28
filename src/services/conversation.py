@@ -37,7 +37,7 @@ from src.services import (
 from src.services.ai_background import enqueue_memory_refresh
 from src.services.ai_orchestrator import get_ai_orchestrator
 from src.services.conversation_memory import should_refresh_working_memory
-from src.utils.formatters import (
+from src.utils.keyboards import (
     format_inline_keyboard,
     format_language_keyboard,
     format_presented_scheme_keyboard,
