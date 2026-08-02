@@ -1,13 +1,42 @@
 """Tests for application startup behavior."""
 
 import json
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from fastapi import HTTPException
 
 from src import main as main_module
 from src.db.scheme_repo import get_scheme_debug_rows
 from src.services.ai_background import InMemoryAIWorkQueue
+
+
+class _FakeRequest:
+    """Minimal stand-in exposing only what the chat endpoint reads."""
+
+    def __init__(self, headers: dict[str, str] | None = None) -> None:
+        self.headers = headers or {}
+
+
+def _capturing_service(captured: dict[str, str]):
+    """Conversation service double that records the session ID it is given."""
+
+    class _Service:
+        def __init__(self, pool):  # type: ignore[no-untyped-def]
+            pass
+
+        async def handle_message(self, request):  # type: ignore[no-untyped-def]
+            captured["user_id"] = request.user_id
+            return SimpleNamespace(
+                text="ok",
+                next_state="GREETING",
+                schemes=None,
+                documents=None,
+                rejection_warnings=None,
+            )
+
+    return _Service
 
 
 class _FakeConn:
@@ -184,3 +213,86 @@ async def test_configure_ai_background_runtime_skips_worker_for_external_queue()
 
     configure_queue.assert_called_once_with(external_queue)
     start_worker.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_chat_endpoint_namespaces_caller_supplied_user_id() -> None:
+    """A Telegram user's numeric ID must not address their real session."""
+    captured: dict[str, str] = {}
+    telegram_user_id = "780045592"
+
+    with patch.object(main_module, "get_db_pool", lambda: object()), patch.object(
+        main_module, "get_settings", lambda: SimpleNamespace(chat_api_key="")
+    ), patch(
+        "src.services.conversation.ConversationService", _capturing_service(captured)
+    ):
+        await main_module.chat_endpoint(
+            {"user_id": telegram_user_id, "message": "Namaste"}, _FakeRequest()
+        )
+
+    assert captured["user_id"] != telegram_user_id
+    assert captured["user_id"] == f"{main_module.CHAT_SESSION_PREFIX}{telegram_user_id}"
+
+
+@pytest.mark.asyncio
+async def test_chat_endpoint_rejects_wrong_api_key() -> None:
+    """With CHAT_API_KEY set, a bad or missing header must not reach the service."""
+    captured: dict[str, str] = {}
+
+    with patch.object(main_module, "get_db_pool", lambda: object()), patch.object(
+        main_module, "get_settings", lambda: SimpleNamespace(chat_api_key="expected-key")
+    ), patch(
+        "src.services.conversation.ConversationService", _capturing_service(captured)
+    ):
+        for headers in ({}, {"X-API-Key": "wrong-key"}):
+            with pytest.raises(HTTPException) as excinfo:
+                await main_module.chat_endpoint(
+                    {"user_id": "tester", "message": "Namaste"}, _FakeRequest(headers)
+                )
+            assert excinfo.value.status_code == 403
+
+    assert captured == {}
+
+
+@pytest.mark.asyncio
+async def test_chat_endpoint_accepts_correct_api_key() -> None:
+    """The matching header still gets through to the conversation service."""
+    captured: dict[str, str] = {}
+
+    with patch.object(main_module, "get_db_pool", lambda: object()), patch.object(
+        main_module, "get_settings", lambda: SimpleNamespace(chat_api_key="expected-key")
+    ), patch(
+        "src.services.conversation.ConversationService", _capturing_service(captured)
+    ):
+        result = await main_module.chat_endpoint(
+            {"user_id": "tester", "message": "Namaste"},
+            _FakeRequest({"X-API-Key": "expected-key"}),
+        )
+
+    assert result["response"] == "ok"
+    assert captured["user_id"] == f"{main_module.CHAT_SESSION_PREFIX}tester"
+
+
+def test_chat_route_binds_body_and_namespaces_over_http() -> None:
+    """Cover the routed path, not just a direct call.
+
+    The endpoint takes both a JSON body and the Request object; a signature
+    change can keep direct calls working while breaking FastAPI's body binding.
+    """
+    from fastapi.testclient import TestClient
+
+    captured: dict[str, str] = {}
+
+    with patch.object(main_module, "get_db_pool", lambda: object()), patch.object(
+        main_module, "get_settings", lambda: SimpleNamespace(chat_api_key="")
+    ), patch(
+        "src.services.conversation.ConversationService", _capturing_service(captured)
+    ):
+        client = TestClient(main_module.app)
+        response = client.post(
+            "/api/chat", json={"user_id": "780045592", "message": "Namaste"}
+        )
+
+    assert response.status_code == 200
+    assert response.json()["response"] == "ok"
+    assert captured["user_id"] == "api:780045592"

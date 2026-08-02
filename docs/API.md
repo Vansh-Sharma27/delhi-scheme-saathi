@@ -271,6 +271,32 @@ curl "http://localhost:8000/api/life-events"
 
 Direct chat endpoint for testing (bypasses Telegram).
 
+**Session namespacing**
+
+`user_id` is taken from the request body and is not authenticated, so it is
+stored under an `api:` prefix. `{"user_id": "780045592"}` drives session
+`api:780045592`, never the Telegram session `780045592`. Without this, anyone
+able to reach the endpoint could resume a real user's conversation and read the
+profile extracted from it — age, income and caste category.
+
+A consequence worth knowing when debugging: you cannot inspect or drive a live
+Telegram user's session through this endpoint. To reproduce something a real
+user hit, fork their session and replay against the copy:
+
+```bash
+python scripts/fork_session.py show 780045592
+python scripts/fork_session.py fork 780045592 --to repro-turn-12
+```
+
+The fork is independent, so iterating on it never mutates the conversation you
+are studying — which the old shared-keyspace behaviour did.
+
+**Authentication**
+
+Optional. When `CHAT_API_KEY` is set, requests must carry a matching `X-API-Key`
+header or the endpoint returns `403`. When it is unset the endpoint is open, so
+set it for any internet-reachable deployment.
+
 **Request Body**
 ```json
 {
@@ -283,6 +309,7 @@ Direct chat endpoint for testing (bypasses Telegram).
 ```bash
 curl -X POST "http://localhost:8000/api/chat" \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: $CHAT_API_KEY" \
   -d '{"user_id": "test123", "message": "Namaste, mujhe pension chahiye"}'
 ```
 

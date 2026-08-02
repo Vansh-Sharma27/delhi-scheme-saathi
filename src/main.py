@@ -5,6 +5,7 @@ and apply for government welfare schemes.
 """
 
 import logging
+import secrets
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -22,6 +23,12 @@ logger = logging.getLogger(__name__)
 
 # Database connection pool (initialized on startup)
 db_pool: asyncpg.Pool | None = None
+
+# Sessions opened through /api/chat live in their own keyspace. Telegram keys
+# sessions by numeric user ID, and /api/chat takes that ID from an
+# unauthenticated request body, so sharing the keyspace would let any caller
+# read and continue a real user's conversation.
+CHAT_SESSION_PREFIX = "api:"
 
 
 async def init_db_pool() -> asyncpg.Pool:
@@ -379,25 +386,37 @@ async def telegram_webhook(request: Request) -> dict[str, str]:
 # =============================================================================
 
 @app.post("/api/chat")
-async def chat_endpoint(request: dict[str, Any]) -> dict[str, Any]:
+async def chat_endpoint(payload: dict[str, Any], request: Request) -> dict[str, Any]:
     """Direct chat endpoint for testing without Telegram.
 
     Request: {"user_id": "test123", "message": "Namaste"}
     Response: {"response": "...", "next_state": "...", "schemes": [...]}
+
+    ``user_id`` is caller-supplied and unauthenticated, so it is namespaced
+    under ``CHAT_SESSION_PREFIX`` before it reaches the session store. Without
+    that, passing a Telegram user's numeric ID here would open their live
+    session and expose the profile extracted from it. Setting ``CHAT_API_KEY``
+    additionally closes the endpoint to unknown callers.
     """
     from src.models.api import ChatRequest
     from src.services.conversation import ConversationService
     from src.utils.validators import sanitize_input
 
+    chat_api_key = get_settings().chat_api_key
+    if chat_api_key and not secrets.compare_digest(
+        request.headers.get("X-API-Key", ""), chat_api_key
+    ):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
     pool = get_db_pool()
-    user_id = str(request.get("user_id", "test_user"))[:64]
-    message = sanitize_input(request.get("message", ""))
+    user_id = str(payload.get("user_id", "test_user"))[:64]
+    message = sanitize_input(payload.get("message", ""))
 
     if not message:
         raise HTTPException(status_code=400, detail="Message is required")
 
     chat_request = ChatRequest(
-        user_id=user_id,
+        user_id=f"{CHAT_SESSION_PREFIX}{user_id}",
         message=message,
     )
 
