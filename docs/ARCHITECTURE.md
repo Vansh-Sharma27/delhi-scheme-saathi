@@ -77,45 +77,71 @@ Receives Telegram updates and routes them to the conversation service:
 - Sends typing indicators
 - Dispatches responses back to Telegram
 
-### 2. Conversation Service (`src/services/conversation.py`)
+### 2. Conversation Service (`src/services/conversation/`)
 
-Main orchestrator that handles the conversation flow:
-- Loads/creates user sessions
-- Analyzes messages via LLM
-- Updates user profile
-- Executes FSM state transitions
-- Generates appropriate responses
+Main orchestrator that handles the conversation flow. One user message is
+one turn, and `service.ConversationService.handle_message` runs the same
+pipeline every time: load session → short-circuit commands and callbacks →
+analyse → settle language → update profile → pick next state → render →
+persist.
+
+The package is split by what each layer needs to know, and dependencies run
+strictly in this order:
+
+| Module | Responsibility |
+|--------|----------------|
+| `language.py` | What language to read the message in and reply in |
+| `intents.py` | What the user is asking for, from the message alone |
+| `scheme_reference.py` | Which scheme the user means ("2", "second", by name) |
+| `turn_policy.py` | Decisions that also need session and profile state |
+| `views.py` | The plain text sent back to the user |
+| `service.py` | The turn pipeline itself |
+
+The LLM proposes and the deterministic layers dispose: anything the LLM
+returns that conflicts with the plain meaning of the user's own words is
+overridden, because a fluent wrong answer is worse here than a plain one.
 
 ### 3. FSM Engine (`src/services/fsm.py`)
 
-7-state finite state machine managing conversation flow:
+10-state finite state machine managing conversation flow:
 
 | State | Purpose |
 |-------|---------|
 | GREETING | Welcome message, initial interaction |
-| UNDERSTANDING | Collect life event and profile info |
-| MATCHING | Transient state while searching schemes |
-| PRESENTING | Display matched schemes |
-| DETAILS | Deep dive into selected scheme |
-| APPLICATION | Step-by-step application guidance |
-| HANDOFF | Transfer to human support |
+| SITUATION_UNDERSTANDING | Establish which life event brought the user here |
+| PROFILE_COLLECTION | Collect age, gender, category, income |
+| SCHEME_MATCHING | Transient state while searching schemes |
+| SCHEME_PRESENTATION | Display matched schemes |
+| SCHEME_DETAILS | Deep dive into selected scheme |
+| DOCUMENT_GUIDANCE | Documents required, and where to get them |
+| REJECTION_WARNINGS | Common reasons this application gets rejected |
+| APPLICATION_HELP | Step-by-step application guidance |
+| CSC_HANDOFF | Transfer to a service centre |
+
+`ConversationState` also defines short aliases (`UNDERSTANDING`, `MATCHING`,
+`PRESENTING`, `DETAILS`, `APPLICATION`, `HANDOFF`) that point at the states
+above, kept for older code paths and tests.
 
 State transitions:
 ```
-GREETING ──────────────────────────────────▶ UNDERSTANDING
-                                                   │
-           ┌───────────────────────────────────────┘
+GREETING ─────▶ SITUATION_UNDERSTANDING ─────▶ PROFILE_COLLECTION
+                                                       │
+           ┌───────────────────────────────────────────┘
            │ (profile complete)
            ▼
-      MATCHING ──────────▶ PRESENTING ──────────▶ DETAILS
-           │                    │                    │
-           │ (no schemes)       │ (refine)           │ (apply)
-           ▼                    ▼                    ▼
-       HANDOFF ◀──────── UNDERSTANDING        APPLICATION
-                                                     │
-                                                     ▼
-                                                 HANDOFF
+   SCHEME_MATCHING ────▶ SCHEME_PRESENTATION ────▶ SCHEME_DETAILS
+           │                                              │
+           │ (no schemes)                                 ▼
+           ▼                            DOCUMENT_GUIDANCE / REJECTION_WARNINGS
+   PROFILE_COLLECTION                        / APPLICATION_HELP
+   (or SITUATION_UNDERSTANDING                        │
+    when the topic is unknown)                        ▼
+                                                 CSC_HANDOFF
 ```
+
+The four scheme views reachable from `SCHEME_DETAILS` transition freely
+between one another and back to `SCHEME_PRESENTATION`; see
+`fsm.get_valid_transitions` for the exact table.
 
 ### 4. Profile Extractor (`src/services/profile_extractor.py`)
 

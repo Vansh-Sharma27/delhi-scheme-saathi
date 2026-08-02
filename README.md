@@ -37,7 +37,7 @@ delhi-scheme-saathi/
 │   ├── services/        # Business logic (FSM, matching, extraction)
 │   ├── integrations/    # External APIs (LLM, embeddings, Telegram)
 │   ├── prompts/         # LLM prompt templates
-│   ├── utils/           # Validators, formatters, helpers
+│   ├── utils/           # Validators, keyboards, logging, scheme catalog
 │   └── webhook/         # Telegram webhook handler
 ├── data/                # Seed data (schemes, documents, offices)
 ├── scripts/             # Database seeding and utilities
@@ -97,11 +97,16 @@ See [docs/API.md](docs/API.md) for complete API documentation.
 
 ## Architecture
 
-The system uses a 7-state finite state machine (FSM) to manage conversation flow:
+The system uses a 10-state finite state machine (FSM) to manage conversation flow:
 
 ```
-GREETING → UNDERSTANDING → MATCHING → PRESENTING → DETAILS → APPLICATION → HANDOFF
+GREETING → SITUATION_UNDERSTANDING → PROFILE_COLLECTION → SCHEME_MATCHING
+         → SCHEME_PRESENTATION → SCHEME_DETAILS → CSC_HANDOFF
 ```
+
+From `SCHEME_DETAILS` the user can move freely between the four per-scheme
+views — `SCHEME_DETAILS`, `DOCUMENT_GUIDANCE`, `REJECTION_WARNINGS` and
+`APPLICATION_HELP` — or back to the scheme list.
 
 Scheme matching uses a 3-stage hybrid approach:
 1. **SQL Filter**: Life event and eligibility criteria
