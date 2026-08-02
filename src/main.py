@@ -5,7 +5,6 @@ and apply for government welfare schemes.
 """
 
 import logging
-import os
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -161,14 +160,9 @@ app = FastAPI(
 )
 
 # CORS middleware — restrict to known origins in production
-_cors_origins = [
-    origin.strip()
-    for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
-    if origin.strip()
-]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_cors_origins or ["http://localhost:3000"],
+    allow_origins=settings.cors_origins or ["http://localhost:3000"],
     allow_credentials=False,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "Authorization"],
@@ -366,7 +360,7 @@ async def telegram_webhook(request: Request) -> dict[str, str]:
     from src.webhook.handler import handle_telegram_update
 
     # Verify Telegram webhook secret token
-    webhook_secret = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "")
+    webhook_secret = get_settings().telegram_webhook_secret
     if webhook_secret:
         token_header = request.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
         if token_header != webhook_secret:

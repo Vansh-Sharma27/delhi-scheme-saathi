@@ -39,6 +39,10 @@ class Settings(BaseSettings):
 
     # Telegram
     telegram_bot_token: str = Field(default="", description="Telegram Bot API token")
+    telegram_webhook_secret: str = Field(
+        default="",
+        description="Shared secret checked against X-Telegram-Bot-Api-Secret-Token; empty disables the check"
+    )
 
     # Embeddings (Jina AI primary, Voyage AI fallback)
     # Jina AI - 10M free tokens, 89 languages including Hindi/Bengali/Urdu
@@ -110,11 +114,20 @@ class Settings(BaseSettings):
     # Application
     log_level: str = Field(default="INFO", description="Logging level")
     debug: bool = Field(default=False, description="Debug mode")
+    cors_allowed_origins: str = Field(
+        default="http://localhost:3000",
+        description="Comma-separated CORS origins"
+    )
 
     @property
     def is_production(self) -> bool:
         """Check if running in production mode."""
         return not self.debug
+
+    @property
+    def cors_origins(self) -> list[str]:
+        """CORS origins as a list, ignoring empty entries."""
+        return [origin.strip() for origin in self.cors_allowed_origins.split(",") if origin.strip()]
 
 
 @lru_cache(maxsize=1)

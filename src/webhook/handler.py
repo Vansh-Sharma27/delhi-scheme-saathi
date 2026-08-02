@@ -8,13 +8,13 @@ Handles incoming Telegram updates including:
 """
 
 import logging
-import os
 import re
 from contextlib import suppress
 from typing import Any
 
 import asyncpg
 
+from src.config import get_settings
 from src.integrations.sarvam import get_sarvam_client
 from src.integrations.telegram import get_telegram_client
 from src.models.api import ChatRequest, TelegramUpdate
@@ -31,19 +31,18 @@ TTS_MAX_TEXT_LENGTH = 900
 def _get_voice_client():
     """Get the configured voice client (Sarvam AI or Bhashini).
 
-    Prefers Sarvam AI if SARVAM_API_KEY is set, falls back to Bhashini.
+    Prefers Sarvam AI when its key is set, falls back to Bhashini. With
+    neither configured this still returns the Sarvam client, which reports
+    itself as unconfigured so callers can tell the user voice is off.
     """
-    sarvam_key = os.environ.get("SARVAM_API_KEY", "")
-    if sarvam_key:
+    settings = get_settings()
+    if settings.sarvam_api_key:
         return get_sarvam_client()
 
-    # Fallback to Bhashini if configured
-    bhashini_key = os.environ.get("BHASHINI_API_KEY", "")
-    if bhashini_key:
+    if settings.bhashini_api_key:
         from src.integrations.bhashini import get_bhashini_client
         return get_bhashini_client()
 
-    # Return Sarvam client (will handle no-key case gracefully)
     return get_sarvam_client()
 
 

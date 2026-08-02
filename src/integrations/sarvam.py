@@ -10,10 +10,11 @@ API Documentation: https://docs.sarvam.ai/
 
 import base64
 import logging
-import os
 from dataclasses import dataclass
 
 import httpx
+
+from src.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -75,9 +76,9 @@ class SarvamClient:
         """Initialize Sarvam AI client.
 
         Args:
-            api_key: Sarvam AI API subscription key (or SARVAM_API_KEY env var)
+            api_key: Sarvam AI API subscription key; falls back to settings
         """
-        self.api_key = api_key or os.environ.get("SARVAM_API_KEY", "")
+        self.api_key = api_key or get_settings().sarvam_api_key
         self._http_client: httpx.AsyncClient | None = None
 
     async def _get_client(self) -> httpx.AsyncClient:

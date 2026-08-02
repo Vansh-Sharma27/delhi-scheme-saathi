@@ -10,10 +10,11 @@ API Documentation: https://bhashini.gov.in/ulca/documentation
 """
 
 import logging
-import os
 from dataclasses import dataclass
 
 import httpx
+
+from src.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -65,13 +66,14 @@ class BhashiniClient:
         """Initialize Bhashini client.
 
         Args:
-            api_key: Bhashini API key (or BHASHINI_API_KEY env var)
-            user_id: Bhashini user ID (or BHASHINI_USER_ID env var)
-            ulca_api_key: ULCA API key for pipeline access (or BHASHINI_ULCA_API_KEY env var)
+            api_key: Bhashini API key; falls back to settings
+            user_id: Bhashini user ID; falls back to settings
+            ulca_api_key: ULCA API key for pipeline access; falls back to settings
         """
-        self.api_key = api_key or os.environ.get("BHASHINI_API_KEY", "")
-        self.user_id = user_id or os.environ.get("BHASHINI_USER_ID", "")
-        self.ulca_api_key = ulca_api_key or os.environ.get("BHASHINI_ULCA_API_KEY", "")
+        settings = get_settings()
+        self.api_key = api_key or settings.bhashini_api_key
+        self.user_id = user_id or settings.bhashini_user_id
+        self.ulca_api_key = ulca_api_key or settings.bhashini_ulca_api_key
 
         self._http_client: httpx.AsyncClient | None = None
 
