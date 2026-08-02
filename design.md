@@ -108,7 +108,7 @@ This section highlights key architectural decisions and their rationales, addres
 - Voice messages use OGG Opus (8-16 kbps), allowing 30-second messages in ~60KB
 - Text responses prioritized over audio when network quality is poor or TTS length exceeds 900 characters
 - Inline keyboards provide structured navigation without requiring users to type scheme names
-- Long messages split at `───` section dividers to stay under Telegram's 4096 char limit
+- Long messages split between paragraphs to stay under Telegram's 4096 char limit
 - Rule-based fallback when external APIs are unreachable
 
 ### 12. AI Orchestration and Working Memory (New — not in original design)

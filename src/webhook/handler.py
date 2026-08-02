@@ -19,7 +19,7 @@ from src.integrations.sarvam import get_sarvam_client
 from src.integrations.telegram import get_telegram_client
 from src.models.api import ChatRequest, TelegramUpdate
 from src.services import session_manager
-from src.services.conversation import ConversationService
+from src.services.conversation import ConversationService, language
 
 logger = logging.getLogger(__name__)
 
@@ -46,20 +46,28 @@ def _get_voice_client():
     return get_sarvam_client()
 
 
+# Deliberately narrower than the marker set used for typed messages. A
+# transcript is the speech recogniser's guess, so a single common word is weak
+# evidence; requiring two of these unambiguous ones keeps STT scoring from
+# swinging to Hinglish on a mis-recognition.
+_TRANSCRIPT_HINGLISH_MARKERS = (
+    "mujhe",
+    "chahiye",
+    "batao",
+    "batayiye",
+    "madad",
+    "sahayata",
+)
+_TRANSCRIPT_MARKER_THRESHOLD = 2
+
+
 def _infer_transcript_language(text: str) -> str:
     """Infer transcript language using a light heuristic."""
-    devanagari_chars = sum(1 for char in text if "\u0900" <= char <= "\u097F")
-    alpha_chars = sum(1 for char in text if char.isalpha())
-    if alpha_chars and devanagari_chars / alpha_chars > 0.3:
+    if language.devanagari_ratio(text) > language.DEVANAGARI_THRESHOLD:
         return "hi"
 
-    text_lower = text.lower()
-    marker_hits = sum(
-        1
-        for token in ("mujhe", "chahiye", "batao", "batayiye", "madad", "sahayata")
-        if re.search(rf"(?<!\w){re.escape(token)}(?!\w)", text_lower)
-    )
-    if marker_hits >= 2:
+    marker_hits = language.count_markers(text.lower(), _TRANSCRIPT_HINGLISH_MARKERS)
+    if marker_hits >= _TRANSCRIPT_MARKER_THRESHOLD:
         return "hinglish"
     return "en"
 
@@ -155,10 +163,10 @@ async def _transcribe_with_fallbacks(
     best_result = None
     best_score = -1.0
 
-    for language in language_candidates:
+    for candidate in language_candidates:
         result = await voice_client.speech_to_text(
             audio_bytes=audio_bytes,
-            source_lang=language,
+            source_lang=candidate,
             audio_format=audio_format,
         )
         if not result.text:
@@ -166,18 +174,16 @@ async def _transcribe_with_fallbacks(
 
         score = float(result.confidence or 0.0) + _transcript_quality_score(result.text)
         transcript_language = _infer_transcript_language(result.text)
-        if (
-            (language == "en" and transcript_language == "en")
-            or (language == "hi" and transcript_language in {"hi", "hinglish"})
+        # Reward a transcript that reads like the language it was decoded as,
+        # and penalise one the recogniser itself labels as a different one.
+        if (candidate == "en" and transcript_language == "en") or (
+            candidate == "hi" and transcript_language in {"hi", "hinglish"}
         ):
             score += 0.2
 
         detected_language = getattr(result, "language", None)
         if detected_language in {"en", "hi", "hinglish"}:
-            if detected_language == language:
-                score += 0.15
-            elif detected_language != language:
-                score -= 0.2
+            score += 0.15 if detected_language == candidate else -0.2
 
         if score > best_score:
             best_result = result
@@ -459,61 +465,38 @@ def _clean_for_telegram(text: str) -> str:
     return text.strip()
 
 
-# Telegram message length limit (with a small buffer)
+# Telegram rejects messages over 4096 characters; the buffer leaves room for
+# the trailing newline Telegram clients sometimes add.
 _TG_MAX_LEN = 4000
-
-# Section divider pattern used by _build_scheme_details_text
-_SECTION_DIVIDER = "───────────────────"
 
 
 def _split_message(text: str) -> list[str]:
-    """Split a long message into parts that fit within Telegram's 4096 char limit.
+    """Split a long message into parts that fit Telegram's length limit.
 
-    Splits at section dividers (───) first for clean visual breaks.
-    Falls back to splitting at double-newlines if no dividers are present.
+    Splits between paragraphs so a card is never cut mid-line. A single
+    paragraph longer than the limit is emitted as its own oversized part
+    rather than being chopped, because breaking mid-sentence in Hindi reads
+    worse than one long message; the caller sends it and lets Telegram
+    complain if it truly cannot fit.
     """
     if len(text) <= _TG_MAX_LEN:
         return [text]
 
-    # Try splitting at section dividers first
-    if _SECTION_DIVIDER in text:
-        sections = text.split(_SECTION_DIVIDER)
-        parts = []
-        current = ""
-
-        for section in sections:
-            candidate = (current + _SECTION_DIVIDER + section) if current else section
-            if len(candidate) <= _TG_MAX_LEN:
-                current = candidate
-            else:
-                if current:
-                    parts.append(current.strip())
-                current = section
-
-        if current:
-            parts.append(current.strip())
-
-        if parts:
-            return parts
-
-    # Fallback: split at double-newlines
-    paragraphs = text.split("\n\n")
-    parts = []
+    parts: list[str] = []
     current = ""
-
-    for para in paragraphs:
-        candidate = (current + "\n\n" + para) if current else para
+    for paragraph in text.split("\n\n"):
+        candidate = f"{current}\n\n{paragraph}" if current else paragraph
         if len(candidate) <= _TG_MAX_LEN:
             current = candidate
-        else:
-            if current:
-                parts.append(current.strip())
-            current = para
+            continue
+        if current:
+            parts.append(current.strip())
+        current = paragraph
 
     if current:
         parts.append(current.strip())
 
-    return parts if parts else [text[:_TG_MAX_LEN]]
+    return parts or [text[:_TG_MAX_LEN]]
 
 
 def _clean_for_tts(text: str) -> str:

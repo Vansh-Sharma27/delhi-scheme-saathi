@@ -12,12 +12,10 @@ from src.models.rejection_rule import RejectionRule
 from src.models.scheme import EligibilityCriteria, Scheme, SchemeMatch
 from src.models.session import ConversationState, Message, Session, UserProfile
 from src.services import response_generator
-from src.services.conversation import (
-    ConversationService,
-    _infer_text_language,
-    _resolve_scheme_from_text,
-    _truncate_at_sentence,
-)
+from src.services.conversation import ConversationService
+from src.services.conversation.language import infer_text_language
+from src.services.conversation.scheme_reference import resolve_scheme_from_text
+from src.services.conversation.views import truncate_at_sentence
 from src.services.life_event_classifier import classify_by_keywords
 
 ACTIVE_SCHEME_SEEDS = [
@@ -475,11 +473,11 @@ async def test_detail_language_change_stays_in_details() -> None:
             "अगला क्या देखें: दस्तावेज, अस्वीकृति चेतावनियाँ, या आवेदन प्रक्रिया?"
         )
     )
-    with patch("src.services.conversation.scheme_repo.get_scheme_by_id", AsyncMock(return_value=scheme)), patch(
-        "src.services.conversation.document_resolver.resolve_documents_for_scheme",
+    with patch("src.services.conversation.views.scheme_repo.get_scheme_by_id", AsyncMock(return_value=scheme)), patch(
+        "src.services.conversation.views.document_resolver.resolve_documents_for_scheme",
         AsyncMock(return_value=[]),
     ), patch(
-        "src.services.conversation.rejection_engine.get_rejection_warnings",
+        "src.services.conversation.views.rejection_engine.get_rejection_warnings",
         AsyncMock(return_value=[]),
     ), patch(
         "src.services.response_generator.get_ai_orchestrator",
@@ -624,7 +622,7 @@ async def test_language_callback_re_renders_active_scheme_in_selected_language()
     scheme = _make_scheme("SCH-1", name_hindi="शिक्षा योजना")
 
     with patch(
-        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        "src.services.conversation.views.scheme_repo.get_scheme_by_id",
         AsyncMock(return_value=scheme),
     ):
         result = await service.handle_message(
@@ -659,9 +657,9 @@ def test_scheme_resolution_avoids_numeric_false_positives() -> None:
         ],
     )
 
-    assert _resolve_scheme_from_text(session, "my annual income is 210000") is None
-    assert _resolve_scheme_from_text(session, "Can you share scheme details?") is None
-    assert _resolve_scheme_from_text(session, "scheme 2") == "SCH-2"
+    assert resolve_scheme_from_text(session, "my annual income is 210000") is None
+    assert resolve_scheme_from_text(session, "Can you share scheme details?") is None
+    assert resolve_scheme_from_text(session, "scheme 2") == "SCH-2"
 
 
 def test_scheme_resolution_handles_natural_reference_to_secondary_candidate() -> None:
@@ -675,7 +673,7 @@ def test_scheme_resolution_handles_natural_reference_to_secondary_candidate() ->
         ],
     )
 
-    assert _resolve_scheme_from_text(
+    assert resolve_scheme_from_text(
         session,
         "May I know why you suggested education loan scheme when I was asking for housing schemes?",
     ) == "SCH-2"
@@ -715,7 +713,7 @@ async def test_no_match_guard_does_not_rerun_matching_without_profile_change() -
     )
     match_schemes = AsyncMock(return_value=[])
 
-    with patch("src.services.conversation.scheme_matcher.match_schemes", match_schemes):
+    with patch("src.services.conversation.service.scheme_matcher.match_schemes", match_schemes):
         result = await service.handle_message(
             ChatRequest(user_id="user-no-match-guard", message="ok")
         )
@@ -780,8 +778,8 @@ async def test_details_profile_change_clears_selection_and_rematches() -> None:
         ]
     )
 
-    with patch("src.services.conversation.scheme_matcher.match_schemes", match_schemes), patch(
-        "src.services.conversation.format_inline_keyboard",
+    with patch("src.services.conversation.service.scheme_matcher.match_schemes", match_schemes), patch(
+        "src.services.conversation.service.format_inline_keyboard",
         return_value=[[{"text": "Scheme SCH-2", "callback_data": "scheme:SCH-2"}]],
     ):
         result = await service.handle_message(
@@ -799,7 +797,7 @@ async def test_details_profile_change_clears_selection_and_rematches() -> None:
 
 def test_plain_english_scheme_message_stays_english() -> None:
     """The word 'scheme' alone should not force Hinglish auto-detection."""
-    assert _infer_text_language("Can you explain this scheme in English?") == "en"
+    assert infer_text_language("Can you explain this scheme in English?") == "en"
 
 
 def test_generic_loan_keyword_does_not_force_education_life_event() -> None:
@@ -842,7 +840,7 @@ async def test_field_answer_turn_does_not_blindly_replace_known_life_event() -> 
     )
     match_schemes = AsyncMock(return_value=[])
 
-    with patch("src.services.conversation.scheme_matcher.match_schemes", match_schemes):
+    with patch("src.services.conversation.service.scheme_matcher.match_schemes", match_schemes):
         result = await service.handle_message(
             ChatRequest(
                 user_id="user-voice-income",
@@ -1253,8 +1251,8 @@ async def test_unlocked_hinglish_income_turn_preserves_scheme_list_language() ->
         ]
     )
 
-    with patch("src.services.conversation.scheme_matcher.match_schemes", match_schemes), patch(
-        "src.services.conversation.format_inline_keyboard",
+    with patch("src.services.conversation.service.scheme_matcher.match_schemes", match_schemes), patch(
+        "src.services.conversation.service.format_inline_keyboard",
         return_value=[[{"text": "Education Loan Scheme - Delhi", "callback_data": "scheme:SCH-EDU-LIST"}]],
     ):
         result = await service.handle_message(
@@ -1316,7 +1314,7 @@ async def test_explicit_topic_switch_ignores_bogus_scheme_selection_and_updates_
     )
     match_schemes = AsyncMock(return_value=[])
 
-    with patch("src.services.conversation.scheme_matcher.match_schemes", match_schemes):
+    with patch("src.services.conversation.service.scheme_matcher.match_schemes", match_schemes):
         result = await service.handle_message(
             ChatRequest(
                 user_id="user-topic-switch-live-shape",
@@ -1377,8 +1375,8 @@ async def test_explicit_topic_switch_suppresses_old_scheme_details_action() -> N
     )
     match_schemes = AsyncMock(return_value=[])
 
-    with patch("src.services.conversation.scheme_matcher.match_schemes", match_schemes), patch(
-        "src.services.conversation._build_scheme_details_text",
+    with patch("src.services.conversation.service.scheme_matcher.match_schemes", match_schemes), patch(
+        "src.services.conversation.views.build_scheme_details_text",
         AsyncMock(return_value="DETAILS"),
     ) as details_mock:
         result = await service.handle_message(
@@ -1511,7 +1509,7 @@ async def test_no_match_topic_switch_updates_life_event_and_reruns_matching() ->
     )
     match_schemes = AsyncMock(return_value=[])
 
-    with patch("src.services.conversation.scheme_matcher.match_schemes", match_schemes):
+    with patch("src.services.conversation.service.scheme_matcher.match_schemes", match_schemes):
         result = await service.handle_message(
             ChatRequest(user_id="user-topic", message="Now I need housing help instead")
         )
@@ -1581,7 +1579,7 @@ async def test_ai_relevance_gate_clarifies_cross_domain_candidate() -> None:
         ]
     )
 
-    with patch("src.services.conversation.scheme_matcher.match_schemes", match_schemes):
+    with patch("src.services.conversation.service.scheme_matcher.match_schemes", match_schemes):
         result = await service.handle_message(
             ChatRequest(user_id="user-ai-gate", message="show me the schemes")
         )
@@ -1659,8 +1657,8 @@ async def test_relevance_judge_uses_active_need_summary_not_raw_income_reply() -
         ]
     )
 
-    with patch("src.services.conversation.scheme_matcher.match_schemes", match_schemes), patch(
-        "src.services.conversation.format_inline_keyboard",
+    with patch("src.services.conversation.service.scheme_matcher.match_schemes", match_schemes), patch(
+        "src.services.conversation.service.format_inline_keyboard",
         return_value=[[{"text": "Widow Pension", "callback_data": "scheme:SCH-WIDOW"}]],
     ):
         await service.handle_message(
@@ -1719,8 +1717,8 @@ async def test_clear_deterministic_match_skips_ai_relevance_judge() -> None:
         ]
     )
 
-    with patch("src.services.conversation.scheme_matcher.match_schemes", match_schemes), patch(
-        "src.services.conversation.format_inline_keyboard",
+    with patch("src.services.conversation.service.scheme_matcher.match_schemes", match_schemes), patch(
+        "src.services.conversation.service.format_inline_keyboard",
         return_value=[[{"text": "Strong Housing Match", "callback_data": "scheme:SCH-HIGH"}]],
     ):
         result = await service.handle_message(
@@ -1783,7 +1781,7 @@ async def test_followup_about_secondary_scheme_resolves_in_live_conversation() -
         name_hindi="शिक्षा ऋण योजना - दिल्ली",
     )
     with patch(
-        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        "src.services.conversation.views.scheme_repo.get_scheme_by_id",
         AsyncMock(return_value=education_scheme),
     ):
         result = await service.handle_message(
@@ -1838,7 +1836,7 @@ async def test_scheme_term_question_gets_direct_answer_instead_of_card_replay() 
         categories=["EWS", "LIG", "MIG"],
     )
     with patch(
-        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        "src.services.conversation.views.scheme_repo.get_scheme_by_id",
         AsyncMock(return_value=pmay_scheme),
     ):
         result = await service.handle_message(
@@ -1888,10 +1886,10 @@ async def test_justify_question_uses_scheme_answer_path() -> None:
     )
 
     with patch(
-        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        "src.services.conversation.views.scheme_repo.get_scheme_by_id",
         AsyncMock(return_value=_make_scheme("SCH-DELHI-003", life_event="DEATH_IN_FAMILY", genders=["female"], categories=["all"])),
     ), patch(
-        "src.services.conversation.response_generator.generate_scheme_question_response",
+        "src.services.conversation.views.response_generator.generate_scheme_question_response",
         AsyncMock(return_value="I suggested this because you said you are widowed and your income is below ₹1 lakh."),
     ) as answer_mock:
         result = await service.handle_message(
@@ -1937,10 +1935,10 @@ async def test_language_switch_justify_question_still_uses_scheme_answer_path() 
     )
 
     with patch(
-        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        "src.services.conversation.views.scheme_repo.get_scheme_by_id",
         AsyncMock(return_value=_make_scheme("SCH-DELHI-001", life_event="HOUSING")),
     ), patch(
-        "src.services.conversation.response_generator.generate_scheme_question_response",
+        "src.services.conversation.views.response_generator.generate_scheme_question_response",
         AsyncMock(return_value="I suggested this because your housing need and income fit the scheme rules."),
     ) as answer_mock:
         result = await service.handle_message(
@@ -1999,10 +1997,10 @@ async def test_language_switch_translation_request_uses_scheme_answer_path() -> 
     )
 
     with patch(
-        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        "src.services.conversation.views.scheme_repo.get_scheme_by_id",
         AsyncMock(return_value=_make_scheme("SCH-DELHI-001", life_event="HOUSING")),
     ), patch(
-        "src.services.conversation.response_generator.generate_scheme_question_response",
+        "src.services.conversation.views.response_generator.generate_scheme_question_response",
         AsyncMock(return_value="इस योजना में आय वर्ग का मतलब वार्षिक पारिवारिक आय का समूह है।"),
     ) as answer_mock:
         result = await service.handle_message(
@@ -2050,7 +2048,7 @@ async def test_scheme_eligibility_question_with_profile_update_stays_on_answer_p
     match_schemes = AsyncMock()
 
     with patch(
-        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        "src.services.conversation.views.scheme_repo.get_scheme_by_id",
         AsyncMock(
             return_value=_make_scheme(
                 "SCH-DELHI-003",
@@ -2061,10 +2059,10 @@ async def test_scheme_eligibility_question_with_profile_update_stays_on_answer_p
             )
         ),
     ), patch(
-        "src.services.conversation.scheme_matcher.match_schemes",
+        "src.services.conversation.service.scheme_matcher.match_schemes",
         match_schemes,
     ), patch(
-        "src.services.conversation.response_generator.generate_scheme_question_response",
+        "src.services.conversation.views.response_generator.generate_scheme_question_response",
         AsyncMock(
             return_value=(
                 "General category does not disqualify her for this scheme. "
@@ -2142,8 +2140,8 @@ async def test_low_context_field_answer_skips_relevance_clarification_loop() -> 
         ]
     )
 
-    with patch("src.services.conversation.scheme_matcher.match_schemes", match_schemes), patch(
-        "src.services.conversation.format_inline_keyboard",
+    with patch("src.services.conversation.service.scheme_matcher.match_schemes", match_schemes), patch(
+        "src.services.conversation.service.format_inline_keyboard",
         return_value=[[{"text": "Housing Relief Scheme", "callback_data": "scheme:SCH-HOUSE"}]],
     ):
         result = await service.handle_message(
@@ -2220,7 +2218,7 @@ async def test_unlocked_hinglish_field_style_reply_preserves_language_for_matchi
         ]
     )
 
-    with patch("src.services.conversation.scheme_matcher.match_schemes", match_schemes):
+    with patch("src.services.conversation.service.scheme_matcher.match_schemes", match_schemes):
         result = await service.handle_message(
             ChatRequest(
                 user_id="user-hinglish-field-style",
@@ -2397,7 +2395,7 @@ async def test_scheme_question_response_answers_eligibility_deterministically() 
 def test_truncate_at_sentence_handles_hindi_danda() -> None:
     """Hindi descriptions should truncate at sentence boundaries instead of mid-thought."""
     text = "यह पहला वाक्य है। यह दूसरा वाक्य है जिसे बाद में काटना चाहिए।"
-    assert _truncate_at_sentence(text, 25) == "यह पहला वाक्य है।"
+    assert truncate_at_sentence(text, 25) == "यह पहला वाक्य है।"
 
 
 @pytest.mark.asyncio
@@ -2448,7 +2446,7 @@ async def test_application_request_uses_step_by_step_guidance_when_steps_exist()
     )
 
     with patch(
-        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        "src.services.conversation.views.scheme_repo.get_scheme_by_id",
         AsyncMock(return_value=scheme),
     ):
         result = await service.handle_message(
@@ -2509,10 +2507,10 @@ async def test_application_help_followup_question_stays_on_answer_path() -> None
     )
 
     with patch(
-        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        "src.services.conversation.views.scheme_repo.get_scheme_by_id",
         AsyncMock(return_value=scheme),
     ), patch(
-        "src.services.conversation.response_generator.generate_scheme_question_response",
+        "src.services.conversation.views.response_generator.generate_scheme_question_response",
         AsyncMock(return_value="The first step is to collect the DAK application form."),
     ) as answer_mock:
         result = await service.handle_message(
@@ -2561,10 +2559,10 @@ async def test_procedure_request_routes_to_application_help() -> None:
     )
 
     with patch(
-        "src.services.conversation._build_application_help_text",
+        "src.services.conversation.views.build_application_help_text",
         AsyncMock(return_value="📝 How to Apply for Scheme SCH-5:\n\nStep 1: Submit the form."),
     ), patch(
-        "src.services.conversation._build_scheme_details_text",
+        "src.services.conversation.views.build_scheme_details_text",
         AsyncMock(return_value="Scheme details"),
     ):
         result = await service.handle_message(
@@ -2616,10 +2614,10 @@ async def test_rgsry_application_followup_ignores_echoed_active_scheme_selection
     )
 
     with patch(
-        "src.services.conversation._build_application_help_text",
+        "src.services.conversation.views.build_application_help_text",
         AsyncMock(return_value="APP HELP"),
     ) as application_mock, patch(
-        "src.services.conversation._build_scheme_details_text",
+        "src.services.conversation.views.build_scheme_details_text",
         AsyncMock(return_value="DETAILS"),
     ) as details_mock:
         result = await service.handle_message(
@@ -2676,7 +2674,7 @@ async def test_locked_english_scheme_followup_rewrites_hindi_application_reply()
     )
 
     with patch(
-        "src.services.conversation._build_application_help_text",
+        "src.services.conversation.views.build_application_help_text",
         AsyncMock(
             return_value=(
                 "📝 योजना के लिए आवेदन:\n\n"
@@ -2741,10 +2739,10 @@ async def test_same_scheme_question_with_echoed_selection_stays_on_answer_path()
     )
 
     with patch(
-        "src.services.conversation.response_generator.generate_scheme_question_response",
+        "src.services.conversation.views.response_generator.generate_scheme_question_response",
         AsyncMock(return_value="The first step is to complete Part A."),
     ) as answer_mock, patch(
-        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        "src.services.conversation.views.scheme_repo.get_scheme_by_id",
         AsyncMock(
             return_value=_make_scheme(
                 "SCH-DELHI-005",
@@ -2754,7 +2752,7 @@ async def test_same_scheme_question_with_echoed_selection_stays_on_answer_path()
             )
         ),
     ), patch(
-        "src.services.conversation._build_application_help_text",
+        "src.services.conversation.views.build_application_help_text",
         AsyncMock(return_value="APP HELP"),
     ) as application_mock:
         result = await service.handle_message(
@@ -2847,16 +2845,16 @@ async def test_same_scheme_followup_routing_works_for_every_active_scheme(
     }
 
     with patch(
-        "src.services.conversation._build_document_guidance_text",
+        "src.services.conversation.views.build_document_guidance_text",
         patch_targets["_build_document_guidance_text"],
     ), patch(
-        "src.services.conversation._build_rejection_warnings_text",
+        "src.services.conversation.views.build_rejection_warnings_text",
         patch_targets["_build_rejection_warnings_text"],
     ), patch(
-        "src.services.conversation._build_application_help_text",
+        "src.services.conversation.views.build_application_help_text",
         patch_targets["_build_application_help_text"],
     ), patch(
-        "src.services.conversation._build_scheme_details_text",
+        "src.services.conversation.views.build_scheme_details_text",
         patch_targets["_build_scheme_details_text"],
     ):
         result = await service.handle_message(
@@ -2915,10 +2913,10 @@ async def test_rejection_followup_question_stays_on_answer_path_for_every_active
     )
 
     with patch(
-        "src.services.conversation.response_generator.generate_scheme_question_response",
+        "src.services.conversation.views.response_generator.generate_scheme_question_response",
         AsyncMock(return_value="The top rejection risk is incomplete or inconsistent information."),
     ) as answer_mock, patch(
-        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        "src.services.conversation.views.scheme_repo.get_scheme_by_id",
         AsyncMock(
             return_value=_make_scheme(
                 scheme_seed["id"],
@@ -2928,7 +2926,7 @@ async def test_rejection_followup_question_stays_on_answer_path_for_every_active
             )
         ),
     ), patch(
-        "src.services.conversation._build_rejection_warnings_text",
+        "src.services.conversation.views.build_rejection_warnings_text",
         AsyncMock(return_value="REJECTION CARD"),
     ) as warnings_mock:
         result = await service.handle_message(
@@ -2987,10 +2985,10 @@ async def test_affirmative_rejection_followup_enters_application_help_for_every_
     )
 
     with patch(
-        "src.services.conversation._build_application_help_text",
+        "src.services.conversation.views.build_application_help_text",
         AsyncMock(return_value="APP HELP"),
     ) as application_mock, patch(
-        "src.services.conversation._build_rejection_warnings_text",
+        "src.services.conversation.views.build_rejection_warnings_text",
         AsyncMock(return_value="REJECTION CARD"),
     ) as warnings_mock:
         result = await service.handle_message(
@@ -3072,10 +3070,10 @@ async def test_hindi_document_guidance_translates_english_document_fields() -> N
     )
 
     with patch(
-        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        "src.services.conversation.views.scheme_repo.get_scheme_by_id",
         AsyncMock(return_value=scheme),
     ), patch(
-        "src.services.conversation.document_resolver.resolve_documents_for_scheme",
+        "src.services.conversation.views.document_resolver.resolve_documents_for_scheme",
         AsyncMock(return_value=[document_chain]),
     ), patch(
         "src.services.response_generator.get_ai_orchestrator",
@@ -3123,10 +3121,10 @@ async def test_document_guidance_followup_question_stays_on_answer_path() -> Non
     )
 
     with patch(
-        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        "src.services.conversation.views.scheme_repo.get_scheme_by_id",
         AsyncMock(return_value=_make_scheme("SCH-DAK", life_event="HEALTH_CRISIS")),
     ), patch(
-        "src.services.conversation.response_generator.generate_scheme_question_response",
+        "src.services.conversation.views.response_generator.generate_scheme_question_response",
         AsyncMock(return_value="The affidavit / self-declaration is the document that needs two witnesses."),
     ) as answer_mock:
         result = await service.handle_message(
@@ -3185,10 +3183,10 @@ async def test_hindi_rejection_guidance_prefers_hindi_rule_content() -> None:
     )
 
     with patch(
-        "src.services.conversation.scheme_repo.get_scheme_by_id",
+        "src.services.conversation.views.scheme_repo.get_scheme_by_id",
         AsyncMock(return_value=_make_scheme("SCH-DAK", life_event="HEALTH_CRISIS")),
     ), patch(
-        "src.services.conversation.rejection_engine.get_rejection_warnings",
+        "src.services.conversation.views.rejection_engine.get_rejection_warnings",
         AsyncMock(return_value=[warning]),
     ):
         result = await service.handle_message(
@@ -3232,8 +3230,8 @@ async def test_document_request_moves_to_document_guidance() -> None:
         }
     )
 
-    with patch("src.services.conversation.scheme_repo.get_scheme_by_id", AsyncMock(return_value=_make_scheme("SCH-1"))), patch(
-        "src.services.conversation.document_resolver.resolve_documents_for_scheme",
+    with patch("src.services.conversation.views.scheme_repo.get_scheme_by_id", AsyncMock(return_value=_make_scheme("SCH-1"))), patch(
+        "src.services.conversation.views.document_resolver.resolve_documents_for_scheme",
         AsyncMock(return_value=[]),
     ):
         result = await service.handle_message(
@@ -3285,11 +3283,11 @@ async def test_switch_scheme_inside_details_uses_new_selection() -> None:
     async def fake_scheme_lookup(pool, scheme_id):  # type: ignore[no-untyped-def]
         return _make_scheme(scheme_id)
 
-    with patch("src.services.conversation.scheme_repo.get_scheme_by_id", AsyncMock(side_effect=fake_scheme_lookup)), patch(
-        "src.services.conversation.document_resolver.resolve_documents_for_scheme",
+    with patch("src.services.conversation.views.scheme_repo.get_scheme_by_id", AsyncMock(side_effect=fake_scheme_lookup)), patch(
+        "src.services.conversation.views.document_resolver.resolve_documents_for_scheme",
         AsyncMock(return_value=[]),
     ), patch(
-        "src.services.conversation.rejection_engine.get_rejection_warnings",
+        "src.services.conversation.views.rejection_engine.get_rejection_warnings",
         AsyncMock(return_value=[]),
     ):
         result = await service.handle_message(

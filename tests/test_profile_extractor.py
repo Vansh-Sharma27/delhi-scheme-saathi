@@ -130,35 +130,35 @@ class TestSkipDetection:
     """Tests for 'I don't know' / skip intent detection."""
 
     def test_skip_detection_import(self):
-        """Verify _wants_to_skip can be imported from conversation module."""
-        from src.services.conversation import _wants_to_skip
-        assert callable(_wants_to_skip)
+        """Verify wants_to_skip can be imported from the conversation package."""
+        from src.services.conversation.intents import wants_to_skip
+        assert callable(wants_to_skip)
 
     def test_skip_dont_know_english(self):
         """'I don't know' should trigger skip."""
-        from src.services.conversation import _wants_to_skip
-        assert _wants_to_skip("I don't know") is True
-        assert _wants_to_skip("i dont know") is True
-        assert _wants_to_skip("no idea") is True
-        assert _wants_to_skip("not sure") is True
+        from src.services.conversation.intents import wants_to_skip
+        assert wants_to_skip("I don't know") is True
+        assert wants_to_skip("i dont know") is True
+        assert wants_to_skip("no idea") is True
+        assert wants_to_skip("not sure") is True
 
     def test_skip_hindi(self):
         """Hindi skip phrases should trigger skip."""
-        from src.services.conversation import _wants_to_skip
-        assert _wants_to_skip("pata nahi") is True
-        assert _wants_to_skip("nahi pata") is True
-        assert _wants_to_skip("पता नहीं") is True
+        from src.services.conversation.intents import wants_to_skip
+        assert wants_to_skip("pata nahi") is True
+        assert wants_to_skip("nahi pata") is True
+        assert wants_to_skip("पता नहीं") is True
 
     def test_skip_explicit(self):
         """Explicit skip commands should trigger skip."""
-        from src.services.conversation import _wants_to_skip
-        assert _wants_to_skip("skip") is True
-        assert _wants_to_skip("next") is True
-        assert _wants_to_skip("move on") is True
+        from src.services.conversation.intents import wants_to_skip
+        assert wants_to_skip("skip") is True
+        assert wants_to_skip("next") is True
+        assert wants_to_skip("move on") is True
 
     def test_normal_message_no_skip(self):
         """Normal messages should not trigger skip."""
-        from src.services.conversation import _wants_to_skip
-        assert _wants_to_skip("I am 25 years old") is False
-        assert _wants_to_skip("OBC") is False
-        assert _wants_to_skip("housing help") is False
+        from src.services.conversation.intents import wants_to_skip
+        assert wants_to_skip("I am 25 years old") is False
+        assert wants_to_skip("OBC") is False
+        assert wants_to_skip("housing help") is False

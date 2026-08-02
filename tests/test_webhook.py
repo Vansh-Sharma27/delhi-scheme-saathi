@@ -617,7 +617,7 @@ class TestTextMessageHandling:
         ), patch(
             "src.webhook.handler._get_voice_client", return_value=mock_voice_client
         ), patch(
-            "src.services.conversation._build_scheme_details_text",
+            "src.services.conversation.views.build_scheme_details_text",
             AsyncMock(return_value="शिक्षा योजना विवरण"),
         ):
             result = await handle_telegram_update(update_data, AsyncMock())
@@ -910,3 +910,50 @@ class TestExtractLocation:
         location = extract_location(update)
 
         assert location is None
+
+
+class TestSplitMessage:
+    """Tests for splitting long replies to fit Telegram's length limit."""
+
+    def test_short_message_is_not_split(self):
+        """A message within the limit is returned unchanged, as one part."""
+        from src.webhook.handler import _split_message
+
+        text = "योजना की जानकारी\n\nआप पात्र हैं।"
+        assert _split_message(text) == [text]
+
+    def test_splits_between_paragraphs(self):
+        """Paragraphs are grouped so no part exceeds the limit."""
+        from src.webhook.handler import _TG_MAX_LEN, _split_message
+
+        paragraph = "क" * 1500
+        text = "\n\n".join([paragraph] * 4)
+
+        parts = _split_message(text)
+
+        assert len(parts) > 1
+        assert all(len(part) <= _TG_MAX_LEN for part in parts)
+        # Every paragraph survives the split; only the joins move.
+        assert "".join(parts).count(paragraph) == 4
+
+    def test_single_oversized_paragraph_is_kept_whole(self):
+        """A paragraph longer than the limit is not chopped mid-sentence."""
+        from src.webhook.handler import _TG_MAX_LEN, _split_message
+
+        text = "a" * (_TG_MAX_LEN + 500)
+
+        parts = _split_message(text)
+
+        assert parts == [text]
+
+    def test_oversized_paragraph_does_not_swallow_the_next_one(self):
+        """An oversized paragraph is emitted alone, and later ones still follow."""
+        from src.webhook.handler import _TG_MAX_LEN, _split_message
+
+        oversized = "a" * (_TG_MAX_LEN + 500)
+        text = f"{oversized}\n\ntail paragraph"
+
+        parts = _split_message(text)
+
+        assert parts[0] == oversized
+        assert parts[-1] == "tail paragraph"
