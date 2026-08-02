@@ -45,8 +45,12 @@ htmlcov/
 .tox/
 .nox/
 
-# MyPy
+# Linters and type checkers
 .mypy_cache/
+.ruff_cache/
+
+# Claude Code / agent harness config.
+.claude/
 
 # Docker
 .docker/
@@ -62,6 +66,10 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Merge and patch artifacts
+*.orig
+*.rej
 
 # Audio files (temp)
 *.ogg
