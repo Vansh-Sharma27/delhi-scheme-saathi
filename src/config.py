@@ -118,6 +118,13 @@ class Settings(BaseSettings):
         default="http://localhost:3000",
         description="Comma-separated CORS origins"
     )
+    chat_api_key: str = Field(
+        default="",
+        description=(
+            "Shared secret required in X-API-Key on /api/chat; empty leaves the "
+            "endpoint unauthenticated, which is why its sessions are namespaced"
+        )
+    )
 
     @property
     def is_production(self) -> bool:
