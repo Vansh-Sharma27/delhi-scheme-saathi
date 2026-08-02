@@ -22,8 +22,9 @@ In Telegram, try `/help` first. The bot now also exposes `/start`, `/help`, and 
 |-----------|------------|
 | Backend | Python 3.11, FastAPI |
 | Database | PostgreSQL 16 + pgvector |
-| LLM | Grok (xAI) via OpenAI-compatible API |
-| Embeddings | Voyage AI (voyage-multilingual-2, 1024-dim) |
+| LLM | Grok (xAI) via OpenAI-compatible API; AWS Bedrock (Nova) when `USE_BEDROCK=true` |
+| Embeddings | Jina AI (`jina-embeddings-v3`) primary, Voyage AI (`voyage-multilingual-2`, 1024-dim) fallback |
+| Voice | Sarvam AI primary, Bhashini fallback |
 | Messaging | Telegram Bot API |
 | Containerization | Docker, Docker Compose |
 
@@ -90,7 +91,7 @@ See [docs/QUICKSTART.md](docs/QUICKSTART.md) for detailed setup instructions.
 | `GET /api/document/{id}` | Document procurement guide |
 | `GET /api/csc/nearest` | Nearest government offices |
 | `GET /api/life-events` | List of life event categories |
-| `POST /api/chat` | Direct chat endpoint (for testing) |
+| `POST /api/chat` | Direct chat endpoint (for testing); sessions are namespaced separately from Telegram |
 | `POST /webhook/telegram` | Telegram webhook handler |
 
 See [docs/API.md](docs/API.md) for complete API documentation.
@@ -113,7 +114,9 @@ Scheme matching uses a 3-stage hybrid approach:
 2. **Vector Search**: Semantic similarity using pgvector
 3. **Ranking**: Combined score with eligibility match details
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture, and
+[docs/adr/](docs/adr/README.md) for the decisions behind it — what was chosen,
+what was rejected, and why.
 
 ## Data
 
@@ -144,17 +147,61 @@ curl -X POST http://localhost:8000/api/chat \
   -d '{"user_id": "test", "message": "Namaste"}'
 ```
 
+`user_id` here is caller-supplied and unauthenticated, so it is stored under an
+`api:` prefix. A conversation started through this endpoint is therefore a
+separate session from the Telegram chat with the same ID — passing a real
+Telegram user ID does not open that user's session. Add `-H "X-API-Key: ..."`
+when `CHAT_API_KEY` is set.
+
+To reproduce something a real user hit, copy their session into that keyspace
+and replay against the copy:
+```bash
+python scripts/fork_session.py show 780045592          # inspect
+python scripts/fork_session.py fork 780045592 --to repro-turn-12
+```
+Requires a shared session store (DynamoDB); the local in-memory store lives
+inside the app process and is not reachable from a separate command.
+
+Scan dependencies for known vulnerabilities:
+```bash
+python -m pip_audit -r requirements.txt
+```
+
 ## Environment Variables
+
+See `.env.example` for the full list. The ones that matter most:
 
 | Variable | Description |
 |----------|-------------|
 | `DATABASE_URL` | PostgreSQL connection string |
 | `XAI_API_KEY` | xAI API key for Grok LLM |
-| `VOYAGE_API_KEY` | Voyage AI key for embeddings |
+| `JINA_API_KEY` | Jina AI key for embeddings (primary) |
+| `VOYAGE_API_KEY` | Voyage AI key for embeddings (fallback) |
 | `TELEGRAM_BOT_TOKEN` | Telegram bot token |
+| `SARVAM_API_KEY` | Sarvam AI key for voice; without it voice is disabled |
+| `BHASHINI_API_KEY` | Bhashini voice fallback (with `BHASHINI_USER_ID`, `BHASHINI_ULCA_API_KEY`) |
+| `USE_BEDROCK` | `true` routes the LLM through AWS Bedrock with Grok as fallback |
 | `AI_MEMORY_QUEUE_BACKEND` | `in_memory` locally, `sqs` for shared AWS queue |
 | `AI_MEMORY_QUEUE_URL` | SQS queue URL for async working-memory jobs |
 | `LOG_LEVEL` | Logging level (INFO, DEBUG) |
+
+Access control — all default to open, which is intended only for local use:
+
+| Variable | Description |
+|----------|-------------|
+| `TELEGRAM_WEBHOOK_SECRET` | Checked against `X-Telegram-Bot-Api-Secret-Token`. **Empty disables the check**, so `/webhook/telegram` accepts any caller |
+| `CHAT_API_KEY` | Required in `X-API-Key` on `/api/chat` when set. Empty leaves the endpoint open |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated allowed origins |
+
+Neither `docker-compose.yml` nor `sam-template.yaml` currently passes
+`TELEGRAM_WEBHOOK_SECRET` or `CHAT_API_KEY` to the container, so setting them
+in `.env` alone has no effect on those deployments. Wire them into whichever
+deployment path you use before exposing the service publicly.
+
+Configured credentials are stripped from log output by
+`src/utils/logging_config.py` before any handler emits a record. This matters
+because the Telegram bot token is part of every Telegram request URL, and httpx
+includes that URL in the exceptions the webhook handler logs.
 
 ## License
 

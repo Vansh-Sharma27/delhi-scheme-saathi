@@ -27,10 +27,15 @@ Edit `.env` with your API keys:
 DATABASE_URL=postgresql://postgres:postgres@postgres:5432/delhi_scheme_saathi
 XAI_API_KEY=xai-your-key-here
 XAI_BASE_URL=https://api.x.ai/v1
+JINA_API_KEY=jina-your-key-here
 VOYAGE_API_KEY=pa-your-key-here
 TELEGRAM_BOT_TOKEN=123456:ABC-your-token-here
 LOG_LEVEL=INFO
 ```
+
+Embeddings use Jina first and fall back to Voyage, so `JINA_API_KEY` is the one
+to set if you only configure one. See `.env.example` for voice and access
+control keys.
 
 ## Step 2: Start Services
 
